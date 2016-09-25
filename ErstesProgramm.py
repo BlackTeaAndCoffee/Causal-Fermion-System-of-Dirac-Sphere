@@ -25,7 +25,7 @@ def Diag_plot(x_values, y_matrix, X_Title, Y_Title, PDFTitle):
     for i in range(np.shape(y_Matrix)[0]):
         y_values = y_matrix[i,:]
         c.plot(graph.data.values(x = x_values, y = y_values),
-                [graph.style.line([color.rgb.blue])])
+                [graph.style.line([color.gradient.Rainbow])])
 
     c.writePDFfile(PDFTitle)
 
