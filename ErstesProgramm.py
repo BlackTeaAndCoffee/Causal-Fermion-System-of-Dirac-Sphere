@@ -166,14 +166,6 @@ if __name__ == "__main__":
 
 
     Hauptroutine_Integrand(x_Anf, x_End, K_Anf, K_End, K_Anzahl, L, kappa)
-#    y_Matrix, x_Achse, Kurve_Names = get_Integrand_values(x_Anf, x_End, K_Anf,
-#            K_End, K_Anzahl, L, kappa)
-
-#    diag_plot(list(x_Achse), y_Matrix, 'Radius = r', 'Lagr(r)$*sin(r)^2$', Kurve_Names,'N=1_Integrand_kappa=%0.2f'%kappa, "br")
 
 
     Hauptroutine_Wirkung(K_Anf, K_End, K_Anzahl, kappa_Anzahl)
- #    y_Matrix, Kurve_Names, x_Achse = get_Wirkung_fuer_kappas(K_Anf, K_End, K_Anzahl, kappa_Anzahl)
-
-
-    #diag_plot(list(x_Achse), y_Matrix, 'K', 'S(K)',Kurve_Names,'N=1_S(K)_kappaschar', "br")
