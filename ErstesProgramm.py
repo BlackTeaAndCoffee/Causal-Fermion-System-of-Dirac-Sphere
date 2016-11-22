@@ -117,7 +117,7 @@ def get_Wirkung_fuer_kappas(x_Anf, x_End, K_Anzahl, kappa_Anzahl):
     x_values= np.linspace(0,np.pi,L)
     y_Matrix =np.zeros((kappa_Anzahl, K_Anzahl))
 
-    k_liste =np.linspace(0,2.5,K_Anzahl)
+    k_liste =np.linspace(x_Anf,x_End,K_Anzahl)
     for m,kappa in enumerate(kappa_list):
         Kurve_Names.append('kappa='+'%5.4f'%kappa)
         print Kurve_Names
@@ -139,7 +139,7 @@ def Hauptroutine_Wirkung(K_Anf, K_End, K_Anzahl, kappa_Anzahl):
     y_Matrix, Kurve_Names, x_Achse = get_Wirkung_fuer_kappas(K_Anf, K_End, K_Anzahl, kappa_Anzahl)
 
 
-    diag_plot(list(x_Achse), y_Matrix, 'K', 'S(K)',Kurve_Names,'N=1_S(K)_kappaschar', "br")
+    diag_plot(list(x_Achse), y_Matrix, 'K', 'S(K)',Kurve_Names,'N=1_S(K)_kappaschar_K_Anzahl%d'%K_Anzahl, "br")
 
 
 if __name__ == "__main__":
@@ -150,14 +150,14 @@ if __name__ == "__main__":
     ident =  Matrix([[1,0],[0,1]])
 
     L = 100
-    K_Anzahl=10
+    K_Anzahl=200
     K_Anf = 0
-    K_End = 2.5
+    K_End = 10
     kappa = 0.1
 
-    kappa_Anzahl = 10
-    rho1, k1 = symbols('rho1 k1')
-    w = [0]
+    kappa_Anzahl = 3
+    rho1, k1, k2 = symbols('rho1 k1 k2')
+    w = [0, 1]
     N = 1
     rho = [1]
 
@@ -166,6 +166,5 @@ if __name__ == "__main__":
 
 
     Hauptroutine_Integrand(x_Anf, x_End, K_Anf, K_End, K_Anzahl, L, kappa)
+    #Hauptroutine_Wirkung(K_Anf, K_End, K_Anzahl, kappa_Anzahl)
 
-
-    Hauptroutine_Wirkung(K_Anf, K_End, K_Anzahl, kappa_Anzahl)
