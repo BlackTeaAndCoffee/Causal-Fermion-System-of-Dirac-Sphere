@@ -8,7 +8,7 @@ from pyx.graph import axis
 import scipy.integrate as integrate
 import scipy.special,scipy.misc
 import numpy as np
-
+import random
 
 def diag_plot(x_Achse, y_matrix, X_Title, Y_Title, Kurv_Names, PDFTitle, keypos):
     c = graph.graphxy(width=10,height=10,
@@ -100,14 +100,27 @@ def boundedness_constraint(t,r,theta, phi, N, kappa):
     sub = closedChain(t, r, theta, phi, N)
     return kappa* trace(sub)**2
 
-def traceConstraint(N):
+def traceConstraint():
+    #dann benutze rho[0] usw.
     add = 0
-    for n in range(1, N+1):
+    for n in range(1, N):
         add += rho[n-1]*(diracEigenvalues(n)**2 - 0.25)
-    return add
+
+    return add/(diracEigenvalues(N)**2 - 0.25)
 '''
 Constraints
 '''
+
+def rho_matrix():
+    subs  = traceConstraint()
+    a = random.randint(0,N-1)
+    l = rho[N-1]
+    del rho[a]
+    solve_val = solve(subs - l, rho[a])
+    new_eq = lambdify((*rho), solve_val)
+    maximum = lamdify(*[0 for i in range(N-1)])
+    for i in range(rho_Anzahl):
+        rho_mat[]
 
 '''
 Function fpr Integration
@@ -122,60 +135,53 @@ Function fpr Integration
 '''
 Integrand and Action
 '''
-def integrand(time, point):
-    return (max(lagr(time, point).real, 0) + bound(time, point))*np.sin(point)**2
-
+def integrand(t, point):
+    return (max(lagr(t, point).real,0) + bound(t,point))*np.sin(point)**2
 
 def get_Integrand_values2():
     y_Matrix =np.zeros(L)
-
     for j,point in enumerate(x_values):
         y_Matrix[j] = integrand(t, point)
-
     return y_Matrix
 
-#   def get_Integrand_values():
-#       y_Matrix =np.zeros((K_Anzahl, L))
-#       Kurve_Names =[]
-#       for m,k_value in enumerate(k_liste):
-#           Kurve_Names.append('k1='+'%3.2f'%k_value)
-#           lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N,k_value))
-#           bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,k_value,kappa)))
-#           for j,point in enumerate(x_values):
-#               y_Matrix[m,j] =(max(lagr(t, point).real,0) + bound(t,point))*np.sin(point)**2
-#       return y_Matrix, x_values, Kurve_Names
+def get_Wirkung_fuer_kappas(x_Anf, x_End, K_Anzahl, kappa_Anzahl):
+    kappa_list = np.linspace(0,0.01,kappa_Anzahl)
+    Kurve_Names = []
+    x_values= np.linspace(0,np.pi,L)
+    y_Matrix =np.zeros((kappa_Anzahl, K_Anzahl))
 
-#   def get_Wirkung_fuer_kappas(x_Anf, x_End, K_Anzahl, kappa_Anzahl):
-#       kappa_list = np.linspace(0,0.01,kappa_Anzahl)
-#       Kurve_Names = []
-#       x_values= np.linspace(0,np.pi,L)
-#       y_Matrix =np.zeros((kappa_Anzahl, K_Anzahl))
+    k_liste =np.linspace(x_Anf,x_End,K_Anzahl)
+    for m,kappa in enumerate(kappa_list):
+        Kurve_Names.append('kappa='+'%5.4f'%kappa)
+        print Kurve_Names
+        for j,k_value in enumerate(k_liste):
+            lagr = lambdify((t,r), simplify(lagrangian_without_bound_constr(t,r,0,0,N,k_value)))
+            bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,k_value,kappa)))
+            integrand = lambda r : (max(lagr(t, r),0) + bound(t,r))*np.sin(r)**2
 
-#       k_liste =np.linspace(x_Anf,x_End,K_Anzahl)
-#       for m,kappa in enumerate(kappa_list):
-#           Kurve_Names.append('kappa='+'%5.4f'%kappa)
-#           print Kurve_Names
-#           for j,k_value in enumerate(k_liste):
-#               lagr = lambdify((t,r), simplify(lagrangian_without_bound_constr(t,r,0,0,N,k_value)))
-#               bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,k_value,kappa)))
-#               integrand = lambda r : (max(lagr(t, r),0) + bound(t,r))*np.sin(r)**2
-
-#               y_Matrix[m,j]= integrate.quad(integrand, 0,np.pi)[0]
-#       return y_Matrix, Kurve_Names, k_liste
+            y_Matrix[m,j]= integrate.quad(integrand, 0,np.pi)[0]
+    return y_Matrix, Kurve_Names, k_liste
 
 
 
-#   def Hauptroutine_Integrand(x_Anf, x_End, K_Anf, K_End, K_Anzahl, L, kappa):
-#       y_Matrix, x_Achse, Kurve_Names = get_Integrand_values(x_Anf, x_End, K_Anf,
-#               K_End, K_Anzahl, L, kappa)
+def Hauptroutine_Integrand(x_Anf, x_End, K_Anf, K_End, K_Anzahl, L, kappa):
+    y_Matrix, x_Achse, Kurve_Names = get_Integrand_values(x_Anf, x_End, K_Anf,
+            K_End, K_Anzahl, L, kappa)
 
-#       diag_plot(list(x_Achse), y_Matrix, 'Radius = r', 'Lagr(r)$*sin(r)^2$', Kurve_Names,'N=1_Integrand_kappa=%0.2f'%kappa, "br")
+    diag_plot(list(x_Achse), y_Matrix, 'Radius = r', 'Lagr(r)$*sin(r)^2$', Kurve_Names,'N=1_Integrand_kappa=%0.2f'%kappa, "br")
 
-#   def Hauptroutine_Wirkung(K_Anf, K_End, K_Anzahl, kappa_Anzahl):
-#       y_Matrix, Kurve_Names, x_Achse = get_Wirkung_fuer_kappas(K_Anf, K_End, K_Anzahl, kappa_Anzahl)
+def Hauptroutine_Wirkung(K_Anf, K_End, K_Anzahl, kappa_Anzahl):
+    y_Matrix, Kurve_Names, x_Achse = get_Wirkung_fuer_kappas(K_Anf, K_End, K_Anzahl, kappa_Anzahl)
 
 
-#       diag_plot(list(x_Achse), y_Matrix, 'K', 'S(K)',Kurve_Names,'N=1_S(K)_kappaschar_K_Anzahl%d'%K_Anzahl, "br")
+    diag_plot(list(x_Achse), y_Matrix, 'K', 'S(K)',Kurve_Names,'N=1_S(K)_kappaschar_K_Anzahl%d'%K_Anzahl, "br")
+
+def K_Matrix():
+    K = np.zeros((N, K_Anzahl))
+    for i in range(N):
+        K[i,:] = np.linspace(K_Anf, K_End, K_Anzahl)
+    return K
+
 
 if __name__ == "__main__":
     t, theta, phi = symbols('t theta phi')
@@ -185,13 +191,22 @@ if __name__ == "__main__":
     ident =  Matrix([[1,0],[0,1]])
 
     L = 100
+
     K_Anzahl=10
     K_Anf = 0
     K_End = 6
-    kappa = 0.01
 
+    kappa = 0.01
     kappa_Anzahl = 1
+
+    rho_Anzahl = 10
+    rho_Anf = 0
+    rho_End = 1
+
     rho1, k1, k2 = symbols('rho1 k1 k2')
+    rho = symbols('rho0:N')
+    rho_matrix=
+
     w = [0, 1]
     N = 1
     rho = [1]
@@ -203,12 +218,12 @@ if __name__ == "__main__":
     y_Matrix =np.zeros((K_Anzahl, L))
 
     Kurve_Names=[]
-    k_1 =np.linspace(K_Anf,K_End,K_Anzahl)
+    K = K_Matrix()
+
     for i in range(K_Anzahl):
         k = [0,k_1[i]]
         lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N))
         bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,kappa)))
-
         Kurve_Names.append('k1='+'%3.2f'%k[1])
         y_liste  = get_Integrand_values2()
         y_Matrix[i,:] = y_liste
