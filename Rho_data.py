@@ -29,8 +29,8 @@ def subs_coeffs():
     liste = []
     for i in range(N - 1):
         liste.append(Poly(subs).coeff_monomial(rho[i]))
-    #maximum = lamdify(*[0 for i in range(N-1)])
     return liste
+
 def get_rho_values():
     wert = 1
     rho_values = np.zeros(N)
