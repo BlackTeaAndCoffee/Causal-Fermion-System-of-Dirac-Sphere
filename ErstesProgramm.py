@@ -156,7 +156,7 @@ def get_Wirkung_fuer_kappa(Intgrenze, K_Liste, Rho_Liste, w_Liste, kappa):
                 w_Liste, K_Liste )))
     bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
         K_Liste,kappa)))
-    integrand = lambda r : (max(lagr(t, r),0) + bound(t,r))*np.sin(r)**2
+    integrand = lambda r : (max(lagr(t, r).real,0) + bound(t,r))*np.sin(r)**2
 
     Wirkung = integrate.quad(integrand, Intgrenze[0],Intgrenze[1])[0]
 
@@ -188,11 +188,11 @@ if __name__ == "__main__":
 
     L = 100
 
-    K_Anzahl=51
+    K_Anzahl=20
     K_Anf = 0
-    K_End = 6
+    K_End = 2.5
 
-    kappa = 0
+    kappa = 0.0
     kappa_Anzahl = 1
 
     Rho_Anzahl = 10
@@ -216,7 +216,7 @@ if __name__ == "__main__":
 
     Intgrenze = [x_Anf, x_End]
     Wirk = []
-    K_Liste =  list(np.linspace(0,10,K_Anzahl))
+    K_Liste =  list(np.linspace(K_Anf,K_End,K_Anzahl))
     for i in range(K_Anzahl):
         K2_Liste = [0,K_Liste[i]]
         #lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N))
