@@ -28,6 +28,18 @@ def diag_plot(x_Achse, y_matrix, X_Title, Y_Title, Kurv_Names, PDFTitle, keypos)
 
     c.writePDFfile(PDFTitle)
 
+def diag_plot2(x_Achse, y_Achse, X_Title, Y_Title, Kurv_Name, PDFTitle, keypos):
+    c = graph.graphxy(width=10,height=10,
+        x = graph.axis.linear(min = min(x_Achse), max = max(x_Achse),
+                          title= X_Title),
+        y = graph.axis.linear(min = min(y_Achse),max = max(y_Achse),
+                          title= Y_Title),
+                      key = graph.key.key(pos=keypos, dist =0.1))
+
+    c.plot(graph.data.values(x = x_Achse, y = y_Achse, title  = Kurv_Name),[graph.style.line([color.gradient.Rainbow])])
+
+    c.writePDFfile(PDFTitle)
+
 '''
 Needed parts for the Integrand
 '''
@@ -72,18 +84,20 @@ def projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
         mat += Rho_Liste[n-1]*exp(-1j*w_Liste[n-1]*t)*(TensorProduct(preMatrixPlus(n,
             K_Liste),
             integralKernelPlus(n, r, theta, phi))
-    + TensorProduct(preMatrixMinus(n,K_Liste),integralKernelMinus(n, r, theta, phi)))
+    + TensorProduct(preMatrixMinus(n,K_Liste),integralKernelMinus(n, r, theta,
+        phi)))
+        print Rho_Liste, w_Liste, K_Liste, n
     return mat
 
 def projectorAdj(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
     mat =  Matrix([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
     for n in range(1, N+1):
-        mat += Rho_Liste[n-1]*exp(1j*w[n-1]*t)*(TensorProduct(preMatrixPlus(n,K_Liste),
+        mat += Rho_Liste[n-1]*exp(1j*w_Liste[n-1]*t)*(TensorProduct(preMatrixPlus(n,K_Liste),
             integralKernelMinus(n, r, theta, phi))
             + TensorProduct(preMatrixMinus(n,K_Liste),integralKernelPlus(n, r, theta, phi)))
     return mat
 
-def closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, k):
+def closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
     return projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)*projectorAdj(t, r, theta,
             phi, N, Rho_Liste, w_Liste, K_Liste)
 
@@ -92,15 +106,15 @@ def lagrangian_without_bound_constr(t, r, theta, phi,N, Rho_Liste, w_Liste, K_Li
     return trace(sub*sub) - 0.25 * trace(sub)**2
 '''
 Needed parts for the Integrand
+
 '''
-
-
 '''
 Constraints
 '''
 
 def boundedness_constraint(t,r,theta, phi, N, Rho_Liste, w_Liste, K_Liste, kappa):
     sub = closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
+    print 'kappa=', kappa
     return kappa* trace(sub)**2
 
 def traceConstraint():
@@ -135,14 +149,12 @@ def get_Integrand_values2():
         y_Matrix[j] = integrand(t, point)
     return y_Matrix
 
-def get_Wirkung_fuer_kappa(Intgrenze, K_Liste, Rho_Liste_Liste, w_Liste, kappa):
-    #Ich verändere gerade diese Funktion, nach Abschluss diese Zeile löschen!!!
+def get_Wirkung_fuer_kappa(Intgrenze, K_Liste, Rho_Liste, w_Liste, kappa):
 
     lagr = lambdify((t,r),
             simplify(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
-                w_Liste, K_liste )))
-    bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,
-        Rho_Liste, w_Liste,
+                w_Liste, K_Liste )))
+    bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
         K_Liste,kappa)))
     integrand = lambda r : (max(lagr(t, r),0) + bound(t,r))*np.sin(r)**2
 
@@ -176,7 +188,7 @@ if __name__ == "__main__":
 
     L = 100
 
-    K_Anzahl=10
+    K_Anzahl=51
     K_Anf = 0
     K_End = 6
 
@@ -189,11 +201,10 @@ if __name__ == "__main__":
 
     Rho_Liste1, k1, k2 = symbols('Rho_Liste1 k1 k2')
     Rho_Liste = symbols('Rho_Liste0:N')
-    Rho_Liste_matrix=
 
-    w_Liste = [0, 1]
+    w_Liste = [0, 0]
     N = 1
-    Rho_Liste = Rho_data.rho_values(N)
+    Rho_Liste = Rho_data.get_rho_values(N)
 
     x_Anf = 0
     x_End = np.pi
@@ -202,19 +213,23 @@ if __name__ == "__main__":
     y_Matrix =np.zeros((K_Anzahl, L))
 
     Kurve_Names=[]
-    K_Liste = [i for i in range(K_Anzahl)]
 
-
-
+    Intgrenze = [x_Anf, x_End]
+    Wirk = []
+    K_Liste =  list(np.linspace(0,10,K_Anzahl))
     for i in range(K_Anzahl):
-        lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N))
-        bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,kappa)))
-        #Kurve_Names.append('k1='+'%3.2f'%k[1])
+        K2_Liste = [0,K_Liste[i]]
+        #lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N))
+        #bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,kappa)))
+        Wirk.append(get_Wirkung_fuer_kappa(Intgrenze, K2_Liste, Rho_Liste, w_Liste,
+            kappa))
+        #Kurve_Names.append('k1='+'%3.2f'%K_Liste[1])
         #y_liste  = get_Integrand_values2()
         #y_Matrix[i,:] = y_liste
 
-
-    diag_plot(list(x_values), y_Matrix, 'Radius = r', 'Lagr(r)$*sin(r)^2$', Kurve_Names,'N=1_Integrand_kappa=%0.2f'%kappa, "br")
+    Kurve_Names  = [kappa]
+    diag_plot2(K_Liste, Wirk, 'K', 'Wirkung',
+            Kurve_Names,'N=1_Wirkung_kappa=%0.2f'%kappa, "tr")
 
     #Hauptroutine_Integrand(x_Anf, x_End, K_Anf, K_End, K_Anzahl, L, kappa)
     #Hauptroutine_Wirkung(K_Anf, K_End, K_Anzahl, kappa_Anzahl)

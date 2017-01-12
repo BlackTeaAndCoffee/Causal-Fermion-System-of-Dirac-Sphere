@@ -34,20 +34,23 @@ def subs_coeffs():
 def get_rho_values(N):
     wert = 1
     rho_values = np.zeros(N)
-    for j in range(N-1):
-        a = random.random()
-        rho_values[j] = -a* (wert/liste[j])    # hier steht ein Minus,weil die
-                                               # Koeffizienten negativ sind,
-                                               # finden aber als positive
-                                               # Zahlen Verwendung.
-        zahl = wert - rho_values[j]
-        if zahl == 0:
-            break
-        else:
-            wert = zahl
+    if N ==1:
+        return [2]
+    else:
+        for j in range(N-1):
+            a = random.random()
+            rho_values[j] = -a* (wert/liste[j])    # hier steht ein Minus,weil die
+                                                   # Koeffizienten negativ sind,
+                                                   # finden aber als positive
+                                                   # Zahlen Verwendung.
+            zahl = wert - rho_values[j]
+            if zahl == 0:
+                break
+            else:
+                wert = zahl
 
-    rho_values[N-1] = zahl/(diracEigenvalues(N)**2-0.25)
-    return rho_values
+        rho_values[N-1] = zahl/(diracEigenvalues(N)**2-0.25)
+        return rho_values
 
 
 if __name__ == "__main__":
