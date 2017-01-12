@@ -103,7 +103,7 @@ def closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
 
 def lagrangian_without_bound_constr(t, r, theta, phi,N, Rho_Liste, w_Liste, K_Liste):
     sub = closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
-    return trace(sub*sub) - 0.25 * trace(sub)**2
+    return trace(sub*sub) - S(0.25) * S(trace(sub)**2)
 '''
 Needed parts for the Integrand
 
@@ -115,7 +115,7 @@ Constraints
 def boundedness_constraint(t,r,theta, phi, N, Rho_Liste, w_Liste, K_Liste, kappa):
     sub = closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
     print 'kappa=', kappa
-    return kappa* trace(sub)**2
+    return S(kappa)* trace(sub)**2
 
 def traceConstraint():
     #dann benutze Rho_Liste[0] usw.
@@ -152,13 +152,19 @@ def get_Integrand_values2():
 def get_Wirkung_fuer_kappa(Intgrenze, K_Liste, Rho_Liste, w_Liste, kappa):
 
     lagr = lambdify((t,r),
-            simplify(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
-                w_Liste, K_Liste )))
-    bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
+            lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
+                w_Liste, K_Liste ))
+
+    bound = lambdify((t,r), simplify(boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
         K_Liste,kappa)))
     integrand = lambda r : (max(lagr(t, r).real,0) + bound(t,r))*np.sin(r)**2
 
     Wirkung = integrate.quad(integrand, Intgrenze[0],Intgrenze[1])[0]
+    print 'lagr', simplify(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
+                w_Liste, K_Liste ))
+
+    print 'simplagr', simplify(boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
+        K_Liste,kappa))
 
     return Wirkung
 
@@ -188,11 +194,11 @@ if __name__ == "__main__":
 
     L = 100
 
-    K_Anzahl=20
+    K_Anzahl=10
     K_Anf = 0
     K_End = 2.5
 
-    kappa = 0.0
+    kappa = S(0.01)
     kappa_Anzahl = 1
 
     Rho_Anzahl = 10
@@ -202,9 +208,9 @@ if __name__ == "__main__":
     Rho_Liste1, k1, k2 = symbols('Rho_Liste1 k1 k2')
     Rho_Liste = symbols('Rho_Liste0:N')
 
-    w_Liste = [0, 0]
+    w_Liste = [S(0), S(0)]
     N = 1
-    Rho_Liste = Rho_data.get_rho_values(N)
+    Rho_Liste = S(Rho_data.get_rho_values(N))
 
     x_Anf = 0
     x_End = np.pi
@@ -216,7 +222,7 @@ if __name__ == "__main__":
 
     Intgrenze = [x_Anf, x_End]
     Wirk = []
-    K_Liste =  list(np.linspace(K_Anf,K_End,K_Anzahl))
+    K_Liste =  S(list(np.linspace(K_Anf,K_End,K_Anzahl)))
     for i in range(K_Anzahl):
         K2_Liste = [0,K_Liste[i]]
         #lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N))
