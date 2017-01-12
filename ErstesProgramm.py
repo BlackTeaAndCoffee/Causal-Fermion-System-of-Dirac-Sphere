@@ -9,6 +9,7 @@ import scipy.integrate as integrate
 import scipy.special,scipy.misc
 import numpy as np
 import random
+import Rho_data
 
 def diag_plot(x_Achse, y_matrix, X_Title, Y_Title, Kurv_Names, PDFTitle, keypos):
     c = graph.graphxy(width=10,height=10,
@@ -179,7 +180,7 @@ if __name__ == "__main__":
     K_Anf = 0
     K_End = 6
 
-    kappa = 0.01
+    kappa = 0
     kappa_Anzahl = 1
 
     Rho_Anzahl = 10
@@ -190,9 +191,9 @@ if __name__ == "__main__":
     Rho_Liste = symbols('Rho_Liste0:N')
     Rho_Liste_matrix=
 
-    w = [0, 1]
+    w_Liste = [0, 1]
     N = 1
-    Rho_Liste = [1]
+    Rho_Liste = Rho_data.rho_values(N)
 
     x_Anf = 0
     x_End = np.pi
@@ -201,20 +202,19 @@ if __name__ == "__main__":
     y_Matrix =np.zeros((K_Anzahl, L))
 
     Kurve_Names=[]
-    K = K_Matrix()
+    K_Liste = [i for i in range(K_Anzahl)]
 
 
 
+    for i in range(K_Anzahl):
+        lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N))
+        bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,kappa)))
+        #Kurve_Names.append('k1='+'%3.2f'%k[1])
+        #y_liste  = get_Integrand_values2()
+        #y_Matrix[i,:] = y_liste
 
-#   for i in range(K_Anzahl):
-#       k = [0,k_1[i]]
-#       lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N))
-#       bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,kappa)))
-#       Kurve_Names.append('k1='+'%3.2f'%k[1])
-#       y_liste  = get_Integrand_values2()
-#       y_Matrix[i,:] = y_liste
 
-#   diag_plot(list(x_values), y_Matrix, 'Radius = r', 'Lagr(r)$*sin(r)^2$', Kurve_Names,'N=1_Integrand_kappa=%0.2f'%kappa, "br")
+    diag_plot(list(x_values), y_Matrix, 'Radius = r', 'Lagr(r)$*sin(r)^2$', Kurve_Names,'N=1_Integrand_kappa=%0.2f'%kappa, "br")
 
     #Hauptroutine_Integrand(x_Anf, x_End, K_Anf, K_End, K_Anzahl, L, kappa)
     #Hauptroutine_Wirkung(K_Anf, K_End, K_Anzahl, kappa_Anzahl)

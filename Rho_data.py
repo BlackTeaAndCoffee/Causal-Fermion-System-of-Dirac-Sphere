@@ -31,7 +31,7 @@ def subs_coeffs():
         liste.append(Poly(subs).coeff_monomial(rho[i]))
     return liste
 
-def get_rho_values():
+def get_rho_values(N):
     wert = 1
     rho_values = np.zeros(N)
     for j in range(N-1):
@@ -51,13 +51,13 @@ def get_rho_values():
 
 
 if __name__ == "__main__":
-    N = 10
+    N = 1
     rho = symbols('rho0:N')
     liste = subs_coeffs()
 
     print liste
 
-    rho_values  = get_rho_values()
+    rho_values  = get_rho_values(N)
 
     print  rho_values
 
