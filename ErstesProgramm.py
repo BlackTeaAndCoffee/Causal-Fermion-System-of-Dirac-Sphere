@@ -21,7 +21,7 @@ def diag_plot(x_Achse, y_matrix, X_Title, Y_Title, Kurv_Names, PDFTitle, keypos)
     dd = []
     for i in range(np.shape(y_matrix)[0]):
         y_values = y_matrix[i,:]
-        print len(y_values)
+        print (len(y_values))
         dd.append(graph.data.values(x = x_Achse, y = y_values ,title = Kurv_Names[i]))
 
     c.plot(dd,[graph.style.line([color.gradient.Rainbow])])
@@ -86,7 +86,6 @@ def projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
             integralKernelPlus(n, r, theta, phi))
     + TensorProduct(preMatrixMinus(n,K_Liste),integralKernelMinus(n, r, theta,
         phi)))
-        print Rho_Liste, w_Liste, K_Liste, n
     return mat
 
 def projectorAdj(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
@@ -114,7 +113,7 @@ Constraints
 
 def boundedness_constraint(t,r,theta, phi, N, Rho_Liste, w_Liste, K_Liste, kappa):
     sub = closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
-    print 'kappa=', kappa
+    print ('kappa=', kappa)
     return S(kappa)* trace(sub)**2
 
 def traceConstraint():
@@ -160,11 +159,11 @@ def get_Wirkung_fuer_kappa(Intgrenze, K_Liste, Rho_Liste, w_Liste, kappa):
     integrand = lambda r : (max(lagr(t, r).real,0) + bound(t,r))*np.sin(r)**2
 
     Wirkung = integrate.quad(integrand, Intgrenze[0],Intgrenze[1])[0]
-    print 'lagr', simplify(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
-                w_Liste, K_Liste ))
+    print('lagr', simplify(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
+                w_Liste, K_Liste )))
 
-    print 'simplagr', simplify(boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
-        K_Liste,kappa))
+    print ('simplagr', simplify(boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
+        K_Liste,kappa)))
 
     return Wirkung
 
@@ -200,13 +199,6 @@ if __name__ == "__main__":
 
     kappa = S(0.01)
     kappa_Anzahl = 1
-
-    Rho_Anzahl = 10
-    Rho_Liste_Anf = 0
-    Rho_Liste_End = 1
-
-    Rho_Liste1, k1, k2 = symbols('Rho_Liste1 k1 k2')
-    Rho_Liste = symbols('Rho_Liste0:N')
 
     w_Liste = [S(0), S(0)]
     N = 1
