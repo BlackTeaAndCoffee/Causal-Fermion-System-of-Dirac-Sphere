@@ -130,7 +130,7 @@ Constraints
 Function fpr Integration
 '''
 def integration(funktion, AnfW, EndW):
-    result = integrate.quad(lambda (t,r): funktion(t,r), AnfW, EndW)
+    result = integrate.quad(lambda t,r: funktion(t,r), AnfW, EndW)
     return result[0]
 '''
 Function fpr Integration
@@ -152,11 +152,11 @@ def get_Wirkung_fuer_kappa(Intgrenze, K_Liste, Rho_Liste, w_Liste, kappa):
 
     lagr = lambdify((t,r),
             lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
-                w_Liste, K_Liste ))
+                w_Liste, K_Liste) )
 
-    bound = lambdify((t,r), simplify(boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
-        K_Liste,kappa)))
-    integrand = lambda r : (max(lagr(t, r).real,0) + bound(t,r))*np.sin(r)**2
+    bound = lambdify((t,r), boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
+        K_Liste,kappa))
+    integrand = lambda r : (max(lagr(t, r).real,0) + bound(t,r).real)*np.sin(r)**2
 
     Wirkung = integrate.quad(integrand, Intgrenze[0],Intgrenze[1])[0]
     print('lagr', simplify(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
@@ -197,12 +197,12 @@ if __name__ == "__main__":
     K_Anf = 0
     K_End = 2.5
 
-    kappa = S(0.01)
+    kappa = 0.01
     kappa_Anzahl = 1
 
-    w_Liste = [S(0), S(0)]
+    w_Liste = [0, 0]
     N = 1
-    Rho_Liste = S(Rho_data.get_rho_values(N))
+    Rho_Liste = Rho_data.get_rho_values(N)
 
     x_Anf = 0
     x_End = np.pi
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 
     Intgrenze = [x_Anf, x_End]
     Wirk = []
-    K_Liste =  S(list(np.linspace(K_Anf,K_End,K_Anzahl)))
+    K_Liste =  list(np.linspace(K_Anf,K_End,K_Anzahl))
     for i in range(K_Anzahl):
         K2_Liste = [0,K_Liste[i]]
         #lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N))

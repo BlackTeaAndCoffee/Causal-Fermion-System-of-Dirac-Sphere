@@ -58,10 +58,8 @@ if __name__ == "__main__":
     rho = symbols('rho0:N')
     liste = subs_coeffs()
 
-    print liste
 
     rho_values  = get_rho_values(N)
 
-    print  rho_values
 
 
