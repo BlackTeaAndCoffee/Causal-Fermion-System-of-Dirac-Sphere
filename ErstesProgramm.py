@@ -11,6 +11,13 @@ import numpy as np
 import random
 import Rho_data
 
+sigma1 = Matrix([[0, 1],[1, 0]])
+sigma2 = Matrix([[0, -1j],[1j, 0]])
+sigma3 = Matrix([[1, 0],[0, -1]])
+ident =  Matrix([[1,0],[0,1]])
+
+
+
 def diag_plot(x_Achse, y_matrix, X_Title, Y_Title, Kurv_Names, PDFTitle, keypos):
     c = graph.graphxy(width=10,height=10,
         x = graph.axis.linear(min = min(x_Achse), max = max(x_Achse),
@@ -69,12 +76,12 @@ def sigma_r(theta, phi):
     return sin(theta)*cos(phi)*sigma1 + sin(theta)*sin(phi)*sigma2 + cos(theta)*sigma3
 
 def preMatrixPlus(n,K_Liste):
-    a = K_Liste[n]
+    a = K_Liste[n-1]
     b = root(1 + a**2, 2)
     return Matrix([[1- b, a],[-a, 1 + b]])
 
 def preMatrixMinus(n,K_Liste):
-    a = K_Liste[n]
+    a = K_Liste[n-1]
     b = root(1 + a**2, 2)
     return Matrix([[1- b, -a],[ a, 1 + b]])
 
@@ -148,14 +155,27 @@ def get_Integrand_values2():
         y_Matrix[j] = integrand(t, point)
     return y_Matrix
 
-def get_Wirkung_fuer_kappa(Intgrenze, K_Liste, Rho_Liste, w_Liste, kappa):
+def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, K_Liste, Rho_Liste, w_Liste, kappa):
+    sigma1 = Matrix([[0, 1],[1, 0]])
+    sigma2 = Matrix([[0, -1j],[1j, 0]])
+    sigma3 = Matrix([[1, 0],[0, -1]])
+    ident =  Matrix([[1,0],[0,1]])
+
+
+
+    print(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
+                w_Liste, K_Liste))
+    print( boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
+        K_Liste,kappa))
 
     lagr = lambdify((t,r),
             lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
-                w_Liste, K_Liste) )
+                w_Liste, K_Liste))
 
     bound = lambdify((t,r), boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
         K_Liste,kappa))
+
+
     integrand = lambda r : (max(lagr(t, r).real,0) + bound(t,r).real)*np.sin(r)**2
 
     Wirkung = integrate.quad(integrand, Intgrenze[0],Intgrenze[1])[0]
@@ -186,10 +206,6 @@ def get_Wirkung_fuer_kappa(Intgrenze, K_Liste, Rho_Liste, w_Liste, kappa):
 
 if __name__ == "__main__":
     t, theta, phi = symbols('t theta phi')
-    sigma1 = Matrix([[0, 1],[1, 0]])
-    sigma2 = Matrix([[0, -1j],[1j, 0]])
-    sigma3 = Matrix([[1, 0],[0, -1]])
-    ident =  Matrix([[1,0],[0,1]])
 
     L = 100
 
@@ -216,10 +232,10 @@ if __name__ == "__main__":
     Wirk = []
     K_Liste =  list(np.linspace(K_Anf,K_End,K_Anzahl))
     for i in range(K_Anzahl):
-        K2_Liste = [0,K_Liste[i]]
+        K2_Liste = [K_Liste[i]]
         #lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N))
         #bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,kappa)))
-        Wirk.append(get_Wirkung_fuer_kappa(Intgrenze, K2_Liste, Rho_Liste, w_Liste,
+        Wirk.append(get_Wirkung_fuer_kappa(t, r,N,Intgrenze, K2_Liste, Rho_Liste, w_Liste,
             kappa))
         #Kurve_Names.append('k1='+'%3.2f'%K_Liste[1])
         #y_liste  = get_Integrand_values2()

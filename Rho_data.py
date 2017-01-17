@@ -11,9 +11,9 @@ def diracEigenvalues(n):
 '''
 Constraints
 '''
-def traceConstraint():
+def traceConstraint(N,rho):
     #dann benutze rho[0] usw.
-    add = 1
+    add = 1.
     for n in range(1, N):
         add -= rho[n-1]*(diracEigenvalues(n)**2 - 0.25)
 
@@ -24,14 +24,16 @@ def traceConstraint():
 Constraints
 '''
 
-def subs_coeffs():
-    subs  = traceConstraint()
+def subs_coeffs(N, rho):
+    subs  = traceConstraint(N, rho)
     liste = []
     for i in range(N - 1):
         liste.append(Poly(subs).coeff_monomial(rho[i]))
     return liste
 
 def get_rho_values(N):
+    rho = symbols('rho0:N')
+    liste = subs_coeffs(N, rho)
     wert = 1
     rho_values = np.zeros(N)
     if N ==1:
@@ -55,10 +57,6 @@ def get_rho_values(N):
 
 if __name__ == "__main__":
     N = 1
-    rho = symbols('rho0:N')
-    liste = subs_coeffs()
-
-
     rho_values  = get_rho_values(N)
 
 
