@@ -1,20 +1,20 @@
 from __future__ import division
-from sympy import *
 from sympy.utilities.lambdify import lambdify
-from sympy.abc import r,x
+from sympy.abc import r,t
 from sympy.physics.quantum import TensorProduct
 from pyx import *
 from pyx.graph import axis
 import scipy.integrate as integrate
 import scipy.special,scipy.misc
+import sympy as sy
 import numpy as np
 import random
 import Rho_data
 
-sigma1 = Matrix([[0, 1],[1, 0]])
-sigma2 = Matrix([[0, -1j],[1j, 0]])
-sigma3 = Matrix([[1, 0],[0, -1]])
-ident =  Matrix([[1,0],[0,1]])
+sigma1 = sy.Matrix([[0, 1],[1, 0]])
+sigma2 = sy.Matrix([[0, -1j],[1j, 0]])
+sigma3 = sy.Matrix([[1, 0],[0, -1]])
+ident =  sy.Matrix([[1,0],[0,1]])
 
 
 
@@ -51,44 +51,48 @@ def diag_plot2(x_Achse, y_Achse, X_Title, Y_Title, Kurv_Name, PDFTitle, keypos):
 Needed parts for the Integrand
 '''
 
+
+def schwartz_Funktion(T):
+    return lambda t : np.exp(-(t/T)**2)
+
 def prefactor(n):
     return (int(scipy.misc.factorial(n + 2))/
-            (8 * pi**(3/2)*gamma('%d/%d'%(3+2*n,2))))
+            (8 * sy.pi**(3/2)*sy.gamma('%d/%d'%(3+2*n,2))))
 
 def diracEigenvalues(n):
     return (2*n + 1)/2
 
 def integralKernelPlus(n, r, theta, phi):
     n=n-1
-    lala1 = jacobi(n, 1/2, 3/2, r)
-    lala2 = jacobi(n, 3/2, 1/2, r)
-    return prefactor(n)*(cos(r/2)*lala1*ident -
-                        1j*sin(r/2)*lala2*sigma_r(theta, phi))
+    lala1 = sy.jacobi(n, 1/2, 3/2, r)
+    lala2 = sy.jacobi(n, 3/2, 1/2, r)
+    return prefactor(n)*(sy.cos(r/2)*lala1*ident -
+                        1j*sy.sin(r/2)*lala2*sigma_r(theta, phi))
 
 def integralKernelMinus(n, r, theta, phi):
     n=n-1
-    lala1 = jacobi(n, 1/2, 3/2, r)
-    lala2 = jacobi(n, 3/2, 1/2, r)
-    return prefactor(n)*(cos(r/2)*lala1*ident +
-                        1j*sin(r/2)*lala2*sigma_r(theta, phi))
+    lala1 = sy.jacobi(n, 1/2, 3/2, r)
+    lala2 = sy.jacobi(n, 3/2, 1/2, r)
+    return prefactor(n)*(sy.cos(r/2)*lala1*ident +
+                        1j*sy.sin(r/2)*lala2*sigma_r(theta, phi))
 
 def sigma_r(theta, phi):
-    return sin(theta)*cos(phi)*sigma1 + sin(theta)*sin(phi)*sigma2 + cos(theta)*sigma3
+    return sy.sin(theta)*sy.cos(phi)*sigma1 + sy.sin(theta)*sy.sin(phi)*sigma2+ sy.cos(theta)*sigma3
 
 def preMatrixPlus(n,K_Liste):
     a = K_Liste[n-1]
-    b = root(1 + a**2, 2)
-    return Matrix([[1- b, a],[-a, 1 + b]])
+    b = sy.root(1 + a**2, 2)
+    return sy.Matrix([[1- b, a],[-a, 1 + b]])
 
 def preMatrixMinus(n,K_Liste):
     a = K_Liste[n-1]
-    b = root(1 + a**2, 2)
-    return Matrix([[1- b, -a],[ a, 1 + b]])
+    b = sy.root(1 + a**2, 2)
+    return sy.Matrix([[1- b, -a],[ a, 1 + b]])
 
 def projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
-    mat = Matrix([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
+    mat = sy.Matrix([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
     for n in range(1,N + 1):
-        mat += Rho_Liste[n-1]*exp(-1j*w_Liste[n-1]*t)*(TensorProduct(preMatrixPlus(n,
+        mat += Rho_Liste[n-1]*sy.exp(-1j*w_Liste[n-1]*t)*(TensorProduct(preMatrixPlus(n,
             K_Liste),
             integralKernelPlus(n, r, theta, phi))
     + TensorProduct(preMatrixMinus(n,K_Liste),integralKernelMinus(n, r, theta,
@@ -96,9 +100,9 @@ def projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
     return mat
 
 def projectorAdj(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
-    mat =  Matrix([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
+    mat =  sy.Matrix([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
     for n in range(1, N+1):
-        mat += Rho_Liste[n-1]*exp(1j*w_Liste[n-1]*t)*(TensorProduct(preMatrixPlus(n,K_Liste),
+        mat += Rho_Liste[n-1]*sy.exp(1j*w_Liste[n-1]*t)*(TensorProduct(preMatrixPlus(n,K_Liste),
             integralKernelMinus(n, r, theta, phi))
             + TensorProduct(preMatrixMinus(n,K_Liste),integralKernelPlus(n, r, theta, phi)))
     return mat
@@ -109,7 +113,7 @@ def closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
 
 def lagrangian_without_bound_constr(t, r, theta, phi,N, Rho_Liste, w_Liste, K_Liste):
     sub = closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
-    return trace(sub*sub) - S(0.25) * S(trace(sub)**2)
+    return sy.trace(sub*sub) - sy.S(0.25) * sy.S(sy.trace(sub)**2)
 '''
 Needed parts for the Integrand
 
@@ -121,7 +125,7 @@ Constraints
 def boundedness_constraint(t,r,theta, phi, N, Rho_Liste, w_Liste, K_Liste, kappa):
     sub = closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
     print ('kappa=', kappa)
-    return S(kappa)* trace(sub)**2
+    return sy.S(kappa)* sy.trace(sub)**2
 
 def traceConstraint():
     #dann benutze Rho_Liste[0] usw.
@@ -155,11 +159,11 @@ def get_Integrand_values2():
         y_Matrix[j] = integrand(t, point)
     return y_Matrix
 
-def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, K_Liste, Rho_Liste, w_Liste, kappa):
-    sigma1 = Matrix([[0, 1],[1, 0]])
-    sigma2 = Matrix([[0, -1j],[1j, 0]])
-    sigma3 = Matrix([[1, 0],[0, -1]])
-    ident =  Matrix([[1,0],[0,1]])
+def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste, kappa):
+    sigma1 = sy.Matrix([[0, 1],[1, 0]])
+    sigma2 = sy.Matrix([[0, -1j],[1j, 0]])
+    sigma3 = sy.Matrix([[1, 0],[0, -1]])
+    ident =  sy.Matrix([[1,0],[0,1]])
 
 
 
@@ -169,21 +173,30 @@ def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, K_Liste, Rho_Liste, w_Liste, kapp
         K_Liste,kappa))
 
     lagr = lambdify((t,r),
-            lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
-                w_Liste, K_Liste))
+            ((lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
+                w_Liste, K_Liste))), "numpy")
 
-    bound = lambdify((t,r), boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
-        K_Liste,kappa))
+    bound = lambdify((t,r), (boundedness_constraint(t,r,0,0,N,Rho_Liste,
+        w_Liste, K_Liste,kappa)), "numpy")
+
+    print('lagr', lagr(1,2), 'bound', bound(2,2))
+    integrand = lambda t1, r1 : (max(lagr(t1, r1),0).real +
+            bound(t1,r1).real)*np.sin(r1)**2
 
 
-    integrand = lambda r : (max(lagr(t, r).real,0) + bound(t,r).real)*np.sin(r)**2
+    print('yooooooolooooooooo', integrand(1,2), integrand(3,1))
 
-    Wirkung = integrate.quad(integrand, Intgrenze[0],Intgrenze[1])[0]
-    print('lagr', simplify(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
-                w_Liste, K_Liste )))
+    Wirkung = integrate.dblquad(lambda t1, r1 : (max(lagr(t1, r1),0).real +
+            bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1/T)**2)
+    ,0,1, lambda r1: Intgrenze[0], lambda r1 : Intgrenze[1])[0]
 
-    print ('simplagr', simplify(boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
-        K_Liste,kappa)))
+    #Wirkung = integrate.quad(Erster_Teil*schwartz_Funktion(T), 0,T, args = (t))[0]
+
+    #print('lagr', simplify(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
+    #            w_Liste, K_Liste )))
+
+    #print ('simplagr', simplify(boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
+    #    K_Liste,kappa)))
 
     return Wirkung
 
@@ -206,6 +219,8 @@ def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, K_Liste, Rho_Liste, w_Liste, kapp
 
 if __name__ == "__main__":
     t, theta, phi = symbols('t theta phi')
+
+    T = 10 #Lebensdauer des Universums, wir fuer die Schwartzfunktion benoetigt
 
     L = 100
 
@@ -235,7 +250,7 @@ if __name__ == "__main__":
         K2_Liste = [K_Liste[i]]
         #lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N))
         #bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,kappa)))
-        Wirk.append(get_Wirkung_fuer_kappa(t, r,N,Intgrenze, K2_Liste, Rho_Liste, w_Liste,
+        Wirk.append(get_Wirkung_fuer_kappa(t, r,N,Intgrenze, T,  K2_Liste, Rho_Liste, w_Liste,
             kappa))
         #Kurve_Names.append('k1='+'%3.2f'%K_Liste[1])
         #y_liste  = get_Integrand_values2()

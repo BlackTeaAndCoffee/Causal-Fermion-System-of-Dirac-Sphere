@@ -14,6 +14,8 @@ import Rho_data
 if __name__ == "__main__":
     N = 2
     Anzahl_an_Ber = 10
+    T = 10
+
     t, theta, phi = symbols('t theta phi')
 
     K_Anzahl=10
@@ -38,7 +40,7 @@ if __name__ == "__main__":
         print(w_Liste)
         K_Liste = np.random.random_sample(N)
         print(K_Liste)
-        Wirk.append(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, K_Liste, Rho_Liste, w_Liste,
+        Wirk.append(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
             kappa))
     print(Wirk)
 #   K_Liste =  list(np.linspace(K_Anf,K_End,K_Anzahl))
