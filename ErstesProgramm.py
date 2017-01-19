@@ -16,44 +16,9 @@ sigma2 = sy.Matrix([[0, -1j],[1j, 0]])
 sigma3 = sy.Matrix([[1, 0],[0, -1]])
 ident =  sy.Matrix([[1,0],[0,1]])
 
-
-
-def diag_plot(x_Achse, y_matrix, X_Title, Y_Title, Kurv_Names, PDFTitle, keypos):
-    c = graph.graphxy(width=10,height=10,
-        x = graph.axis.linear(min = min(x_Achse), max = max(x_Achse),
-                          title= X_Title),
-        y = graph.axis.linear(min = np.amin(y_matrix),max = np.amax(y_matrix),
-                          title= Y_Title),
-                      key = graph.key.key(pos=keypos, dist =0.1))
-    dd = []
-    for i in range(np.shape(y_matrix)[0]):
-        y_values = y_matrix[i,:]
-        print (len(y_values))
-        dd.append(graph.data.values(x = x_Achse, y = y_values ,title = Kurv_Names[i]))
-
-    c.plot(dd,[graph.style.line([color.gradient.Rainbow])])
-
-    c.writePDFfile(PDFTitle)
-
-def diag_plot2(x_Achse, y_Achse, X_Title, Y_Title, Kurv_Name, PDFTitle, keypos):
-    c = graph.graphxy(width=10,height=10,
-        x = graph.axis.linear(min = min(x_Achse), max = max(x_Achse),
-                          title= X_Title),
-        y = graph.axis.linear(min = min(y_Achse),max = max(y_Achse),
-                          title= Y_Title),
-                      key = graph.key.key(pos=keypos, dist =0.1))
-
-    c.plot(graph.data.values(x = x_Achse, y = y_Achse, title  = Kurv_Name),[graph.style.line([color.gradient.Rainbow])])
-
-    c.writePDFfile(PDFTitle)
-
 '''
 Needed parts for the Integrand
 '''
-
-
-def schwartz_Funktion(T):
-    return lambda t : np.exp(-(t/T)**2)
 
 def prefactor(n):
     return (int(scipy.misc.factorial(n + 2))/
@@ -127,24 +92,8 @@ def boundedness_constraint(t,r,theta, phi, N, Rho_Liste, w_Liste, K_Liste, kappa
     print ('kappa=', kappa)
     return sy.S(kappa)* sy.trace(sub)**2
 
-def traceConstraint():
-    #dann benutze Rho_Liste[0] usw.
-    add = 0
-    for n in range(1, N):
-        add += Rho_Liste[n-1]*(diracEigenvalues(n)**2 - 0.25)
-
-    return add/(diracEigenvalues(N)**2 - 0.25)
 '''
 Constraints
-'''
-'''
-Function fpr Integration
-'''
-def integration(funktion, AnfW, EndW):
-    result = integrate.quad(lambda t,r: funktion(t,r), AnfW, EndW)
-    return result[0]
-'''
-Function fpr Integration
 '''
 
 '''
@@ -160,17 +109,6 @@ def get_Integrand_values2():
     return y_Matrix
 
 def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste, kappa):
-    sigma1 = sy.Matrix([[0, 1],[1, 0]])
-    sigma2 = sy.Matrix([[0, -1j],[1j, 0]])
-    sigma3 = sy.Matrix([[1, 0],[0, -1]])
-    ident =  sy.Matrix([[1,0],[0,1]])
-
-
-
-    print(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
-                w_Liste, K_Liste))
-    print( boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
-        K_Liste,kappa))
 
     lagr = lambdify((t,r),
             ((lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
@@ -179,24 +117,12 @@ def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste, k
     bound = lambdify((t,r), (boundedness_constraint(t,r,0,0,N,Rho_Liste,
         w_Liste, K_Liste,kappa)), "numpy")
 
-    print('lagr', lagr(1,2), 'bound', bound(2,2))
     integrand = lambda t1, r1 : (max(lagr(t1, r1),0).real +
             bound(t1,r1).real)*np.sin(r1)**2
 
-
-    print('yooooooolooooooooo', integrand(1,2), integrand(3,1))
-
     Wirkung = integrate.dblquad(lambda t1, r1 : (max(lagr(t1, r1),0).real +
-            bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1/T)**2)
-    ,0,1, lambda r1: Intgrenze[0], lambda r1 : Intgrenze[1])[0]
-
-    #Wirkung = integrate.quad(Erster_Teil*schwartz_Funktion(T), 0,T, args = (t))[0]
-
-    #print('lagr', simplify(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
-    #            w_Liste, K_Liste )))
-
-    #print ('simplagr', simplify(boundedness_constraint(t,r,0,0,N,Rho_Liste, w_Liste,
-    #    K_Liste,kappa)))
+            bound(t1,r1).real)*(np.sin(r1)**2)*np.exp(-(t1-T)**2/T)
+    ,0,2*T, lambda r1: Intgrenze[0], lambda r1 : Intgrenze[1])[0]
 
     return Wirkung
 
@@ -220,7 +146,7 @@ def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste, k
 if __name__ == "__main__":
     t, theta, phi = symbols('t theta phi')
 
-    T = 10 #Lebensdauer des Universums, wir fuer die Schwartzfunktion benoetigt
+    T = 1 #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
 
     L = 100
 

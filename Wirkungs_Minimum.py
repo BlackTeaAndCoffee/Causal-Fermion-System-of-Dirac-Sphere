@@ -11,10 +11,39 @@ import numpy as np
 import random
 import Rho_data
 
+def diag_plot(x_Achse, y_matrix, X_Title, Y_Title, Kurv_Names, PDFTitle, keypos):
+    c = graph.graphxy(width=10,height=10,
+        x = graph.axis.linear(min = min(x_Achse), max = max(x_Achse),
+                          title= X_Title),
+        y = graph.axis.linear(min = np.amin(y_matrix),max = np.amax(y_matrix),
+                          title= Y_Title),
+                      key = graph.key.key(pos=keypos, dist =0.1))
+    dd = []
+    for i in range(np.shape(y_matrix)[0]):
+        y_values = y_matrix[i,:]
+        print (len(y_values))
+        dd.append(graph.data.values(x = x_Achse, y = y_values ,title = Kurv_Names[i]))
+
+    c.plot(dd,[graph.style.line([color.gradient.Rainbow])])
+
+    c.writePDFfile(PDFTitle)
+
+def diag_plot2(x_Achse, y_Achse, X_Title, Y_Title, Kurv_Name, PDFTitle, keypos):
+    c = graph.graphxy(width=10,height=10,
+        x = graph.axis.linear(min = min(x_Achse), max = max(x_Achse),
+                          title= X_Title),
+        y = graph.axis.linear(min = min(y_Achse),max = max(y_Achse),
+                          title= Y_Title),
+                      key = graph.key.key(pos=keypos, dist =0.1))
+
+    c.plot(graph.data.values(x = x_Achse, y = y_Achse, title  = Kurv_Name),[graph.style.line([color.gradient.Rainbow])])
+    c.writePDFfile(PDFTitle)
+
+
 if __name__ == "__main__":
     N = 2
     Anzahl_an_Ber = 10
-    T = 10
+    T = 1
 
     t, theta, phi = symbols('t theta phi')
 
@@ -43,10 +72,14 @@ if __name__ == "__main__":
         Wirk.append(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
             kappa))
     print(Wirk)
+
 #   K_Liste =  list(np.linspace(K_Anf,K_End,K_Anzahl))
 #   for i in range(K_Anzahl):
-#       K2_Liste = [0,K_Liste[i]]
-#       Wirk.append(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, K2_Liste, Rho_Liste, w_Liste,
+#       w_Liste = np.random.random_sample(N)
+#       w_Liste[0] = 0
+
+#       K2_Liste = [K_Liste[i]]
+#       Wirk.append(get_Wirkung_fuer_kappa(t, r,N,Intgrenze, T,  K2_Liste, Rho_Liste, w_Liste,
 #           kappa))
 
 #   Kurve_Names  = [kappa]
