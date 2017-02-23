@@ -41,9 +41,9 @@ def diag_plot2(x_Achse, y_Achse, X_Title, Y_Title, Kurv_Name, PDFTitle, keypos):
 
 
 if __name__ == "__main__":
-    N = 2
-    Anzahl_an_Ber = 10
-    T = 1
+    N = 3
+    Anzahl_an_Ber = 1
+    T = np.pi
 
     t, theta, phi = symbols('t theta phi')
 
@@ -54,8 +54,8 @@ if __name__ == "__main__":
     kappa = 0.01
     kappa_Anzahl = 1
 
-    Rho_Liste = Rho_data.get_rho_values(N)
-    print(Rho_Liste)
+    Rho_Liste = Rho_data.get_rho_values(N, SameValues  = True)
+    print('rho : ', Rho_Liste)
 
     x_Anf = 0
     x_End = np.pi
@@ -63,14 +63,16 @@ if __name__ == "__main__":
     Intgrenze = [x_Anf, x_End]
     Wirk = []
 
+
+    w_Liste = [-i for i in range(N)]
+    K_Liste = [i for i in range(1,N+1)]
+
+    print('w : ', w_Liste)
+    print('k : ', K_Liste)
+
     for i in range(Anzahl_an_Ber):
-        w_Liste = np.random.random_sample(N)
-        w_Liste[0] = 0
-        print(w_Liste)
-        K_Liste = np.random.random_sample(N)
-        print(K_Liste)
         Wirk.append(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
-            kappa))
+            kappa, False))
     print(Wirk)
 
 #   K_Liste =  list(np.linspace(K_Anf,K_End,K_Anzahl))

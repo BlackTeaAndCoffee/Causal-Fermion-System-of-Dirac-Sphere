@@ -4,12 +4,16 @@ from sympy.abc import r,t
 from sympy.physics.quantum import TensorProduct
 from pyx import *
 from pyx.graph import axis
+from sympy import symbols
+from sympy.printing import ccode
 import scipy.integrate as integrate
 import scipy.special,scipy.misc
 import sympy as sy
 import numpy as np
 import random
 import Rho_data
+import os
+
 
 sigma1 = sy.Matrix([[0, 1],[1, 0]])
 sigma2 = sy.Matrix([[0, -1j],[1j, 0]])
@@ -99,8 +103,23 @@ Constraints
 '''
 Integrand and Action
 '''
-def integrand(t, point):
-    return (max(lagr(t, point).real,0) + bound(t,point))*np.sin(point)**2
+def Integrand(t, r, N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion
+        = True):
+    lagr = lambdify((t,r),
+            ((lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
+                w_Liste, K_Liste))), "numpy")
+    bound = lambdify((t,r), (boundedness_constraint(t,r,0,0,N,Rho_Liste,
+        w_Liste, K_Liste,kappa)), "numpy")
+
+
+    if Schwartzfunktion:
+        integrand = lambda t1, r1 : (max(lagr(t1, r1).real,0) +
+                bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1)**2/T)
+    else:
+        integrand = lambda t1, r1 : (max(lagr(t1, r1).real,0) +
+                bound(t1,r1).real)*np.sin(r1)**2
+
+    return integrand
 
 def get_Integrand_values2():
     y_Matrix =np.zeros(L)
@@ -108,25 +127,58 @@ def get_Integrand_values2():
         y_Matrix[j] = integrand(t, point)
     return y_Matrix
 
-def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste, kappa):
+def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+        kappa, Schwartzfunktion):
 
-    lagr = lambdify((t,r),
-            ((lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
-                w_Liste, K_Liste))), "numpy")
+    integrand = Integrand(t, r,N, Rho_Liste, w_Liste, K_Liste, kappa, T,
+            Schwartzfunktion)
 
-    bound = lambdify((t,r), (boundedness_constraint(t,r,0,0,N,Rho_Liste,
-        w_Liste, K_Liste,kappa)), "numpy")
-
-    integrand = lambda t1, r1 : (max(lagr(t1, r1),0).real +
-            bound(t1,r1).real)*np.sin(r1)**2
-
-    Wirkung = integrate.dblquad(lambda t1, r1 : (max(lagr(t1, r1),0).real +
-            bound(t1,r1).real)*(np.sin(r1)**2)*np.exp(-(t1-T)**2/T)
-    ,0,2*T, lambda r1: Intgrenze[0], lambda r1 : Intgrenze[1])[0]
+    Wirkung = integrate.dblquad(lambda t1, r1 :
+            integrand(t1, r1)
+    ,0,2*T, lambda r1: Intgrenze[0], lambda r1 : Intgrenze[1], epsabs =
+    1.49e-12, epsrel = 1.49e-12)[0]
 
     return Wirkung
 
+def get_Wirkung_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+        kappa, Schwartzfunktion):
+    a = ccode(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
+                w_Liste, K_Liste))
+    b = ccode(boundedness_constraint(t,r,0,0,N,Rho_Liste,
+        w_Liste, K_Liste,kappa))
 
+    f = open('testlib2.c', 'w')
+    if Schwartzfunktion:
+        f.write('#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
+                'double f(int n, double args[n])'+
+                '{return '+
+                '(fmax('+'creall('+(a.replace("r","args[0]")).replace("t","args[1]")+'),0)')
+
+        f.write('+ c.reall('+ (b.replace("r","args[0]")).replace("t","args[1]")+'))'
+                +'*sin(args[0])*sin(args[0])*exp(-pow(args[1],2)/'+'pow(%2.0f,2))'%(T,)+';'+'}')
+    else:
+        f.write('#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
+
+                 'double f(int n, double args[n])'+
+                '{return '+
+                '(fmax('+'creall('+(a.replace("r","args[0]")).replace("t","args[1]")+'),0)')
+
+        f.write('+creall('+ (b.replace("r",
+            "args[0]")).replace("t","args[1]")+'))'
+            +'*sin(args[0])*sin(args[0])'+';'+'}\n')
+
+
+    g = open('funcprint.txt', 'r')
+    g1 = g.read()
+    f.write(g1)
+    g.close()
+    f.close()
+
+    #os.system('gcc -shared -o testlib2.so -fPIC testlib2.c')
+    #os.system('python3 foo.py')
+
+    os.system('gcc -o yolo testlib2.c -lm')
+    os.system('./yolo')
 
 #   def Hauptroutine_Integrand(x_Anf, x_End, K_Anf, K_End, K_Anzahl, L, kappa):
 #       y_Matrix, x_Achse, Kurve_Names = get_Integrand_values(x_Anf, x_End, K_Anf,
@@ -150,42 +202,32 @@ if __name__ == "__main__":
 
     L = 100
 
-    K_Anzahl=10
-    K_Anf = 0
+    K_Anzahl=1
+    K_Anf = 0.1
     K_End = 2.5
 
-    kappa = 0.01
+    kappa = 0.1
     kappa_Anzahl = 1
 
-    w_Liste = [0, 0]
     N = 1
+    w_Liste = [i for i in range(N)]
     Rho_Liste = Rho_data.get_rho_values(N)
 
     x_Anf = 0
     x_End = np.pi
-
-    x_values= np.linspace(x_Anf,x_End,L)
-    y_Matrix =np.zeros((K_Anzahl, L))
 
     Kurve_Names=[]
 
     Intgrenze = [x_Anf, x_End]
     Wirk = []
     K_Liste =  list(np.linspace(K_Anf,K_End,K_Anzahl))
-    for i in range(K_Anzahl):
-        K2_Liste = [K_Liste[i]]
-        #lagr = lambdify((t,r), lagrangian_without_bound_constr(t,r,0,0,N))
-        #bound = lambdify((t,r),simplify(boundedness_constraint(t,r,0,0,N,kappa)))
-        Wirk.append(get_Wirkung_fuer_kappa(t, r,N,Intgrenze, T,  K2_Liste, Rho_Liste, w_Liste,
-            kappa))
-        #Kurve_Names.append('k1='+'%3.2f'%K_Liste[1])
-        #y_liste  = get_Integrand_values2()
-        #y_Matrix[i,:] = y_liste
 
-    Kurve_Names  = [kappa]
-    diag_plot2(K_Liste, Wirk, 'K', 'Wirkung',
-            Kurve_Names,'N=1_Wirkung_kappa=%0.2f'%kappa, "tr")
+    print(K_Liste)
+    print(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
+                w_Liste, K_Liste))
+    print(boundedness_constraint(t,r,0,0,N,Rho_Liste,
+        w_Liste, K_Liste,kappa))
 
-    #Hauptroutine_Integrand(x_Anf, x_End, K_Anf, K_End, K_Anzahl, L, kappa)
-    #Hauptroutine_Wirkung(K_Anf, K_End, K_Anzahl, kappa_Anzahl)
+    get_Wirkung_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste, kappa, False)
 
+    print(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False))
