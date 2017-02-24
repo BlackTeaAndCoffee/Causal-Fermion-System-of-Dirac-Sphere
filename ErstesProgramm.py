@@ -13,7 +13,7 @@ import numpy as np
 import random
 import Rho_data
 import os
-
+import DiagXY
 
 sigma1 = sy.Matrix([[0, 1],[1, 0]])
 sigma2 = sy.Matrix([[0, -1j],[1j, 0]])
@@ -133,10 +133,11 @@ def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
     integrand = Integrand(t, r,N, Rho_Liste, w_Liste, K_Liste, kappa, T,
             Schwartzfunktion)
 
-    Wirkung = integrate.dblquad(lambda t1, r1 :
-            integrand(t1, r1)
-    ,0,2*T, lambda r1: Intgrenze[0], lambda r1 : Intgrenze[1], epsabs =
-    1.49e-12, epsrel = 1.49e-12)[0]
+    Wirkung = integrate.nquad(lambda r1,t1 : integrand(t1,r1), [[0, np.pi],[0,2]])
+#   Wirkung = integrate.dblquad(lambda r1,t1 :
+#           integrand(t1, r1)
+#   ,0,np.pi, lambda t1: 0, lambda t1 : 2, epsabs =
+#   1.49e-16, epsrel = 1.49e-16)
 
     return Wirkung
 
@@ -147,25 +148,24 @@ def get_Wirkung_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
     b = ccode(boundedness_constraint(t,r,0,0,N,Rho_Liste,
         w_Liste, K_Liste,kappa))
 
+
     f = open('testlib2.c', 'w')
     if Schwartzfunktion:
         f.write('#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
                 'double f(int n, double args[n])'+
                 '{return '+
-                '(fmax('+'creall('+(a.replace("r","args[0]")).replace("t","args[1]")+'),0)')
+            '(fmax('+'creall('+ a.replace("exp", "cexp").replace("pow", "cpow").replace("r","args[0]").replace("t","args[1]")+'),0)')
 
-        f.write('+ c.reall('+ (b.replace("r","args[0]")).replace("t","args[1]")+'))'
+        f.write('+ c.reall('+ (b.replace("exp", "cexp").replace("r","args[0]")).replace("pow","cpow").replace("t","args[1]")+'))'
                 +'*sin(args[0])*sin(args[0])*exp(-pow(args[1],2)/'+'pow(%2.0f,2))'%(T,)+';'+'}')
     else:
         f.write('#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
-
                  'double f(int n, double args[n])'+
                 '{return '+
-                '(fmax('+'creall('+(a.replace("r","args[0]")).replace("t","args[1]")+'),0)')
+                "(fmax(creall("+a.replace("exp", "cexp").replace("r","args[0]").replace("pow", "cpow").replace("t","args[1]")+"),0)")
 
-        f.write('+creall('+ (b.replace("r",
-            "args[0]")).replace("t","args[1]")+'))'
-            +'*sin(args[0])*sin(args[0])'+';'+'}\n')
+        f.write('+creall('+ b.replace("exp", "cexp").replace("r","args[0]").replace("pow", "cpow").
+                replace("t","args[1]")+'))*sin(1.0L*args[0])*sin(1.0L*args[0]);'+'}\n')
 
 
     g = open('funcprint.txt', 'r')
@@ -174,8 +174,8 @@ def get_Wirkung_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
     g.close()
     f.close()
 
-    #os.system('gcc -shared -o testlib2.so -fPIC testlib2.c')
-    #os.system('python3 foo.py')
+    os.system('gcc -shared -o testlib2.so -fPIC testlib2.c')
+    os.system('python3 foo.py')
 
     os.system('gcc -o yolo testlib2.c -lm')
     os.system('./yolo')
@@ -202,14 +202,15 @@ if __name__ == "__main__":
 
     L = 100
 
-    K_Anzahl=1
-    K_Anf = 0.1
-    K_End = 2.5
+    N = 5
 
-    kappa = 0.1
+    K_Anzahl=N
+    K_Anf = 2
+    K_End = 6
+
+    kappa = 0.01
     kappa_Anzahl = 1
 
-    N = 1
     w_Liste = [i for i in range(N)]
     Rho_Liste = Rho_data.get_rho_values(N)
 
@@ -222,12 +223,21 @@ if __name__ == "__main__":
     Wirk = []
     K_Liste =  list(np.linspace(K_Anf,K_End,K_Anzahl))
 
-    print(K_Liste)
-    print(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
-                w_Liste, K_Liste))
-    print(boundedness_constraint(t,r,0,0,N,Rho_Liste,
-        w_Liste, K_Liste,kappa))
+    integrand1 = Integrand(t, r, N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion
+        = False)
 
-    get_Wirkung_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste, kappa, False)
+    xvalues = []
+    yvalues =[]
 
-    print(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False))
+    for i in range(100):
+       el = i*np.pi/100
+       yvalues.append(integrand1(1,el))
+       print (el, integrand1(1,el))
+       xvalues.append(el)
+    #DiagXY.f_gegn_x(list(xvalues), yvalues,'r', 'lagr', 'clagrsimp' )
+
+
+    get_Wirkung_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+            kappa, False)
+    print(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,
+        w_Liste,kappa, False))
