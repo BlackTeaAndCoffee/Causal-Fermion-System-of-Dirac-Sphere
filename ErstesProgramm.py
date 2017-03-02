@@ -14,6 +14,7 @@ import random
 import Rho_data
 import os
 import DiagXY
+import ctypes
 
 sigma1 = sy.Matrix([[0, 1],[1, 0]])
 sigma2 = sy.Matrix([[0, -1j],[1j, 0]])
@@ -149,36 +150,54 @@ def get_Wirkung_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
         w_Liste, K_Liste,kappa))
 
 
-    f = open('testlib2.c', 'w')
-    if Schwartzfunktion:
-        f.write('#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
-                'double f(int n, double args[n])'+
-                '{return '+
-            '(fmax('+'creall('+ a.replace("exp", "cexp").replace("pow", "cpow").replace("r","args[0]").replace("t","args[1]")+'),0)')
+#   f = open('testlib2.c', 'w')
+#   if Schwartzfunktion:
+#       f.write('#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
+#               'double f(int n, double args[n])'+
+#               '{return '+
+#           '(fmax('+'creall('+ a.replace("exp", "cexp"
+#               ).replace("pow", "cpow").replace("r","args[0]").replace("t","args[1]")+'),0)')
 
-        f.write('+ c.reall('+ (b.replace("exp", "cexp").replace("r","args[0]")).replace("pow","cpow").replace("t","args[1]")+'))'
-                +'*sin(args[0])*sin(args[0])*exp(-pow(args[1],2)/'+'pow(%2.0f,2))'%(T,)+';'+'}')
-    else:
-        f.write('#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
+#       f.write('+ c.reall('+ (b.replace("exp", "cexp").replace("r","args[0]")).replace("pow","cpow"
+#           ).replace("t","args[1]")+'))'
+#               +'*sin(args[0])*sin(args[0])*exp(-pow(args[1],2)/'+'pow(%2.0f,2))'%(T,)+';'+'}')
+#   else:
+#       f.write('#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
+#                'double f(int n, double args[n])'+
+#               '{return '+
+#               "(fmax(creall("+a.replace("exp",
+#                   "cexp").replace("r","args[0]").replace("pow", "cpow").replace("t","args[1]")+"),0)")
+
+#       f.write('+creall('+ b.replace("exp", "cexp").replace("r","args[0]").replace("pow", "cpow").
+#               replace("t","args[1]")+'))*sin(1.0L*args[0])*sin(1.0L*args[0]);'+'}\n')
+
+
+#   g = open('funcprint.txt', 'r')
+#   g1 = g.read()
+#   f.write(g1)
+#   g.close()
+#   f.close()
+
+
+
+    os.system('gcc -x c -shared -o testlib2.so -fPIC'+
+           ' << EOF '+'#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
                  'double f(int n, double args[n])'+
                 '{return '+
-                "(fmax(creall("+a.replace("exp", "cexp").replace("r","args[0]").replace("pow", "cpow").replace("t","args[1]")+"),0)")
+                "(fmax(creall("+a.replace("exp",
+                    "cexp").replace("r","args[0]").replace("pow",
+                        "cpow").replace("t","args[1]")+"),0)"+
+                '+creall('+ b.replace("exp", "cexp").replace("r","args[0]").replace("pow", "cpow").
+                replace("t","args[1]")+'))*sin(1.0L*args[0])*sin(1.0L*args[0]);'+'}\n'
+                + 'EOF')
 
-        f.write('+creall('+ b.replace("exp", "cexp").replace("r","args[0]").replace("pow", "cpow").
-                replace("t","args[1]")+'))*sin(1.0L*args[0])*sin(1.0L*args[0]);'+'}\n')
+    lib=ctypes.CDLL('/home/mustafa/Regensburg/Reproduktion_Von_Nikkis_Ergebnissen/Progs_mit_Sympy/testlib2.so')
+    lib.f.restype = ctypes.c_double
+    lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
+    print(integrate.nquad(lib.f,[[0,np.pi],[0,2]]))
 
-
-    g = open('funcprint.txt', 'r')
-    g1 = g.read()
-    f.write(g1)
-    g.close()
-    f.close()
-
-    os.system('gcc -shared -o testlib2.so -fPIC testlib2.c')
-    os.system('python3 foo.py')
-
-    os.system('gcc -o yolo testlib2.c -lm')
-    os.system('./yolo')
+#   os.system('gcc -o yolo testlib2.c -lm')
+#   os.system('./yolo')
 
 #   def Hauptroutine_Integrand(x_Anf, x_End, K_Anf, K_End, K_Anzahl, L, kappa):
 #       y_Matrix, x_Achse, Kurve_Names = get_Integrand_values(x_Anf, x_End, K_Anf,
@@ -202,7 +221,7 @@ if __name__ == "__main__":
 
     L = 100
 
-    N = 5
+    N = 2
 
     K_Anzahl=N
     K_Anf = 2
@@ -223,21 +242,21 @@ if __name__ == "__main__":
     Wirk = []
     K_Liste =  list(np.linspace(K_Anf,K_End,K_Anzahl))
 
-    integrand1 = Integrand(t, r, N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion
-        = False)
+#    integrand1 = Integrand(t, r, N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion
+#        = True)
 
-    xvalues = []
-    yvalues =[]
+#   xvalues = []
+#   yvalues =[]
 
-    for i in range(100):
-       el = i*np.pi/100
-       yvalues.append(integrand1(1,el))
-       print (el, integrand1(1,el))
-       xvalues.append(el)
+#   for i in range(100):
+#      el = i*np.pi/100
+#      yvalues.append(integrand1(1,el))
+#      print (el, integrand1(1,el))
+#      xvalues.append(el)
     #DiagXY.f_gegn_x(list(xvalues), yvalues,'r', 'lagr', 'clagrsimp' )
 
 
-    get_Wirkung_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
-            kappa, False)
+#   get_Wirkung_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+#           kappa, False)
     print(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,
         w_Liste,kappa, False))
