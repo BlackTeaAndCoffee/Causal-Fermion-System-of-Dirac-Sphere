@@ -142,77 +142,116 @@ def get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
 
     return Wirkung
 
-def get_Wirkung_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
-        kappa, Schwartzfunktion):
+def get_Integrand_with_c(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+        kappa, Schwartzfunktion, Comp_String):
+    a = ccode(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
+                w_Liste, K_Liste))
+    b = ccode(boundedness_constraint(t,r,0,0,N,Rho_Liste,w_Liste, K_Liste,kappa))
+    print('ola')
+    g = open('funcprint2.txt', 'r')
+    g1 = g.read()
+    g.close()
+    GesamtString = ''
+    Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
+    Prototypen = 'static float xsav;\n'+ 'static float(*nrfunc)(float,float);\n'
+    Integranddef = "float f(float r, float t)"+ "{return"
+    Begin_von_Func = "(fmax(creall("
+    Func1 = a.replace("exp","cexp").replace("pow","cpow")
+    Func1_End = "),0)"
+
+    GesamtString += Bibliotheken + Prototypen + Integranddef + Begin_von_Func +Func1+ Func1_End
+
+    Func2_Anf = "+ creall("
+    Func2 =  b.replace("exp", "cexp").replace("pow","cpow" )
+
+    if Schwartzfunktion:
+        Func22 = '))*sin(1.0L*r)*sin(1.0L*r)'
+        Func2_End = '*cexp(-(cpow(t,2)/'+"cpow(%2.0f,2)))"%(T)+';'+'}\n'
+        GesamtString += Func2_Anf + Func2 + Func22+ Func2_End + g1
+    else:
+        Func22 = '))*sin(1.0L*r)*sin(1.0L*r);}\n'
+        GesamtString += Func2_Anf + Func2 + Func22+g1
+
+
+    if Comp_String:
+        os.system('gcc -o testlib2'+' << EOF '+GesamtString+ 'EOF -lm')
+    else:
+        f = open('testlib2.c', 'w')
+        f.write(GesamtString)
+        f.close()
+        os.system('gcc -o testlib2 testlib2.c -lm')
+
+
+def get_Integrand_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+        kappa, Schwartzfunktion, Comp_String):
     a = ccode(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
                 w_Liste, K_Liste))
     b = ccode(boundedness_constraint(t,r,0,0,N,Rho_Liste,
         w_Liste, K_Liste,kappa))
 
 
-#   f = open('testlib2.c', 'w')
-#   if Schwartzfunktion:
-#       f.write('#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
-#               'double f(int n, double args[n])'+
-#               '{return '+
-#           '(fmax('+'creall('+ a.replace("exp", "cexp"
-#               ).replace("pow", "cpow").replace("r","args[0]").replace("t","args[1]")+'),0)')
+    Gesamtstring = ''
 
-#       f.write('+ c.reall('+ (b.replace("exp", "cexp").replace("r","args[0]")).replace("pow","cpow"
-#           ).replace("t","args[1]")+'))'
-#               +'*sin(args[0])*sin(args[0])*exp(-pow(args[1],2)/'+'pow(%2.0f,2))'%(T,)+';'+'}')
-#   else:
-#       f.write('#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
-#                'double f(int n, double args[n])'+
-#               '{return '+
-#               "(fmax(creall("+a.replace("exp",
-#                   "cexp").replace("r","args[0]").replace("pow", "cpow").replace("t","args[1]")+"),0)")
+    Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
+    Integranddef = "double f(int n, double args[n])"+ "{return"
+    Begin_von_Func = "(fmax(creall("
+    Func1 = a.replace("exp","cexp").replace("r","args[0]").replace("pow", "cpow").replace("t","args[1]")
+    Func1_End = "),0)"
+    Gesamtstring+= Bibliotheken + Integranddef + Begin_von_Func + Func1+Func1_End
 
-#       f.write('+creall('+ b.replace("exp", "cexp").replace("r","args[0]").replace("pow", "cpow").
-#               replace("t","args[1]")+'))*sin(1.0L*args[0])*sin(1.0L*args[0]);'+'}\n')
+    Func2_Anf = "+ creall("
+    Func2 =  b.replace("exp", "cexp").replace("r","args[0]").replace("pow", "cpow").replace("t","args[1]")
+    g = open('funcprint.txt', 'r')
+    g1 = g.read()
 
+    if Schwartzfunktion:
+        Func22 = '))*sin(1.0L*args[0])*sin(1.0L*args[0])'
+        Func2_End = '*cexp(-(cpow(args[1],2)/'+"cpow(%2.0f,2)))"%(T)+';'+'}\n'
+        Gesamtstring += Func2_Anf + Func2 + Func22+ Func2_End + g1
+    else:
+        Func22 = '))*sin(1.0L*args[0])*sin(1.0L*args[0]);}\n'
+        Gesamtstring += Func2_Anf + Func2 + Func22 + g1
 
-#   g = open('funcprint.txt', 'r')
-#   g1 = g.read()
-#   f.write(g1)
-#   g.close()
-#   f.close()
+    if Comp_String:
+        os.system('gcc -x c -shared -o testlib2.so -fPIC'+' << EOF '+Gesamtstring+ 'EOF')
+    else:
 
+        f = open('testlib2.c', 'w')
+        f.write(Gesamtstring)
+        f.close()
 
+        os.system('gcc -x c -shared -o testlib2.so -fPIC testlib2.c')
 
-    os.system('gcc -x c -shared -o testlib2.so -fPIC'+
-           ' << EOF '+'#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'+
-                 'double f(int n, double args[n])'+
-                '{return '+
-                "(fmax(creall("+a.replace("exp",
-                    "cexp").replace("r","args[0]").replace("pow",
-                        "cpow").replace("t","args[1]")+"),0)"+
-                '+creall('+ b.replace("exp", "cexp").replace("r","args[0]").replace("pow", "cpow").
-                replace("t","args[1]")+'))*sin(1.0L*args[0])*sin(1.0L*args[0]);'+'}\n'
-                + 'EOF')
+    g.close()
 
-    lib=ctypes.CDLL('/home/mustafa/Regensburg/Reproduktion_Von_Nikkis_Ergebnissen/Progs_mit_Sympy/testlib2.so')
-    lib.f.restype = ctypes.c_double
-    lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
-    print(integrate.nquad(lib.f,[[0,np.pi],[0,2]]))
+def get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+        kappa, Schwartzfunktion = True, Comp_String = False, With_Ctypes= True):
 
-#   os.system('gcc -o yolo testlib2.c -lm')
-#   os.system('./yolo')
+    if With_Ctypes:
+        get_Integrand_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+            kappa, Schwartzfunktion, Comp_String)
 
-#   def Hauptroutine_Integrand(x_Anf, x_End, K_Anf, K_End, K_Anzahl, L, kappa):
-#       y_Matrix, x_Achse, Kurve_Names = get_Integrand_values(x_Anf, x_End, K_Anf,
-#               K_End, K_Anzahl, L, kappa)
+        lib=ctypes.CDLL('/home/mustafa/Regensburg/Reproduktion_Von_Nikkis_Ergebnissen/Progs_mit_Sympy/testlib2.so')
+        lib.f.restype = ctypes.c_double
+        lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
+        print(integrate.nquad(lib.f,[[0,np.pi],[0,2]]))
+    else:
+        get_Integrand_with_c(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+        kappa, Schwartzfunktion, Comp_String)
+        os.system('./testlib2')
+    print('done')
+def get_integrand_values(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+        kappa, Schwartzfunktion = True, Comp_String = False, With_Ctypes = True):
 
-#       diag_plot(list(x_Achse), y_Matrix, 'Radius = r', 'Lagr(r)$*sin(r)^2$', Kurve_Names,'N=1_Integrand_kappa=%0.2f'%kappa, "br")
+    if With_Ctypes:
+        get_Integrand_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+            kappa, Schwartzfunktion, Comp_String)
+    else:
+        get_Integrand_with_c(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+        kappa, Schwartzfunktion, Comp_String)
 
-#   def Hauptroutine_Wirkung(Intgrenze, K_Liste, Rho_Liste, w_Liste, kappa):
-#       y_Matrix, Kurve_Names, x_Achse = get_Wirkung_fuer_kappas(Intgrenze,
-#               K_Liste, Rho_Liste, w_Liste, kappa)
-
-
-#       diag_plot(list(x_Achse), y_Matrix, 'K', 'S(K)',Kurve_Names,'N=1_S(K)_kappaschar_K_Anzahl%d'%K_Anzahl, "br")
-
-
+    os.system('gcc -o yolo testlib2.c -lm')
+    os.system('./yolo')
 
 if __name__ == "__main__":
     t, theta, phi = symbols('t theta phi')
@@ -221,7 +260,7 @@ if __name__ == "__main__":
 
     L = 100
 
-    N = 2
+    N = 4
 
     K_Anzahl=N
     K_Anf = 2
@@ -254,9 +293,11 @@ if __name__ == "__main__":
 #      print (el, integrand1(1,el))
 #      xvalues.append(el)
     #DiagXY.f_gegn_x(list(xvalues), yvalues,'r', 'lagr', 'clagrsimp' )
+#   get_integrand_values(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
+#       kappa, Schwartzfunktion = True, Comp_String = False)
 
 
-#   get_Wirkung_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
-#           kappa, False)
-    print(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,
-        w_Liste,kappa, False))
+    get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, True,
+            False, False)
+#   print(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,
+#       w_Liste,kappa, True))
