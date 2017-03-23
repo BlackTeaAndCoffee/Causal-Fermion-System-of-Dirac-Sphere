@@ -38,7 +38,6 @@ def get_rho_values(N, SameValues = True):
         for i in range(1, N+1):
             s += (diracEigenvalues(i)**2 - 0.25)
         rho_values = [1/s for i in range(N)]
-
     else:
         rho = symbols('rho0:N')
         liste = subs_coeffs(N, rho)

@@ -57,14 +57,14 @@ def preMatrixPlus(n,K_Liste):
 def preMatrixMinus(n,K_Liste):
     a = K_Liste[n-1]
     b = sy.root(1 + a**2, 2)
+
     return sy.Matrix([[1- b, -a],[ a, 1 + b]])
 
 def projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
     mat = sy.Matrix([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
     for n in range(1,N + 1):
         mat += Rho_Liste[n-1]*sy.exp(-1j*w_Liste[n-1]*t)*(TensorProduct(preMatrixPlus(n,
-            K_Liste),
-            integralKernelPlus(n, r, theta, phi))
+            K_Liste),integralKernelPlus(n, r, theta, phi))
     + TensorProduct(preMatrixMinus(n,K_Liste),integralKernelMinus(n, r, theta,
         phi)))
     return mat
@@ -72,18 +72,18 @@ def projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
 def projectorAdj(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
     mat =  sy.Matrix([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
     for n in range(1, N+1):
-        mat += Rho_Liste[n-1]*sy.exp(1j*w_Liste[n-1]*t)*(TensorProduct(preMatrixPlus(n,K_Liste),
-            integralKernelMinus(n, r, theta, phi))
+        mat += Rho_Liste[n-1]*sy.exp(1j*w_Liste[n-1]*t)*(TensorProduct(preMatrixPlus(n,K_Liste),integralKernelMinus(n, r, theta, phi))
             + TensorProduct(preMatrixMinus(n,K_Liste),integralKernelPlus(n, r, theta, phi)))
     return mat
 
 def closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
-    return projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)*projectorAdj(t, r, theta,
-            phi, N, Rho_Liste, w_Liste, K_Liste)
+
+    return projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)*projectorAdj(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
 
 def lagrangian_without_bound_constr(t, r, theta, phi,N, Rho_Liste, w_Liste, K_Liste):
     sub = closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
-    return sy.trace(sub*sub) - sy.S(0.25) * sy.S(sy.trace(sub)**2)
+    #print(sub)
+    return sy.trace(sub*sub) - 0.25* sy.trace(sub)**2
 '''
 Needed parts for the Integrand
 
@@ -260,13 +260,13 @@ if __name__ == "__main__":
 
     L = 100
 
-    N = 4
+    N = 5
 
     K_Anzahl=N
-    K_Anf = 2
+    K_Anf = 1
     K_End = 6
 
-    kappa = 0.01
+    kappa = 0.1
     kappa_Anzahl = 1
 
     w_Liste = [i for i in range(N)]
@@ -298,6 +298,6 @@ if __name__ == "__main__":
 
 
     get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, True,
-            False, False)
+            False, True)
 #   print(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,
 #       w_Liste,kappa, True))
