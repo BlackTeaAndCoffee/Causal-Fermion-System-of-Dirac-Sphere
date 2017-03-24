@@ -1,19 +1,14 @@
-from sympy.abc import r,t
-#from sympy.physics.quantum import TensorProduct
-from sympy import symbols
 from sympy.printing import ccode
-from pyx import *
-import Diag_Schar
-import scipy.integrate as integrate
-import scipy.special,scipy.misc
+from scipy import integrate
 import sympy as sy
-import numpy as np
-import Rho_data
-import os
-import ctypes
 import symengine as si
+import numpy as np
 import time
-import DiagXY
+import os
+import Rho_data
+import scipy.misc
+import ctypes
+
 
 sigma1 = si.zeros(2)
 sigma1[1,0] = 1
@@ -73,8 +68,10 @@ def sigma_r(theta, phi):
     return aa +bb
 
 def preMatrixPlus(n,K_Liste):
+    print(K_Liste,n)
     a = K_Liste[n-1]
     b = si.sqrt(1 + a**2)
+    print(a,b)
     matrix = si.zeros(2)
 
     matrix[0,0]= 1-b
@@ -85,9 +82,10 @@ def preMatrixPlus(n,K_Liste):
     return matrix
 
 def preMatrixMinus(n,K_Liste):
+    print(K_Liste,n)
     a = K_Liste[n-1]
     b = si.sqrt(1 + a**2)
-
+    print(a,b)
     matrix = si.zeros(2)
 
     matrix[0,0]= 1-b
@@ -99,7 +97,7 @@ def preMatrixMinus(n,K_Liste):
 def projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
     mat = np.zeros((4,4), dtype = object)
     for n in range(1,N + 1):
-        Koef =Rho_Liste[n-1]*si.exp(-1j*w_Liste[n-1]*t)
+        Koef =Rho_Liste[n-1]*sy.exp(-1j*w_Liste[n-1]*t)
         Term1 = TensorProduct(preMatrixPlus(n,K_Liste),integralKernelPlus(n, r, theta, phi))
         Term2 = TensorProduct(preMatrixMinus(n,K_Liste),integralKernelMinus(n, r, theta,phi))
         mat += Koef*(Term1 + Term2)
@@ -109,7 +107,7 @@ def projectorAdj(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
     mat = np.zeros((4,4),  dtype = object)
 
     for n in range(1, N+1):
-        Koeff = Rho_Liste[n-1]*si.exp(1j*w_Liste[n-1]*t)
+        Koeff = Rho_Liste[n-1]*sy.exp(1j*w_Liste[n-1]*t)
         Term1 = TensorProduct(preMatrixPlus(n,K_Liste),integralKernelMinus(n, r, theta, phi))
         Term2 = TensorProduct(preMatrixMinus(n,K_Liste),integralKernelPlus(n, r,theta, phi))
         mat += Koeff*(Term1 +Term2)
@@ -257,7 +255,6 @@ def get_Test_Integrandt(T):
 
 def get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion = True, Comp_String = False, Type = 1):
-
     if Type == 1:
         '''Cytpes'''
         get_Integrand_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
@@ -309,111 +306,30 @@ def get_integrand_values(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
     os.system('./yolo')
 
 if __name__ == "__main__":
-    t, theta, phi = symbols('t theta phi')
-
+    si.var('r t theta phi')
     T = 1 #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
     N = 2
 
     K_Anzahl=N
-#   K_Anf = 0.1
-#   K_End = 1
+    K_Anf = 0.1
+    K_End = 1
 
     kappa = 0.00001
     kappa_Anzahl = 1
 
-#   w_Liste = [i for i in range(N)]
-#   Rho_Liste = Rho_data.get_rho_values(N)
+    w_Liste = [i for i in range(N)]
+    Rho_Liste = Rho_data.get_rho_values(N)
 
-    x_Anf = 0
+    x_Anf = 0.
     x_End = np.pi
 
-#   Kurve_Names=[]
+    Kurve_Names=[]
 
     Intgrenze = [x_Anf, x_End]
-#   Wirk = []
-#   K_Liste = list(np.linspace(K_Anf,K_End,K_Anzahl))
-#   get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,
-#           False, 1)
+    Wirk = []
+    K_Liste = list(np.linspace(K_Anf,K_End,K_Anzahl))
+    get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,
+            False, 1)
 
-    w_Liste = [0.,1.]
-    K_Liste = [0.,0.]
-    AnzahlGewichte = 10
-    #Stzstellen =20
-    #WertMatrix = np.zeros((AnzahlGewichte, Stzstellen))
-    #KK = [1.*i for i in range(Stzstellen)]
-    #KKMatrix = np.zeros((AnzahlGewichte, Stztstellen))
-    Kurve_Names = []
-
-    c = graph.graphxy(width=10,height=10,
-        x = graph.axis.linear(min = 0, max = 20,
-                          title= r'$K_2$'),
-        y = graph.axis.linear(min = 0,max = 1.5,
-                          title= 'Wirkung'),
-                      key = graph.key.key(pos='tr', dist =0.1))
-    dd=[]
-    for k in range(AnzahlGewichte):
-        rho1 = 0.1*k
-        Rho_Liste = [rho1, (1- rho1)/3]
-        Kurve_Names.append(r"$\rho_1$=%2.2f"%rho1)
-        dk = 0.1
-        k1 = 0.
-        WertListe = []
-        KK =[]
-        while 1:
-            K_Liste[1] = k1
-            print('yay',K_Liste)
-            Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,
-                    w_Liste,kappa, False,False, 1)
-            WertListe.append(Wert[0])
-            KK.append(k1)
-            print('KK', KK)
-            l1 = len(WertListe) - 1
-            if  l1>=2 :
-                a = abs((WertListe[l1-2] - WertListe[l1-1])/(KK[l1-2] -
-                    KK[l1-1]))
-                b = abs((WertListe[l1] - WertListe[l1-1])/(KK[l1] - KK[l1-1]))
-                print('steigung', a/b, b/a)
-                if  b != 0 and (a/b < 0.5 or a/b >2):
-                    WertListe.pop(l1)
-                    KK.pop(l1)
-                    k1 -= dk
-                    dk = 0.02
-                    k1 += dk
-                    K_Liste[1] = k1
-                    Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,
-                    w_Liste,kappa, False,False, 1)
-                    WertListe.append(Wert[0])
-                    KK.append(k1)
-                    print('lol1', len(WertListe))
-                elif a != 0 and (b/a < 0.5 or b/a > 2):
-                    WertListe.pop(l1)
-                    KK.pop(l1)
-                    k1 -= dk
-                    dk = 0.02
-                    k1 += dk
-                    K_Liste[1] = k1
-                    Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,
-                    w_Liste,kappa, False,False, 1)
-                    WertListe.append(Wert[0])
-                    KK.append(k1)
-                    print('lol2', len(WertListe))
-                else:
-                    print('dk1', dk)
-                    dk = dk*2
-                    dk = min(dk, 0.5)
-                    print('dk2',dk)
-                    print('lol3', len(WertListe))
-                print('dk', dk)
-            if Wert[0] > 1.5 or k1 > 20:
-                break
-
-            k1 += dk
-        LL = np.array(WertListe)
-        LL = LL/LL[0]
-        dd.append(graph.data.values(x = KK, y =  LL, title = Kurve_Names[k]))
-
-    c.plot(dd,[graph.style.line([color.gradient.Rainbow])])
-    c.text(5, 10, '$kappa=%2.5f, K_1=%2.2f$'%(kappa,K_Liste[0]))
-    c.writePDFfile('Gewicht_Schar')
 
         #   print(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,w_Liste,kappa, True))
