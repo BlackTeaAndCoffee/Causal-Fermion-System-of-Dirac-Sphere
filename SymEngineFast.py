@@ -1,5 +1,6 @@
 from sympy.printing import ccode
 from scipy import integrate
+from symengine import I
 import sympy as sy
 import symengine as si
 import numpy as np
@@ -14,8 +15,8 @@ sigma1 = si.zeros(2)
 sigma1[1,0] = 1
 sigma1[0,1] = 1
 sigma2 = si.zeros(2)
-sigma2[1,0] = 1j
-sigma2[0,1] = -1j
+sigma2[1,0] = I
+sigma2[0,1] = -I
 sigma3 = si.zeros(2)
 sigma3[0,0] = 1
 sigma3[1,1] = -1
@@ -42,24 +43,24 @@ def TensorProduct(mat11, mat22):
 
 def prefactor(n):
     return int(scipy.misc.factorial(n + 2))/(8 *
-            si.pi**(3/2)*si.gamma(3/2 + n))#sy.gamma('%d/%d'%(3+2*n,2)))
+            si.pi**(3/2)*sy.gamma('%d/%d'%(3+2*n,2)))
 
 def diracEigenvalues(n):
     return (2*n + 1)/2
 
 def integralKernelPlus(n, r, theta, phi):
     n=n-1
-    lala1 = sy.jacobi(n, 1/2, 3/2, r)
-    lala2 = sy.jacobi(n, 3/2, 1/2, r)
-    return prefactor(n)*(si.cos(r/2)*lala1*ident -
-                        1j*si.sin(r/2)*lala2*sigma_r(theta, phi))
+    lala1 = sy.jacobi(n, 1/2, 3/2, r[0])
+    lala2 = sy.jacobi(n, 3/2, 1/2, r[0])
+    return prefactor(n)*(si.cos(r[0]/2)*lala1*ident -
+                        I*si.sin(r[0]/2)*lala2*sigma_r(theta, phi))
 
 def integralKernelMinus(n, r, theta, phi):
     n=n-1
-    lala1 = sy.jacobi(n, 1/2, 3/2, r)
-    lala2 = sy.jacobi(n, 3/2, 1/2, r)
-    return prefactor(n)*(si.cos(r/2)*lala1*ident +
-                        1j*si.sin(r/2)*lala2*sigma_r(theta, phi))
+    lala1 = sy.jacobi(n, 1/2, 3/2, r[0])
+    lala2 = sy.jacobi(n, 3/2, 1/2, r[0])
+    return prefactor(n)*(si.cos(r[0]/2)*lala1*ident +
+                        I*si.sin(r[0]/2)*lala2*sigma_r(theta, phi))
 
 def sigma_r(theta, phi):
     aa = si.sin(theta)*si.cos(phi)*sigma1 + si.sin(theta)*si.sin(phi)*sigma2
@@ -92,24 +93,26 @@ def preMatrixMinus(n,K_Liste):
 def projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
     mat = np.zeros((4,4), dtype = object)
     for n in range(1,N + 1):
-        Koef =Rho_Liste[n-1]*sy.exp(-1j*w_Liste[n-1]*t)
+        Koef =Rho_Liste[n-1]*sy.exp(-I*w_Liste[n-1]*t[0])
+        #print(Rho_Liste[n-1], sy.exp(-1j*w_Liste[n-1]*t))
         Term1 = TensorProduct(preMatrixPlus(n,K_Liste),integralKernelPlus(n, r, theta, phi))
         Term2 = TensorProduct(preMatrixMinus(n,K_Liste),integralKernelMinus(n, r, theta,phi))
         mat += Koef*(Term1 + Term2)
+        #print(Koef, mat)
     return mat
 
 def projectorAdj(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
     mat = np.zeros((4,4),  dtype = object)
 
     for n in range(1, N+1):
-        Koeff = Rho_Liste[n-1]*sy.exp(1j*w_Liste[n-1]*t)
+        Koeff = Rho_Liste[n-1]*sy.exp(I*w_Liste[n-1]*t[0])
         Term1 = TensorProduct(preMatrixPlus(n,K_Liste),integralKernelMinus(n, r, theta, phi))
         Term2 = TensorProduct(preMatrixMinus(n,K_Liste),integralKernelPlus(n, r,theta, phi))
         mat += Koeff*(Term1 +Term2)
     return mat
 
 def closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
-    #print('np.dot(pro,proadj)',projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)*projectorAdj(t, r, theta,phi, N, Rho_Liste, w_Liste, K_Liste))
+    #print(projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)*projectorAdj(t, r, theta,phi, N, Rho_Liste, w_Liste, K_Liste))
     return np.dot(projector(t, r, theta, phi, N, Rho_Liste, w_Liste,
         K_Liste),projectorAdj(t, r, theta,phi, N, Rho_Liste, w_Liste, K_Liste))
 
@@ -140,20 +143,18 @@ Integrand and Action
 '''
 def Integrand(t, r, N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion
         = True):
-    lagr = sy.lambdify((t,r),
-            lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,w_Liste,
-                K_Liste), "numpy")
-    bound = sy.lambdify((t, r),
-            (boundedness_constraint(t,r,0,0,N,Rho_Liste,w_Liste,
-                K_Liste,kappa)), "numpy")
-
+    args = np.concatenate((t,r))
+    exprs = [lagrangian_without_bound_constr(t,r,0,0,N,Rho_Liste,w_Liste,K_Liste)]
+    lagr = si.Lambdify(args, exprs, real = False)
+    exprs2 = [boundedness_constraint(t,r,0,0,N,Rho_Liste,w_Liste, K_Liste,kappa)]
+    bound = si.Lambdify(args,exprs2, real = False)
 
     if Schwartzfunktion:
-        integrand = lambda t1, r1 : (max(lagr(t1, r1).real,0) +
+        integrand = lambda t1, r1: (max(lagr(t1, r1).real,0) +
                 bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1)**2/T)
     else:
-        integrand = lambda t1, r1 : (max(lagr(t1, r1).real,0) +
-                bound(t1,r1).real)*np.sin(r1)**2
+        integrand = lambda t1, r1 : (max(lagr([t1, r1]).real,0) +
+                bound([t1,r1]).real)*np.sin(r1)**2
 
     return integrand
 
@@ -326,7 +327,11 @@ def get_integrand_values(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
     os.system('./yolo')
 
 if __name__ == "__main__":
-    si.var('r t theta phi')
+
+    si.var('theta phi')
+    r = si.symarray('r', 1)
+    t = si.symarray('t', 1)
+
     T = 1 #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
     N = 7
 
@@ -350,6 +355,5 @@ if __name__ == "__main__":
     K_Liste = list(np.linspace(K_Anf,K_End,K_Anzahl))
     get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,
             False, 4)
-
 
         #   print(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,w_Liste,kappa, True))

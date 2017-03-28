@@ -8,11 +8,10 @@ import numpy as np
 
 def func(t, r, N, Intgrenze, T, Rho_Liste,w_Liste,kappa,k1):
     K_Liste[ind]= k1
-    print(K_Liste, WertListe, 'yaaaaaaay1')
+    print('K_Liste=', K_Liste, 'WertListe=',WertListe, 'yaaaaaaay1')
     Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,w_Liste,kappa)
     WertListe.append(Wert[0])
     KK.append(k1)
-    print(WertListe, 'yaay2')
     return WertListe, KK
 
 if __name__ == "__main__":
@@ -20,7 +19,7 @@ if __name__ == "__main__":
     T = 1 #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
     N = 2
 
-    kappa = 0.01
+    kappa = 0.0001
     kappa_Anzahl = 1
 
     x_Anf = 0
@@ -31,18 +30,18 @@ if __name__ == "__main__":
 
 
     w_Liste = [0.,1.]
-    K_Liste = [0.,0.01]
-    AnzahlGewichte = 2
+    K_Liste = [0.,0.]
+    AnzahlGewichte = 1
     Kurve_Names = []
-    PDFTitle = '$GewichteScharVarK%2.2fs$'%ind
+    PDFTitle = 'GewichteScharVarK_%1dalt'%(ind+1)
 
-    c = PyxSchar.initialXY(0,20,0,1.5, r'$K_2$','Wirkung',10,10 , 'tr')
+    c = PyxSchar.initialXY(0,20,0,1.5, r'$K_%1d$'%(ind+1),'Wirkung',10,10 , 'tr')
 
     dd=[]
 
-    for k in range(AnzahlGewichte):
+    for k in range( AnzahlGewichte):
         rho1 = 0.1*k
-        Rho_Liste = [rho1, (1- rho1)/3]
+        Rho_Liste = [0.001,0.999/3]#[rho1, (1- rho1)/3]
         dk = 0.1
         k1 = 0.
         WertListe = []
@@ -80,14 +79,15 @@ if __name__ == "__main__":
             k1 += dk
         LL = np.array(WertListe)
         LL = LL/LL[0]
-        print(LL, KK)
-        dd.append(PyxSchar.set_values(KK, LL, r"$\rho_1$=%2.2f"%rho1))
+        print('LL=', LL,'KK=', KK)
+        dd.append(PyxSchar.set_values(KK, LL,
+            r"$\rho_1=%2.2f, \rho_2=%2.2f$"%(Rho_Liste[0], Rho_Liste[1])))
 
 
     if ind ==0:
-        PyxSchar.plot_diag(dd, '$kappa=%2.5f, K_%2.2f=%2.2f$'%(kappa, 2, 0),
+        PyxSchar.plot_diag(dd, '$kappa=%2.5f, K_{%1d}=%2.2f$'%(kappa, 2, 0),
             (5,10), PDFTitle, c)
     else:
-        PyxSchar.plot_diag(dd, '$kappa=%2.5f, K_%2.2f=%2.2f$'%(kappa, 1, 0),
+        PyxSchar.plot_diag(dd, '$kappa=%2.5f, K_{%1d}=%2.2f$'%(kappa, 1, 0),
             (5,10), PDFTitle, c)
 
