@@ -9,7 +9,8 @@ import numpy as np
 def func(t, r, N, Intgrenze, T, Rho_Liste,w_Liste,kappa,k1):
     K_Liste[ind]= k1
     print('K_Liste=', K_Liste, 'WertListe=',WertListe, 'yaaaaaaay1')
-    Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,w_Liste,kappa)
+    Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,w_Liste,kappa,
+            False, False, 4)
     WertListe.append(Wert[0])
     KK.append(k1)
     return WertListe, KK
@@ -33,7 +34,7 @@ if __name__ == "__main__":
     K_Liste = [0.,0.]
     AnzahlGewichte = 1
     Kurve_Names = []
-    PDFTitle = 'GewichteScharVarK_%1dalt'%(ind+1)
+    PDFTitle = 'GewichteScharVarK_%1d'%(ind+1)
 
     c = PyxSchar.initialXY(0,20,0,1.5, r'$K_%1d$'%(ind+1),'Wirkung',10,10 , 'tr')
 
@@ -41,7 +42,7 @@ if __name__ == "__main__":
 
     for k in range( AnzahlGewichte):
         rho1 = 0.1*k
-        Rho_Liste = [0.001,0.999/3]#[rho1, (1- rho1)/3]
+        Rho_Liste = [1,0]#[rho1, (1- rho1)/3]
         dk = 0.1
         k1 = 0.
         WertListe = []

@@ -47,25 +47,19 @@ def prefactor(n):
 def diracEigenvalues(n):
     return (2*n + 1)/2
 
-def integralKernelPlus(n, r, theta, phi):
+def integralKernelPlus(n, r):
     n=n-1
     lala1 = sy.jacobi(n, 1/2, 3/2, r)
     lala2 = sy.jacobi(n, 3/2, 1/2, r)
     return prefactor(n)*(si.cos(r/2)*lala1*ident -
-                        1j*si.sin(r/2)*lala2*sigma_r(theta, phi))
+                        1j*si.sin(r/2)*lala2*sigma3)
 
-def integralKernelMinus(n, r, theta, phi):
+def integralKernelMinus(n, r):
     n=n-1
     lala1 = sy.jacobi(n, 1/2, 3/2, r)
     lala2 = sy.jacobi(n, 3/2, 1/2, r)
     return prefactor(n)*(si.cos(r/2)*lala1*ident +
-                        1j*si.sin(r/2)*lala2*sigma_r(theta, phi))
-
-def sigma_r(theta, phi):
-    aa = si.sin(theta)*si.cos(phi)*sigma1 + si.sin(theta)*si.sin(phi)*sigma2
-    bb =  si.cos(theta)*sigma3
-
-    return aa +bb
+                        1j*si.sin(r/2)*lala2*sigma3)
 
 def preMatrixPlus(n,K_Liste):
     a = K_Liste[n-1]
@@ -89,32 +83,32 @@ def preMatrixMinus(n,K_Liste):
     matrix[1,1]= 1+b
     return matrix
 
-def projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
+def projector(t, r, N, Rho_Liste, w_Liste, K_Liste):
     mat = np.zeros((4,4), dtype = object)
     for n in range(1,N + 1):
         Koef =Rho_Liste[n-1]*sy.exp(-1j*w_Liste[n-1]*t)
-        Term1 = TensorProduct(preMatrixPlus(n,K_Liste),integralKernelPlus(n, r, theta, phi))
-        Term2 = TensorProduct(preMatrixMinus(n,K_Liste),integralKernelMinus(n, r, theta,phi))
+        Term1 = TensorProduct(preMatrixPlus(n,K_Liste),integralKernelPlus(n, r))
+        Term2 = TensorProduct(preMatrixMinus(n,K_Liste),integralKernelMinus(n, r))
         mat += Koef*(Term1 + Term2)
     return mat
 
-def projectorAdj(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
+def projectorAdj(t, r, N, Rho_Liste, w_Liste, K_Liste):
     mat = np.zeros((4,4),  dtype = object)
 
     for n in range(1, N+1):
         Koeff = Rho_Liste[n-1]*sy.exp(1j*w_Liste[n-1]*t)
-        Term1 = TensorProduct(preMatrixPlus(n,K_Liste),integralKernelMinus(n, r, theta, phi))
-        Term2 = TensorProduct(preMatrixMinus(n,K_Liste),integralKernelPlus(n, r,theta, phi))
+        Term1 = TensorProduct(preMatrixPlus(n,K_Liste),integralKernelMinus(n, r))
+        Term2 = TensorProduct(preMatrixMinus(n,K_Liste),integralKernelPlus(n, r))
         mat += Koeff*(Term1 +Term2)
     return mat
 
-def closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
+def closedChain(t, r, N, Rho_Liste, w_Liste, K_Liste):
     #print('np.dot(pro,proadj)',projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)*projectorAdj(t, r, theta,phi, N, Rho_Liste, w_Liste, K_Liste))
-    return np.dot(projector(t, r, theta, phi, N, Rho_Liste, w_Liste,
-        K_Liste),projectorAdj(t, r, theta,phi, N, Rho_Liste, w_Liste, K_Liste))
+    return np.dot(projector(t, r, N, Rho_Liste, w_Liste,
+        K_Liste),projectorAdj(t, r, N, Rho_Liste, w_Liste, K_Liste))
 
-def lagrangian_without_bound_constr(t, r, theta, phi,N, Rho_Liste, w_Liste, K_Liste):
-    sub = closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
+def lagrangian_without_bound_constr(t, r,N, Rho_Liste, w_Liste, K_Liste):
+    sub = closedChain(t, r,  N, Rho_Liste, w_Liste, K_Liste)
     #print(np.shape(sub),type(sub),sub)
     return np.trace(np.dot(sub,sub)) - 0.25 * np.trace(sub)*np.trace(sub)
 
@@ -126,8 +120,8 @@ Needed parts for the Integrand
 Constraints
 '''
 
-def boundedness_constraint(t,r,theta, phi, N, Rho_Liste, w_Liste, K_Liste, kappa):
-    sub = closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
+def boundedness_constraint(t,r, N, Rho_Liste, w_Liste, K_Liste, kappa):
+    sub = closedChain(t, r,  N, Rho_Liste, w_Liste, K_Liste)
     print ('kappa=', kappa)
     return kappa* np.trace(sub)**2
 
@@ -141,10 +135,10 @@ Integrand and Action
 def Integrand(t, r, N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion
         = True):
     lagr = sy.lambdify((t,r),
-            lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,w_Liste,
+            lagrangian_without_bound_constr(t,r,N, Rho_Liste,w_Liste,
                 K_Liste), "numpy")
     bound = sy.lambdify((t, r),
-            (boundedness_constraint(t,r,0,0,N,Rho_Liste,w_Liste,
+            (boundedness_constraint(t,r,N,Rho_Liste,w_Liste,
                 K_Liste,kappa)), "numpy")
 
 
@@ -159,9 +153,9 @@ def Integrand(t, r, N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion
 
 def get_Integrand_with_c(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion, Comp_String):
-    a = ccode(lagrangian_without_bound_constr(t,r,0,0,N, Rho_Liste,
+    a = ccode(lagrangian_without_bound_constr(t,r,N, Rho_Liste,
                 w_Liste, K_Liste))
-    b = ccode(boundedness_constraint(t,r,0,0,N,Rho_Liste,w_Liste, K_Liste,kappa))
+    b = ccode(boundedness_constraint(t,r,N,Rho_Liste,w_Liste, K_Liste,kappa))
     g = open('funcprint2.txt', 'r')
     g1 = g.read()
     g.close()
@@ -310,6 +304,7 @@ def get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
         aa = time.time()
         print('Für die Integration benötigte Zeit in sec:',aa - tt)
         print(Wirkung)
+        return Wirkung
     print('done')
 
 def get_integrand_values(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,

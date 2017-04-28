@@ -1,9 +1,11 @@
 from sympy.printing import ccode
 from scipy import integrate
 from symengine import I
+from SimTest import *
 import sympy as sy
 import symengine as si
 import numpy as np
+import random
 import time
 import os
 import Rho_data
@@ -311,6 +313,7 @@ def get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
         aa = time.time()
         print('Für die Integration benötigte Zeit in sec:',aa - tt)
         print(Wirkung)
+        return Wirkung[0]
     print('done')
 
 def get_integrand_values(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
@@ -333,13 +336,13 @@ if __name__ == "__main__":
     t = si.symarray('t', 1)
 
     T = 1 #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
-    N = 7
+    N = 1
 
     K_Anzahl=N
     K_Anf = 0.1
     K_End = 1
 
-    kappa = 0.00001
+    kappa = 0.01
     kappa_Anzahl = 1
 
     w_Liste = [i for i in range(N)]
@@ -352,8 +355,44 @@ if __name__ == "__main__":
 
     Intgrenze = [x_Anf, x_End]
     Wirk = []
-    K_Liste = list(np.linspace(K_Anf,K_End,K_Anzahl))
-    get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,
-            False, 4)
+    #get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,False, 4)
+    Iter = 5                                      #Die Anzahl der temperaturiterationen
+    hilfsarray_fuer_temp = np.linspace(0.01,25,Iter)
+    Amplitude = 0.5                                #Amplitude der Fluktuation
+                                                   #der Temperatur
+    freq = np.pi                                    #Die Frequenz mit der die temp variieren  soll
+    halb = 0.001                                      #Der Halbwertswert fuer die
+    temp = temperatur(Iter, hilfsarray_fuer_temp, halb, freq, Amplitude)
 
-        #   print(get_Wirkung_fuer_kappa(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,w_Liste,kappa, True))
+    '''
+    Ich passe das Minimieren zuerst fuer den eindim. Fall an, danach
+    passe ich es für mehrere dim. an.
+    '''
+    x_fitn = random.random()*(K_End - K_Anf) #Startwert... random
+    print(x_fitn)
+    K_Liste = [x_fitn]
+    fitn_wert_x = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,
+            False, 4)
+    x_y_min = [x_fitn, fitn_wert_x]
+    for m,tt in enumerate(temp):
+        for j in range(10):
+            randomi = random.random()*(K_End - K_Anf)
+            K_Liste = [randomi]
+            fitn_wert_y = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,     kappa, False, False, 4)
+            print('fti_y, fit_y, x = ',fitn_wert_x, fitn_wert_y, x_fitn)
+            boltzi = boltzmann(fitn_wert_x, fitn_wert_y, tt)
+            print('boltzi = ', boltzi)
+            if fitn_wert_x > fitn_wert_y:
+                x_fitn = randomi
+                x_y_min[0]=x_fitn
+                x_y_min[1]=fitn_wert_y
+                fitn_wert_x=fitn_wert_y
+
+            elif (fitn_wert_x < fitn_wert_y) and (random.random() < boltzi) :
+                x_fitn = randomi
+                x_y_min[0]=x_fitn
+                x_y_min[1]=fitn_wert_y
+                fitn_wert_x = fitn_wert_y
+    print(x_y_min[0], x_y_min[1])
+
+
