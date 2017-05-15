@@ -1,4 +1,4 @@
-from SymEngineErweiterung import get_Wirkung
+from SymEngineFast import get_Wirkung
 import Diag_Schar
 import Rho_data
 import symengine as si
@@ -10,13 +10,16 @@ def func(t, r, N, Intgrenze, T, Rho_Liste,w_Liste,kappa,k1):
     K_Liste[ind]= k1
     print('K_Liste=', K_Liste, 'WertListe=',WertListe, 'yaaaaaaay1')
     Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,w_Liste,kappa,
-            False, False, 4)
+            False, False, 1)
+    print(Wert)
     WertListe.append(Wert[0])
     KK.append(k1)
     return WertListe, KK
 
 if __name__ == "__main__":
-    si.var('r t')
+    r = si.symarray('r', 1)
+    t = si.symarray('t', 1)
+
     T = 1 #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
     N = 2
 
@@ -32,9 +35,9 @@ if __name__ == "__main__":
 
     w_Liste = [0.,1.]
     K_Liste = [0.,0.]
-    AnzahlGewichte = 1
+    AnzahlGewichte = 9
     Kurve_Names = []
-    PDFTitle = 'GewichteScharVarK_%1d'%(ind+1)
+    PDFTitle = 'GewichteScharAnz%dVarK_%1d'%(AnzahlGewichte, ind+1)
 
     c = PyxSchar.initialXY(0,20,0,1.5, r'$K_%1d$'%(ind+1),'Wirkung',10,10 , 'tr')
 
@@ -42,7 +45,7 @@ if __name__ == "__main__":
 
     for k in range( AnzahlGewichte):
         rho1 = 0.1*k
-        Rho_Liste = [1,0]#[rho1, (1- rho1)/3]
+        Rho_Liste = [rho1, (1- rho1)/3]
         dk = 0.1
         k1 = 0.
         WertListe = []
@@ -63,6 +66,7 @@ if __name__ == "__main__":
                     k1 += dk
                     WertListe, KK = func(t, r, N, Intgrenze, T, Rho_Liste,
                 w_Liste,kappa, k1)
+                    print(1,dk)
                 elif a != 0 and (b/a < 0.5 or b/a > 2):
                     WertListe.pop(l1)
                     KK.pop(l1)
@@ -71,9 +75,11 @@ if __name__ == "__main__":
                     k1 += dk
                     WertListe, KK = func(t, r, N, Intgrenze, T, Rho_Liste,
                 w_Liste,kappa,  k1)
+                    print(2,dk)
                 else:
                     dk = dk*2
                     dk = min(dk, 0.5)
+                    print(3,dk)
             if WertListe[l1] > 1.5 or k1 > 20:
                 break
 

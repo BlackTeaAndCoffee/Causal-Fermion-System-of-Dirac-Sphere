@@ -2,6 +2,7 @@ from sympy.printing import ccode
 from scipy import integrate
 from symengine import I
 from SimTest import *
+from PyxPlot3d import *
 import sympy as sy
 import symengine as si
 import numpy as np
@@ -11,7 +12,6 @@ import os
 import Rho_data
 import scipy.misc
 import ctypes
-
 
 sigma1 = si.zeros(2)
 sigma1[1,0] = 1
@@ -211,12 +211,14 @@ def get_Integrand_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste
     Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
     Integranddef = "double f(int n, double args[n])"+ "{return"
     Begin_von_Func = "(fmax(creall("
-    Func1 = a.replace("exp","cexp").replace("r","args[0]").replace("pow", "cpow").replace("t","args[1]")
+    Func1 = a.replace("exp","cexp").replace("r_0","args[0]").replace("pow",
+            "cpow").replace("t_0","args[1]")
     Func1_End = "),0)"
     Gesamtstring+= Bibliotheken + Integranddef + Begin_von_Func + Func1+Func1_End
 
     Func2_Anf = "+ creall("
-    Func2 =  b.replace("exp", "cexp").replace("r","args[0]").replace("pow", "cpow").replace("t","args[1]")
+    Func2 =  b.replace("exp", "cexp").replace("r_0","args[0]").replace("pow",
+            "cpow").replace("t_0","args[1]")
     g = open('funcprint.txt', 'r')
     g1 = g.read()
 
@@ -287,7 +289,8 @@ def get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
 
         tt = time.time()
         print('Für die Integration benötigte Zeit in sec:',tt-aa)
-        return zup
+        print('yay',zup)
+        return zup[0]
     elif Type ==2:
         '''C'''
         get_Integrand_with_c(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
@@ -336,17 +339,25 @@ if __name__ == "__main__":
     t = si.symarray('t', 1)
 
     T = 1 #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
-    N = 1
+    N = 2
 
     K_Anzahl=N
-    K_Anf = 0.1
-    K_End = 1
+    K_Anf = 0
+    K_End = 30
 
-    kappa = 0.01
+    K_Liste = [0,0]#[i*np.pi for i in range(N)]
+
+    K_An = 90
+
+    K1_Liste = np.linspace(0,K_End,K_An)
+    K2_Liste = np.linspace(0,K_End,K_An)
+
+    kappa = 0.0001
     kappa_Anzahl = 1
 
-    w_Liste = [i for i in range(N)]
-    Rho_Liste = Rho_data.get_rho_values(N)
+    w_Liste = [0,1]
+    rho1 = 0.9
+    Rho_Liste = [rho1, (1-rho1)/3]#Rho_data.get_rho_values(N)
 
     x_Anf = 0.
     x_End = np.pi
@@ -355,44 +366,20 @@ if __name__ == "__main__":
 
     Intgrenze = [x_Anf, x_End]
     Wirk = []
-    #get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,False, 4)
-    Iter = 5                                      #Die Anzahl der temperaturiterationen
-    hilfsarray_fuer_temp = np.linspace(0.01,25,Iter)
-    Amplitude = 0.5                                #Amplitude der Fluktuation
-                                                   #der Temperatur
-    freq = np.pi                                    #Die Frequenz mit der die temp variieren  soll
-    halb = 0.001                                      #Der Halbwertswert fuer die
-    temp = temperatur(Iter, hilfsarray_fuer_temp, halb, freq, Amplitude)
+    d = open('NumbFor3d.txt', 'w')
 
-    '''
-    Ich passe das Minimieren zuerst fuer den eindim. Fall an, danach
-    passe ich es für mehrere dim. an.
-    '''
-    x_fitn = random.random()*(K_End - K_Anf) #Startwert... random
-    print(x_fitn)
-    K_Liste = [x_fitn]
-    fitn_wert_x = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,
-            False, 4)
-    x_y_min = [x_fitn, fitn_wert_x]
-    for m,tt in enumerate(temp):
-        for j in range(10):
-            randomi = random.random()*(K_End - K_Anf)
-            K_Liste = [randomi]
-            fitn_wert_y = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,     kappa, False, False, 4)
-            print('fti_y, fit_y, x = ',fitn_wert_x, fitn_wert_y, x_fitn)
-            boltzi = boltzmann(fitn_wert_x, fitn_wert_y, tt)
-            print('boltzi = ', boltzi)
-            if fitn_wert_x > fitn_wert_y:
-                x_fitn = randomi
-                x_y_min[0]=x_fitn
-                x_y_min[1]=fitn_wert_y
-                fitn_wert_x=fitn_wert_y
 
-            elif (fitn_wert_x < fitn_wert_y) and (random.random() < boltzi) :
-                x_fitn = randomi
-                x_y_min[0]=x_fitn
-                x_y_min[1]=fitn_wert_y
-                fitn_wert_x = fitn_wert_y
-    print(x_y_min[0], x_y_min[1])
+    norma = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,
+            w_Liste,kappa, False,False, 1)
 
+    for k1 in K1_Liste:
+        for k2 in K2_Liste:
+            K_Liste=[k1, k2]
+            Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,False, 1)
+            print(Wert)
+            string = "%f %f %f \n" %(k1,k2,Wert/norma)
+            d.write(string)
+    d.close()
+    Plot("NumbFor3d.txt", "WirkunN%dRho1_%f_Rho2_%f_VarK1_K2" %(N,
+        Rho_Liste[0], Rho_Liste[1]))
 

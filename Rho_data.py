@@ -11,9 +11,9 @@ def diracEigenvalues(n):
 '''
 Constraints
 '''
-def traceConstraint(N,rho):
+def traceConstraint(N, Constant, rho):
     #dann benutze rho[0] usw.
-    add = 1.
+    add = Constant
     for n in range(1, N):
         add -= rho[n-1]*(diracEigenvalues(n)**2 - 0.25)
 
@@ -24,34 +24,42 @@ def traceConstraint(N,rho):
 Constraints
 '''
 
-def subs_coeffs(N, rho):
-    subs  = traceConstraint(N, rho)
+def subs_coeffs(N, Constant, rho):
+    subs  = traceConstraint(N, Constant, rho)
+    print(subs)
     liste = []
     for i in range(N - 1):
         liste.append(Poly(subs).coeff_monomial(rho[i]))
     return liste
 
-def get_rho_values(N, SameValues = True):
+def get_rho_values(N, Factor, Constant, SameValues = True):
 
     if SameValues:
         s = 0
         for i in range(1, N+1):
             s += (diracEigenvalues(i)**2 - 0.25)
-        rho_values = [1/s for i in range(N)]
+        rho_values = [Constant/s for i in range(N)]
     else:
         rho = symbols('rho0:N')
-        liste = subs_coeffs(N, rho)
-        wert = 1
+        liste = subs_coeffs(N, Constant, rho)
+        print(liste)
+        liste2 = np.array(liste)/liste[0]
+        print(liste2)
+        wert = Constant
         rho_values = np.zeros(N)
         if N ==1:
             return [2]
         else:
             for j in range(N-1):
-                a = random.random()
+                a = Factor*random.random()
                 rho_values[j] = -a* (wert/liste[j])    # hier steht ein Minus,weil die
                                                        # Koeffizienten negativ sind,
                                                        # finden aber als positive
                                                        # Zahlen Verwendung.
+                                                 #Das gefaellt mir nicht,wert durch
+                                                 #liste[j] ist blödsinn. Siehe
+                                                 #Wirkungs_Minummum.py
+
                 zahl = wert - rho_values[j]
                 if zahl == 0:
                     break
@@ -63,8 +71,10 @@ def get_rho_values(N, SameValues = True):
 
 
 if __name__ == "__main__":
-    N = 1
-    rho_values  = get_rho_values(N, True)
-
+    N = 5
+    Constant = 1
+    Factor = 1
+    rho_values  = get_rho_values(N, Factor, Constant, False)
+    print(rho_values)
 
 
