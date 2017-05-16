@@ -70,7 +70,7 @@ def subs_coeffs(N, Constant, rho):
     return liste
 
 def get_rho_values(N, Factor, Constant, liste, SameValues = True):
-
+    print('llist', liste)
     if SameValues:
         s = 0
         for i in range(1, N+1):
@@ -83,6 +83,7 @@ def get_rho_values(N, Factor, Constant, liste, SameValues = True):
             return [2]
         elif N ==2:
             rho_values[0] = Factor*(wert/liste[0])
+            print('rho_val', rho_values[0], liste)
             zahl = wert - rho_values[0]
             if zahl == 0:
                 return rho_values
@@ -90,7 +91,6 @@ def get_rho_values(N, Factor, Constant, liste, SameValues = True):
                 wert = zahl
 
             rho_values[N-1] = zahl/(diracEigenvalues(N)**2-0.25)
-            print('wadaaa', rho_values)
         else:
             for j in range(N-1):
                 if j ==0:
@@ -113,44 +113,121 @@ def get_rho_values(N, Factor, Constant, liste, SameValues = True):
             rho_values[N-1] = zahl/(diracEigenvalues(N)**2-0.25)
     return rho_values
 
-def Zeilensparer(liste):
-    K_randomi = np.random.random_sample(N)*(K_End - K_Anf)
-    rho_randomi = np.random.random()
-    Rho_Liste = get_rho_values(N,rho_randomi, Constant, liste, SameValues  =False)
-    print("yala", Rho_Liste)
-    w_randomi = np.random.random_sample(N)*(w_End - w_Anf)
+def Zeilensparer(liste2, Minimum, N, x_fitn, var_K, var_Rho,var_w, variant):
+    print('x_fitn', x_fitn, liste)
+    N = j
+    if j ==1:
+        print('her  i am')
+        if var_K:
+            x_fitn[0]= np.random.random_sample(N)*(K_End - K_Anf)
+        if var_Rho:
+            rho_randomi = np.random.random()
+            x_fitn[1]= get_rho_values(N,rho_randomi, Constant, liste2, SameValues  =False)
+        if var_w:
+            x_fitn[2] = np.random.random_sample(N)*(w_End - w_Anf)
+        print('hola', x_fitn)
+        fitn_wert_y =  get_Wirkung(t, r, N, Intgrenze, T, *x_fitn, kappa, False, False, 1)
+    else:
+        print(Minimum)
+        if var_K:
+            x_fitn[0]= [*Minimum[0][0],0]
+        if var_Rho:
+            x_fitn[1]= [*Minimum[0][1], 0]
+        if var_w:
+            x_fitn[2] = [*Minimum[0][2], 0]
+        fitn_wert_y =  get_Wirkung(t, r, N, Intgrenze, T, *x_fitn, kappa, False, False, 1)
 
-    fitn_wert_y =  get_Wirkung(t, r, N, Intgrenze, T, list(K_randomi),
-            Rho_Liste, list(w_randomi), kappa, False, False, 1)
-    x_fitn = [K_randomi, Rho_Liste, list(w_randomi)]
     return x_fitn, fitn_wert_y
 
-def Variierer(K_randomi, rho_randomi, w_randomi, var_rho = True, var_K = True, var_w = True):
+def x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste):
+    if variant ==1:
+        x_fitn = [K_Liste, Rho_Liste, w_Liste]
+    elif variant ==2:
+        x_fitn = [K_Liste, Rho_Liste, []]
+    elif variant ==3:
+        x_fitn = [[], Rho_Liste, w_Liste]
+    elif variant ==4:
+        x_fitn = [K_Liste, [], w_Liste]
+    elif variant ==5:
+        x_fitn = [K_Liste, [], []]
+    elif variant ==6:
+        x_fitn = [[], Rho_Liste, []]
+    elif variant ==7:
+        x_fitn = [[],[],w_Liste]
+    elif variant ==8:
+        x_fitn = [[],[],[]]
+
+    return x_fitn
+
+def Variierer(K_randomi, rho_randomi, w_randomi, variant, x_fitn,
+        var_rho = True, var_K = True, var_w = True):
     if var_K:
+        print('N', N)
         randomi2 = (2*np.random.random_sample(N) - 1)*(K_End - K_Anf)/10
-        K_randomi = K_randomi + randomi2
-        K_Liste = list(abs(K_randomi))
+        print('K_randomi and randomi2', K_randomi, randomi2)
+        K_randomi = np.absolute(K_randomi + randomi2)
+        print('K_randomi', K_randomi)
+        x_fitn[0]= list(K_randomi)
     if var_rho:
         randomi2 = np.random.random()/10
         rho_randomi = rho_randomi + randomi2
-        Rho_Liste = get_rho_values(N,rho_randomi, Constant,liste, SameValues  =False)
+        x_fitn[1] = get_rho_values(N,rho_randomi, Constant,liste2, SameValues  =False)
     if var_w:
         randomi2 = np.random.random_sample(N)*(w_End - w_Anf)/10
         w_randomi = w_randomi + randomi2
-        w_Liste = list(w_randomi)
-    fitn_wert_y = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, list(Rho_Liste), w_Liste, kappa, False, False, 1)
-    x_fitn = [K_Liste, Rho_Liste, w_Liste]
-    return fitn_wert_y, x_fitn
+        x_fitn[2] = list(w_randomi)
 
-def RandVAlforVar(var_rho = True, var_K = True, var_w = True):
-    if var_K:
+    return x_fitn
+
+
+def Minimierer(j, liste2, Minimum, variant, var_K, var_Rho, var_w, K_Liste,
+        Rho_Liste, w_Liste):
+
+    N  = j
+    x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
+    x_fitn, fitn_wert_y = Zeilensparer(liste2, Minimum, j, x_fitn, var_K, var_Rho,var_w, variant)
+    print('baboo', x_fitn)
+    x_y_min = [x_fitn, fitn_wert_y]
+    print(x_y_min)
+    Mittelgr = 2
+    print('x_y_min', x_y_min)
+    K_M = x_y_min[1]/Mittelgr
+    for i in range(Mittelgr):
+        print('i',liste2)
+        x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
+        x_fitn, fitn_wert_x = Zeilensparer(liste2, Minimum, j, x_fitn,
+                var_K, var_Rho, var_w, variant)
+
+        if fitn_wert_y < x_y_min[1]:
+            x_y_min[1] =fitn_wert_x
+            x_y_min[0] = x_fitn
+        K_M += fitn_wert_y/Mittelgr
+
+
+    for m,tt in enumerate(temp):
         K_randomi = np.random.random_sample(N)*(K_End - K_Anf)
-    elif var_Rho:
+        print('K_randomi',K_randomi)
         rho_randomi = np.random.random()
-    elif var_w:
         w_randomi = np.random.random_sample(N)*(w_End - w_Anf)
+        for j in range(10):
+            x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
+            x_fitn = Variierer (K_randomi, rho_randomi,
+             w_randomi, variant, x_fitn, var_Rho, var_K, var_w)
 
-    return K_randomi, rho_randomi, w_randomi
+            fitn_wert_y = get_Wirkung(t, r, N, Intgrenze, T,
+                    *x_fitn, kappa, False, False, 1)
+            boltzi = boltzmann(fitn_wert_x, fitn_wert_y, tt, K_M)
+            print('boltzi = ', boltzi)
+            if fitn_wert_x > fitn_wert_y:
+                fitn_wert_x=fitn_wert_y
+                if x_y_min[1] > fitn_wert_y:
+                    x_y_min[0]= x_fitn
+                    x_y_min[1]= fitn_wert_y
+
+            elif (fitn_wert_x < fitn_wert_y) and (random.random() <= boltzi) :
+                fitn_wert_x = fitn_wert_y
+            print('Minimum = ', x_y_min[0], x_y_min[1])
+    return x_y_min
 
 if __name__ == "__main__":
     '''
@@ -164,6 +241,8 @@ if __name__ == "__main__":
     K_Anzahl=N
     K_Anf = 0
     K_End = 25
+    K_Liste = list(np.linspace(K_Anf, K_End, 10))
+
 
     kappa = 0.0001
     kappa_Anzahl = 1
@@ -173,8 +252,8 @@ if __name__ == "__main__":
     liste = subs_coeffs(N, Constant, rho)
 
     liste2 = np.array(liste)/liste[0]
-
-    #Rho_Liste = [0.8,0.07]#Rho_data.get_rho_values(N,Factor, Constant, liste2, SameValues  = True)
+    print('liste2', liste2)
+    Rho_Liste = [0.8,0.07]#Rho_data.get_rho_values(N,Factor, Constant, liste2, SameValues  = True)
 
     x_Anf = 0
     x_End = np.pi
@@ -190,7 +269,7 @@ if __name__ == "__main__":
     Ab hier werden die fuer die Minimierung benötigten Variablen definiert
     '''
     Iter = 10                                      #Die Anzahl der temperaturiterationen
-    hilfsarray_fuer_temp = np.linspace(0.01,50,Iter)
+    hilfsarray_fuer_temp = np.linspace(0.01,5,Iter)
     Amplitude = 0.5                                #Amplitude der Fluktuation
                                                    #der Temperatur
     freq = np.pi                                    #Die Frequenz mit der die temp variieren soll
@@ -201,38 +280,15 @@ if __name__ == "__main__":
     Ich passe das Minimieren zuerst fuer den eindim. Fall an, danach
     passe ich es für mehrere dim. an.
     '''
+    Anzahl_N = 2
+    Minimum  = []
 
-    x_fitn,fitn_wert_y = Zeilensparer(liste2)
-
-    x_y_min = [x_fitn, fitn_wert_y]
-    Mittelgr = 2
-    K_M = x_y_min[1]/Mittelgr
-    for i in range(Mittelgr):
-        x_fitn, fitn_wert_x = Zeilensparer(liste2)
-
-        if fitn_wert_y < x_y_min[1]:
-            x_y_min[1] =fitn_wert_x
-            x_y_min[0] = x_fitn
-        K_M += fitn_wert_y/Mittelgr
-
-
-    for m,tt in enumerate(temp):
-        K_randomi = np.random.random_sample(N)*(K_End - K_Anf)
-        rho_randomi = np.random.random()
-        w_randomi = np.random.random_sample(N)*(w_End - w_Anf)
-
-        for j in range(10):
-            fitn_wert_y, x_fitn =  Variierer(K_randomi, rho_randomi, w_randomi, var_rho = True, var_K = True, var_w = True)
-
-            boltzi = boltzmann(fitn_wert_x, fitn_wert_y, tt, K_M)
-            print('boltzi = ', boltzi)
-            if fitn_wert_x > fitn_wert_y:
-                fitn_wert_x=fitn_wert_y
-                if x_y_min[1] > fitn_wert_y:
-                    x_y_min[0]= x_fitn
-                    x_y_min[1]= fitn_wert_y
-
-            elif (fitn_wert_x < fitn_wert_y) and (random.random() <= boltzi) :
-                fitn_wert_x = fitn_wert_y
-            print('Minimum = ', x_y_min[0], x_y_min[1])
+    variant = 5
+    for j in range(1,Anzahl_N+1):
+        #rho_randomi = j*0.1
+        #Rho_Liste =get_rho_values(j,rho_randomi, Constant, liste, SameValues  =False)
+        #print('Rho_Liste', Rho_Liste)
+        K_Liste = [i for i in range(j)]
+        Minimum = Minimierer(j, liste2, Minimum, variant, False,
+                True, True, K_Liste, Rho_Liste, w_Liste )
 
