@@ -71,6 +71,8 @@ def subs_coeffs(N, Constant, rho):
 
 def get_rho_values(N, Factor, Constant, liste, SameValues = True):
     print('llist', liste)
+    mix_list = np.arange(N-1)
+    np.random.shuffle(mix_list)
     if SameValues:
         s = 0
         for i in range(1, N+1):
@@ -179,10 +181,29 @@ def Variierer(K_randomi, rho_randomi, w_randomi, variant, x_fitn,
 
     return x_fitn
 
+def which_variant(var_K, var_Rho, var_w):
+    if var_K == False and var_Rho== False  and var_w== False:
+        return 1
+    elif var_K == False and var_Rho== False  and var_w==True:
+        return 2
+    elif var_K == True and var_Rho== False and var_w==False:
+        return 3
+    elif var_K == False and var_Rho==True  and var_w==False:
+        return 4
+    elif var_K == False and var_Rho==True  and var_w==True:
+        return 5
+    elif var_K ==True  and var_Rho== False  and var_w==True:
+        return 6
+    elif var_K ==True  and var_Rho==True  and var_w==False:
+        return 7
+    elif var_K ==True  and var_Rho==True  and var_w==True:
+        return 8
 
-def Minimierer(j, liste2, Minimum, variant, var_K, var_Rho, var_w, K_Liste,
+
+
+def Minimierer(j, liste2, Minimum, var_K, var_Rho, var_w, K_Liste,
         Rho_Liste, w_Liste):
-
+    variant = which_variant(var_K, var_Rho, var_w)
     N  = j
     x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
     x_fitn, fitn_wert_y = Zeilensparer(liste2, Minimum, j, x_fitn, var_K, var_Rho,var_w, variant)
@@ -283,12 +304,11 @@ if __name__ == "__main__":
     Anzahl_N = 2
     Minimum  = []
 
-    variant = 5
     for j in range(1,Anzahl_N+1):
         #rho_randomi = j*0.1
         #Rho_Liste =get_rho_values(j,rho_randomi, Constant, liste, SameValues  =False)
         #print('Rho_Liste', Rho_Liste)
         K_Liste = [i for i in range(j)]
-        Minimum = Minimierer(j, liste2, Minimum, variant, False,
+        Minimum = Minimierer(j, liste2, Minimum, False,
                 True, True, K_Liste, Rho_Liste, w_Liste )
 
