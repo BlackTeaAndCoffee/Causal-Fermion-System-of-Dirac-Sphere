@@ -69,7 +69,7 @@ def subs_coeffs(N, Constant, rho):
         liste.append(Poly(subs).coeff_monomial(rho[i]))
     return liste
 
-def get_rho_values(N, Factor, Constant, liste, SameValues = True):
+def get_rho_values(N, Factor, for_rho, Constant, liste, SameValues = True):
     print('llist', liste)
     mix_list = np.arange(N-1)
     np.random.shuffle(mix_list)
@@ -94,12 +94,14 @@ def get_rho_values(N, Factor, Constant, liste, SameValues = True):
 
             rho_values[N-1] = zahl/(diracEigenvalues(N)**2-0.25)
         else:
-            for j in range(N-1):
-                if j ==0:
-                    rho_values[0] = Factor*(wert/liste[0])
-                    zahl = wert - rho_values[0]
-                    if zahl ==0:
-                        rho_values[0]
+            for j,listval  in enumerate(liste):
+                rho_values[for_rho] = Factor*(wert/liste[for_rho])
+                zahl = wert - rho_values[for_rho]
+
+                if zahl ==0:
+                    return rho_values
+                elif j == for_rho:
+                    continue
                 else:
                     a = random.random()
                     rho_values[j] = a* (wert/liste[j])    # hier steht ein Minus,weil die
@@ -124,7 +126,7 @@ def Zeilensparer(liste2, Minimum, N, x_fitn, var_K, var_Rho,var_w, variant):
             x_fitn[0]= np.random.random_sample(N)*(K_End - K_Anf)
         if var_Rho:
             rho_randomi = np.random.random()
-            x_fitn[1]= get_rho_values(N,rho_randomi, Constant, liste2, SameValues  =False)
+            x_fitn[1]= get_rho_values(N,rho_randomi,0, Constant, liste2, SameValues  =False)
         if var_w:
             x_fitn[2] = np.random.random_sample(N)*(w_End - w_Anf)
         print('hola', x_fitn)
@@ -161,7 +163,7 @@ def x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste):
 
     return x_fitn
 
-def Variierer(K_randomi, rho_randomi, w_randomi, variant, x_fitn,
+def Variierer(K_randomi, rho_randomi,for_rho, w_randomi, variant, x_fitn,
         var_rho = True, var_K = True, var_w = True):
     if var_K:
         print('N', N)
@@ -173,7 +175,7 @@ def Variierer(K_randomi, rho_randomi, w_randomi, variant, x_fitn,
     if var_rho:
         randomi2 = np.random.random()/10
         rho_randomi = rho_randomi + randomi2
-        x_fitn[1] = get_rho_values(N,rho_randomi, Constant,liste2, SameValues  =False)
+        x_fitn[1] = get_rho_values(N,rho_randomi,for_rho,Constant,liste2, SameValues  =False)
     if var_w:
         randomi2 = np.random.random_sample(N)*(w_End - w_Anf)/10
         w_randomi = w_randomi + randomi2
@@ -230,10 +232,15 @@ def Minimierer(j, liste2, Minimum, var_K, var_Rho, var_w, K_Liste,
         print('K_randomi',K_randomi)
         rho_randomi = np.random.random()
         w_randomi = np.random.random_sample(N)*(w_End - w_Anf)
+        if N==1 or N ==2:
+            for_rho= 1
+        else:
+            for_rho = np.random.randint(N -1)
+        print('for_rho', for_rho)
         for j in range(10):
             x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
-            x_fitn = Variierer (K_randomi, rho_randomi,
-             w_randomi, variant, x_fitn, var_Rho, var_K, var_w)
+            x_fitn = Variierer (K_randomi, rho_randomi, for_rho
+             ,w_randomi, variant, x_fitn, var_Rho, var_K, var_w)
 
             fitn_wert_y = get_Wirkung(t, r, N, Intgrenze, T,
                     *x_fitn, kappa, False, False, 1)
@@ -309,6 +316,11 @@ if __name__ == "__main__":
         #Rho_Liste =get_rho_values(j,rho_randomi, Constant, liste, SameValues  =False)
         #print('Rho_Liste', Rho_Liste)
         K_Liste = [i for i in range(j)]
+        Constant = j*0.1
+        Factor = 1
+        print('liste2', liste2)
+        Rho_Liste = get_rho_values(j, Factor, 1, Constant, liste2, SameValues  = True)
+
         Minimum = Minimierer(j, liste2, Minimum, False,
-                True, True, K_Liste, Rho_Liste, w_Liste )
+                False, True, K_Liste, Rho_Liste, w_Liste )
 
