@@ -3,6 +3,7 @@ from scipy import integrate
 from symengine import I
 from SimTest import *
 from PyxPlot3d import *
+from configfunktion import configfunktion
 import sympy as sy
 import symengine as si
 import numpy as np
@@ -338,26 +339,26 @@ if __name__ == "__main__":
     r = si.symarray('r', 1)
     t = si.symarray('t', 1)
 
+    var_K, var_Rho, var_w = configfunktion('SollVarr?')
+    K_Anf, K_End, K_List = configfunktion('Impuls')
+    w_Anf, w_End, w_List = configfunktion('Frequenz')
+    Constant, kappa, Rho_List = configfunktion('Einschraenkungen')
+    Anzahl_N, first = configfunktion('Systemgroesse')
+
+
+
     T = 1 #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
-    N = 2
+    N = Anzahl_N
 
     K_Anzahl=N
-    K_Anf = 0
-    K_End = 30
 
-    K_Liste = [0,0]#[i*np.pi for i in range(N)]
-
-    K_An = 90
+    K_An = 25
 
     K1_Liste = np.linspace(0,K_End,K_An)
     K2_Liste = np.linspace(0,K_End,K_An)
 
-    kappa = 0.0001
     kappa_Anzahl = 1
 
-    w_Liste = [0,1]
-    rho1 = 0.9
-    Rho_Liste = [rho1, (1-rho1)/3]#Rho_data.get_rho_values(N)
 
     x_Anf = 0.
     x_End = np.pi
@@ -366,20 +367,33 @@ if __name__ == "__main__":
 
     Intgrenze = [x_Anf, x_End]
     Wirk = []
-    d = open('NumbFor3d.txt', 'w')
 
+    w_Liste = eval(w_List)
+    K_Liste = eval(K_List)
 
-    norma = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,
+    for jj in range(20):
+        rho_1 = jj*0.05
+        Rho_Liste = [rho_1, (1-rho_1)/3]
+
+        norma = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,
             w_Liste,kappa, False,False, 1)
+        d = open('NumbFor3d.txt', 'w')
 
-    for k1 in K1_Liste:
-        for k2 in K2_Liste:
-            K_Liste=[k1, k2]
-            Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,False, 1)
-            print(Wert)
-            string = "%f %f %f \n" %(k1,k2,Wert/norma)
-            d.write(string)
-    d.close()
-    Plot("NumbFor3d.txt", "WirkunN%dRho1_%f_Rho2_%f_VarK1_K2" %(N,
-        Rho_Liste[0], Rho_Liste[1]))
+        for k1 in K1_Liste:
+            for k2 in K2_Liste:
+                K_Liste=[k1, k2]
+                Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,False, 1)
+                print(Wert)
+                string = "%f %f %f \n" %(k1,k2,Wert/norma)
+                d.write(string)
+        d.close()
+        PDFName =   "WirkunN%dRho1_%f_Rho2_%f_VarK1_K2_%05d" %(N,Rho_Liste[0],
+                Rho_Liste[1], jj)
+        Plot("NumbFor3d.txt", PDFName)
+        f = open(PDFName +'.pdf', 'a')
+        g = open("NumbFor3d.txt", "r")
+        os.system("cat Anfangswerte.cfg >> " +PDFName + ".pdf")
+
+        f.write('K_1, K_2, Wirkung\n')
+        os.system("cat NumbFor3d.txt >> " +PDFName+".pdf" )
 

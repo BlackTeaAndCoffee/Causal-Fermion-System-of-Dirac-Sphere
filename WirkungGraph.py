@@ -12,7 +12,7 @@ def func(t, r, N, Intgrenze, T, Rho_Liste,w_Liste,kappa,k1):
     Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,w_Liste,kappa,
             False, False, 1)
     print(Wert)
-    WertListe.append(Wert[0])
+    WertListe.append(Wert)
     KK.append(k1)
     return WertListe, KK
 
@@ -35,9 +35,10 @@ if __name__ == "__main__":
 
     w_Liste = [0.,1.]
     K_Liste = [0.,0.]
-    AnzahlGewichte = 9
+    AnzahlGewichte = 11
     Kurve_Names = []
-    PDFTitle = 'GewichteScharAnz%dVarK_%1d'%(AnzahlGewichte, ind+1)
+    PDFTitle = 'N_%d_GewichteScharAnz%dVarK_%1dKappa_%1.5f'%(N,AnzahlGewichte,
+            ind+1, kappa)
 
     c = PyxSchar.initialXY(0,20,0,1.5, r'$K_%1d$'%(ind+1),'Wirkung',10,10 , 'tr')
 
