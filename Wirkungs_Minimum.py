@@ -74,8 +74,8 @@ def subs_coeffs(NN, Constant, rho):
             liste.append(Poly(subs).coeff_monomial(rho[i]))
     return liste
 
-def get_rho_values(NN, Factor, for_rho, Constant, liste, SameValues = True):
-    print('llist', liste)
+def get_rho_values(NN, Factor, for_rho, Constant, liste_in, SameValues = True):
+    print('llist', liste_in)
     mix_list = np.arange(NN-1)
     print('asdfasdf',mix_list)
     np.random.shuffle(mix_list)
@@ -93,19 +93,19 @@ def get_rho_values(NN, Factor, for_rho, Constant, liste, SameValues = True):
             return [2]
         elif NN ==2:
             subb = Factor*wert
-            rho_values[0] = subb/liste[0]
-            print('rho_val', rho_values[0], liste)
+            rho_values[0] = subb/liste_in[0]
+            print('rho_val', rho_values[0], liste_in)
             wert = wert - subb
             if wert == 0:
                 return rho_values
 
-            rho_values[N-1] = 2*wert/(diracEigenvalues(N)**2-0.25)
+            rho_values[NN-1] = 2*wert/(diracEigenvalues(NN)**2-0.25)
         else:
             print('wert', wert)
             subb2 = Factor*wert
-            rho_values[for_rho] = Factor*wert/liste[for_rho]
+            rho_values[for_rho] = Factor*wert/liste_in[for_rho]
             print('rho_vals', rho_values)
-            wert = wert - rho_values[for_rho]*liste[for_rho]
+            wert = wert - rho_values[for_rho]*liste_in[for_rho]
 
 
             for jl,listval  in enumerate(mix_list):
@@ -117,22 +117,22 @@ def get_rho_values(NN, Factor, for_rho, Constant, liste, SameValues = True):
                 else:
                     a = random.random()
                     subb3 = a*wert
-                    rho_values[listval] = a*wert/liste[listval]    # hier steht ein Minus,weil die
+                    rho_values[listval] = a*wert/liste_in[listval]    # hier steht ein Minus,weil die
                                                             # Koeffizienten negativ sind,
                                                            # finden aber als positive
                                                            # Zahlen Verwendung.
                     print('zahl', wert)
-                    wert = wert - rho_values[listval]*liste[listval]
+                    wert = wert - rho_values[listval]*liste_in[listval]
                     print('zahl', wert)
                     if wert == 0:
                         return rho_values
 
             rho_values[NN-1] = 2*wert/(diracEigenvalues(NN)**2 - 0.25)
-    print('rho_values, liste :', rho_values, liste)
+    print('rho_values, liste_in :', rho_values, liste_in)
     s = 0
 
     for ll in range(len(rho_values)-1):
-        s+= liste[ll]*rho_values[ll]
+        s+= liste_in[ll]*rho_values[ll]
         print(s)
     s+= rho_values[-1]*(diracEigenvalues(NN)**2 - 0.25)/2
     print('Summe',s)

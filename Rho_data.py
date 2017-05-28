@@ -76,5 +76,8 @@ if __name__ == "__main__":
     Factor = 1
     rho_values  = get_rho_values(N, Factor, Constant, False)
     print(rho_values)
-
+'''
+Attention:Das Programm ist nicht aktuell. Die akteuelle Version ist in
+Wirkungs_Minimum.py!!!!
+'''
 
