@@ -51,11 +51,11 @@ def diracEigenvalues(n):
 '''
 Constraints
 '''
-def traceConstraint(N, Constant, rho):
+def traceConstraint(N_t, Constant, rho):
     #dann benutze rho[0] usw.
     add = Constant
-    for n in range(1, N):
-        add -= rho[n-1]*(diracEigenvalues(n)**2 - 0.25)
+    for n_t in range(1, N_t):
+        add -= rho[n_t-1]*(diracEigenvalues(n_t)**2 - 0.25)
 
     return add
 
@@ -74,42 +74,35 @@ def subs_coeffs(NN, Constant, rho):
             liste.append(Poly(subs).coeff_monomial(rho[i]))
     return liste
 
-def get_rho_values(NN, Factor, for_rho, Constant, liste_in, SameValues = True):
-    print('llist', liste_in)
-    mix_list = np.arange(NN-1)
-    print('asdfasdf',mix_list)
+def get_rho_values(N_r, Factor, for_rho, Constant, liste_in, SameValues = True):
+    mix_list = np.arange(N_r-1)
     np.random.shuffle(mix_list)
-    print('asfasdf',mix_list)
 
     if SameValues:
-        s = 0
-        for i in range(1, NN+1):
-            s += (diracEigenvalues(i)**2 - 0.25)
-        rho_values = [Constant/s for i in range(NN)]
+        s_m = 0
+        for i in range(1, N_r+1):
+            s_m += (diracEigenvalues(i)**2 - 0.25)
+        rho_values = [Constant/s_m for i in range(N_r)]
     else:
         wert = Constant
-        rho_values = np.zeros(NN)
-        if NN ==1:
+        rho_values = np.zeros(N_r)
+        if N_r ==1:
             return [2]
-        elif NN ==2:
+        elif N_r ==2:
             subb = Factor*wert
             rho_values[0] = subb/liste_in[0]
-            print('rho_val', rho_values[0], liste_in)
             wert = wert - subb
             if wert == 0:
                 return rho_values
 
-            rho_values[NN-1] = 2*wert/(diracEigenvalues(NN)**2-0.25)
+            rho_values[N_r-1] = 2*wert/(diracEigenvalues(N_r)**2-0.25)
         else:
-            print('wert', wert)
             subb2 = Factor*wert
             rho_values[for_rho] = Factor*wert/liste_in[for_rho]
-            print('rho_vals', rho_values)
             wert = wert - rho_values[for_rho]*liste_in[for_rho]
 
 
             for jl,listval  in enumerate(mix_list):
-                print('wert', wert)
                 if wert ==0:
                     return rho_values
                 elif listval == for_rho:
@@ -117,39 +110,32 @@ def get_rho_values(NN, Factor, for_rho, Constant, liste_in, SameValues = True):
                 else:
                     a = random.random()
                     subb3 = a*wert
-                    rho_values[listval] = a*wert/liste_in[listval]    # hier steht ein Minus,weil die
-                                                            # Koeffizienten negativ sind,
-                                                           # finden aber als positive
-                                                           # Zahlen Verwendung.
-                    print('zahl', wert)
+                    rho_values[listval] = a*wert/liste_in[listval]
                     wert = wert - rho_values[listval]*liste_in[listval]
-                    print('zahl', wert)
                     if wert == 0:
                         return rho_values
 
-            rho_values[NN-1] = 2*wert/(diracEigenvalues(NN)**2 - 0.25)
-    print('rho_values, liste_in :', rho_values, liste_in)
-    s = 0
+            rho_values[N_r-1] = 2*wert/(diracEigenvalues(N_r)**2 - 0.25)
+    s_t = 0
 
     for ll in range(len(rho_values)-1):
-        s+= liste_in[ll]*rho_values[ll]
-        print(s)
-    s+= rho_values[-1]*(diracEigenvalues(NN)**2 - 0.25)/2
-    print('Summe',s)
+        s_t+= liste_in[ll]*rho_values[ll]
+    s_t+= rho_values[-1]*(diracEigenvalues(N_r)**2 - 0.25)/2
+    print('Summe',s_t)
     return rho_values
 
-def Zeilensparer(liste2, Minimum, N,first, x_fitn, var_K, var_Rho,var_w, variant):
+def Zeilensparer(liste2, Minimum, N_Z,first, x_fitn, var_K, var_Rho,var_w, variant):
     print('x_fitn', x_fitn, liste)
 
-    if first ==N:
+    if first ==N_Z:
         if var_K:
-            x_fitn[0]= np.random.random_sample(N)*(K_End - K_Anf)
+            x_fitn[0]= np.random.random_sample(N_Z)*(K_End - K_Anf)
         if var_Rho:
             rho_randomi = np.random.random()
-            x_fitn[1]= get_rho_values(N,rho_randomi,0, Constant, liste2, SameValues  =False)
+            x_fitn[1]= get_rho_values(N_Z,rho_randomi,0, Constant, liste2, SameValues  =False)
         if var_w:
-            x_fitn[2] = np.random.random_sample(N)*(w_End - w_Anf)
-        fitn_wert_y =  get_Wirkung(t, r, N, Intgrenze, T, *x_fitn, kappa, False, False, 1)
+            x_fitn[2] = np.random.random_sample(N_Z)*(w_End - w_Anf)
+        fitn_wert_y =  get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn, kappa, False, False, 1)
     else:
         if var_K:
             x_fitn[0]= [*Minimum[0][0],0]
@@ -157,7 +143,7 @@ def Zeilensparer(liste2, Minimum, N,first, x_fitn, var_K, var_Rho,var_w, variant
             x_fitn[1]= [*Minimum[0][1], 0]
         if var_w:
             x_fitn[2] = [*Minimum[0][2], 0]
-        fitn_wert_y =  get_Wirkung(t, r, N, Intgrenze, T, *x_fitn, kappa, False, False, 1)
+        fitn_wert_y =  get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn, kappa, False, False, 1)
 
     return x_fitn, fitn_wert_y
 
@@ -181,23 +167,18 @@ def x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste):
 
     return x_fitn
 
-def Variierer(N, K_randomi, rho_randomi,for_rho, w_randomi, variant, x_fitn,
+def Variierer(N_V, K_randomi, rho_randomi,for_rho, w_randomi, variant, x_fitn,
         var_rho = True, var_K = True, var_w = True):
     if var_K:
-        print('N', N)
-        randomi2 = (2*np.random.random_sample(N) - 1)*(K_End - K_Anf)/10
-        print('K_randomi and randomi2', K_randomi, randomi2)
+        randomi2 = (2*np.random.random_sample(N_V) - 1)*(K_End - K_Anf)/10
         K_randomi = np.absolute(K_randomi + randomi2)
-        print('K_randomi', K_randomi)
         x_fitn[0]= list(K_randomi)
     if var_rho:
         randomi2 = np.random.random()/10
         rho_randomi = rho_randomi + randomi2
-        x_fitn[1] = get_rho_values(N,rho_randomi,for_rho,Constant,liste2, SameValues  =False)
+        x_fitn[1] = get_rho_values(N_V,rho_randomi,for_rho,Constant,liste2, SameValues  =False)
     if var_w:
-        print('N = ', N)
-        randomi2 = np.random.random_sample(N)*(w_End - w_Anf)/10
-        print('olaaaa', randomi2, w_randomi)
+        randomi2 = np.random.random_sample(N_V)*(w_End - w_Anf)/10
         w_randomi = w_randomi + randomi2
         x_fitn[2] = list(w_randomi)
 
@@ -223,18 +204,18 @@ def which_variant(var_K, var_Rho, var_w):
 
 
 
-def Minimierer(N, first, liste2, Minimum, var_K, var_Rho, var_w, K_Liste,
+def Minimierer(N_M, first, liste_M, Minimum, var_K, var_Rho, var_w, K_Liste,
         Rho_Liste, w_Liste):
     variant = which_variant(var_K, var_Rho, var_w)
 
     x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
-    x_fitn, fitn_wert_y = Zeilensparer(liste2, Minimum, N, first, x_fitn, var_K, var_Rho,var_w, variant)
+    x_fitn, fitn_wert_y = Zeilensparer(liste_M, Minimum, N_M, first, x_fitn, var_K, var_Rho,var_w, variant)
     x_y_min = [x_fitn, fitn_wert_y]
     Mittelgr = 2
     K_M = x_y_min[1]/Mittelgr
     for i in range(Mittelgr):
         x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
-        x_fitn, fitn_wert_x = Zeilensparer(liste2, Minimum, N, first, x_fitn,
+        x_fitn, fitn_wert_x = Zeilensparer(liste_M, Minimum, N_M, first, x_fitn,
                 var_K, var_Rho, var_w, variant)
 
         if fitn_wert_y < x_y_min[1]:
@@ -244,20 +225,20 @@ def Minimierer(N, first, liste2, Minimum, var_K, var_Rho, var_w, K_Liste,
 
 
     for m,tt in enumerate(temp):
-        K_randomi = np.random.random_sample(N)*(K_End - K_Anf)
+        K_randomi = np.random.random_sample(N_M)*(K_End - K_Anf)
         rho_randomi = np.random.random()
-        w_randomi = np.random.random_sample(N)*(w_End - w_Anf)
-        if N==1 or N ==2:
+        w_randomi = np.random.random_sample(N_M)*(w_End - w_Anf)
+        if N_M==1 or N_M ==2:
             for_rho= 1
         else:
-            for_rho = np.random.randint(N -1)
+            for_rho = np.random.randint(N_M -1)
         for _ in range(4):
             x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
-            x_fitn = Variierer (N, K_randomi, rho_randomi, for_rho
+            x_fitn = Variierer (N_M, K_randomi, rho_randomi, for_rho
              ,w_randomi, variant, x_fitn, var_Rho, var_K, var_w)
 
             print('Rho_values2 = ', x_fitn[1])
-            fitn_wert_y = get_Wirkung(t, r, N, Intgrenze, T,
+            fitn_wert_y = get_Wirkung(t, r, N_M, Intgrenze, T,
                     *x_fitn, kappa, False, False, 1)
             boltzi = boltzmann(fitn_wert_x, fitn_wert_y, tt, K_M)
             if fitn_wert_x > fitn_wert_y:
