@@ -10,6 +10,7 @@ import numpy as np
 import random
 import time
 import os
+import sys
 import Rho_data
 import scipy.misc
 import ctypes
@@ -53,11 +54,11 @@ Constraints
 '''
 def traceConstraint(N_t, Constant, rho):
     #dann benutze rho[0] usw.
-    add = Constant
+    addd = Constant
     for n_t in range(1, N_t):
-        add -= rho[n_t-1]*(diracEigenvalues(n_t)**2 - 0.25)
+        addd -= rho[n_t-1]*(diracEigenvalues(n_t)**2 - 0.25)
 
-    return add
+    return addd
 
 
 '''
@@ -88,14 +89,14 @@ def get_rho_values(N_r, Factor, for_rho, Constant, liste_in, SameValues = True):
         rho_values = np.zeros(N_r)
         if N_r ==1:
             return [2]
-        elif N_r ==2:
-            subb = Factor*wert
-            rho_values[0] = subb/liste_in[0]
-            wert = wert - subb
-            if wert == 0:
-                return rho_values
+#       elif N_r ==2:
+#           subb = Factor*wert
+#           rho_values[0] = subb/liste_in[0]
+#           wert = wert - subb
+#           if wert == 0:
+#               return rho_values
 
-            rho_values[N_r-1] = 2*wert/(diracEigenvalues(N_r)**2-0.25)
+#           rho_values[N_r-1] = 2*wert/(diracEigenvalues(N_r)**2-0.25)
         else:
             subb2 = Factor*wert
             rho_values[for_rho] = Factor*wert/liste_in[for_rho]
@@ -124,48 +125,59 @@ def get_rho_values(N_r, Factor, for_rho, Constant, liste_in, SameValues = True):
     print('Summe',s_t)
     return rho_values
 
-def Zeilensparer(liste2, Minimum, N_Z,first, x_fitn, var_K, var_Rho,var_w, variant):
-    print('x_fitn', x_fitn, liste)
+def Zeilensparer(liste3, Minimum2, N_Z,first, x_fitn2, var_K, var_Rho,var_w,
+        variant, Ausnahme):
+    print('Ausnahme', Ausnahme)
 
-    if first ==N_Z:
+    if Ausnahme:
+        print('Minimum', Minimum2, type(Minimum2))
+        x_fitn2[0]= [*Minimum2[0],0]
+        x_fitn2[1]= [*Minimum2[1], 0]
+        x_fitn2[2] = [*Minimum2[2], 0]
+
+        print('lolaaaa, x_fitn2, liste', x_fitn2, liste3)
+        fitn_wert_y2 =  get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn2, kappa, False, False, 1)
+        print('fitnwerty2', fitn_wert_y2)
+    elif first ==N_Z:
         if var_K:
-            x_fitn[0]= np.random.random_sample(N_Z)*(K_End - K_Anf)
+            x_fitn2[0]= np.random.random_sample(N_Z)*(K_End - K_Anf)
         if var_Rho:
             rho_randomi = np.random.random()
-            x_fitn[1]= get_rho_values(N_Z,rho_randomi,0, Constant, liste2, SameValues  =False)
+            x_fitn2[1]= get_rho_values(N_Z,rho_randomi,0, Constant, liste3, SameValues  =False)
         if var_w:
-            x_fitn[2] = np.random.random_sample(N_Z)*(w_End - w_Anf)
-        fitn_wert_y =  get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn, kappa, False, False, 1)
+            x_fitn2[2] = np.random.random_sample(N_Z)*(w_End - w_Anf)
+        fitn_wert_y2 =  get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn2, kappa, False, False, 1)
     else:
         if var_K:
-            x_fitn[0]= [*Minimum[0][0],0]
+            x_fitn2[0]= [*Minimum2[0][0],0]
         if var_Rho:
-            x_fitn[1]= [*Minimum[0][1], 0]
+            x_fitn2[1]= [*Minimum2[0][1], 0]
         if var_w:
-            x_fitn[2] = [*Minimum[0][2], 0]
-        fitn_wert_y =  get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn, kappa, False, False, 1)
-
-    return x_fitn, fitn_wert_y
+            x_fitn2[2] = [*Minimum2[0][2], 0]
+        print('x_fitn2 = ', x_fitn2)
+        fitn_wert_y2 =  get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn2, kappa, False, False, 1)
+    print('x_fitn2 = ', x_fitn2)
+    return x_fitn2, fitn_wert_y2
 
 def x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste):
     if variant ==1:
-        x_fitn = [K_Liste, Rho_Liste, w_Liste]
+        x_fitn5 = [K_Liste, Rho_Liste, w_Liste]
     elif variant ==2:
-        x_fitn = [K_Liste, Rho_Liste, []]
+        x_fitn5 = [K_Liste, Rho_Liste, []]
     elif variant ==3:
-        x_fitn = [[], Rho_Liste, w_Liste]
+        x_fitn5 = [[], Rho_Liste, w_Liste]
     elif variant ==4:
-        x_fitn = [K_Liste, [], w_Liste]
+        x_fitn5 = [K_Liste, [], w_Liste]
     elif variant ==5:
-        x_fitn = [K_Liste, [], []]
+        x_fitn5 = [K_Liste, [], []]
     elif variant ==6:
-        x_fitn = [[], Rho_Liste, []]
+        x_fitn5 = [[], Rho_Liste, []]
     elif variant ==7:
-        x_fitn = [[],[],w_Liste]
+        x_fitn5 = [[],[],w_Liste]
     elif variant ==8:
-        x_fitn = [[],[],[]]
+        x_fitn5 = [[],[],[]]
 
-    return x_fitn
+    return x_fitn5
 
 def Variierer(N_V, K_randomi, rho_randomi,for_rho, w_randomi, variant, x_fitn,
         var_rho = True, var_K = True, var_w = True):
@@ -205,29 +217,31 @@ def which_variant(var_K, var_Rho, var_w):
 
 
 def Minimierer(N_M, first, liste_M, Minimum, var_K, var_Rho, var_w, K_Liste,
-        Rho_Liste, w_Liste):
+        Rho_Liste, w_Liste, Ausnahme):
     variant = which_variant(var_K, var_Rho, var_w)
 
     x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
-    x_fitn, fitn_wert_y = Zeilensparer(liste_M, Minimum, N_M, first, x_fitn, var_K, var_Rho,var_w, variant)
+    x_fitn, fitn_wert_y = Zeilensparer(liste_M, Minimum, N_M, first, x_fitn,
+            var_K, var_Rho,var_w, variant,Ausnahme )
     x_y_min = [x_fitn, fitn_wert_y]
+    print('x_fitn =', x_fitn)
     Mittelgr = 2
     K_M = x_y_min[1]/Mittelgr
     for i in range(Mittelgr):
         x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
         x_fitn, fitn_wert_x = Zeilensparer(liste_M, Minimum, N_M, first, x_fitn,
-                var_K, var_Rho, var_w, variant)
+                var_K, var_Rho, var_w, variant, False)
 
         if fitn_wert_y < x_y_min[1]:
             x_y_min[1] =fitn_wert_x
             x_y_min[0] = x_fitn
         K_M += fitn_wert_y/Mittelgr
 
+    K_randomi = np.random.random_sample(N_M)*(K_End - K_Anf)
+    w_randomi = np.random.random_sample(N_M)*(w_End - w_Anf)
 
     for m,tt in enumerate(temp):
-        K_randomi = np.random.random_sample(N_M)*(K_End - K_Anf)
         rho_randomi = np.random.random()
-        w_randomi = np.random.random_sample(N_M)*(w_End - w_Anf)
         if N_M==1 or N_M ==2:
             for_rho= 1
         else:
@@ -238,6 +252,7 @@ def Minimierer(N_M, first, liste_M, Minimum, var_K, var_Rho, var_w, K_Liste,
              ,w_randomi, variant, x_fitn, var_Rho, var_K, var_w)
 
             print('Rho_values2 = ', x_fitn[1])
+            print('K_Liste = ', x_fitn[0])
             fitn_wert_y = get_Wirkung(t, r, N_M, Intgrenze, T,
                     *x_fitn, kappa, False, False, 1)
             boltzi = boltzmann(fitn_wert_x, fitn_wert_y, tt, K_M)
@@ -262,7 +277,9 @@ if __name__ == "__main__":
     w_Anf, w_End, w_List = configfunktion('Frequenz')
     Constant, kappa, Rho_List = configfunktion('Einschraenkungen')
     Anzahl_N, first = configfunktion('Systemgroesse')
+    Ausnahme = configfunktion('Test')
 
+    print('Ausnahme', Ausnahme, var_K)
 
     T = np.pi
     r = si.symarray('r', 1)
@@ -291,7 +308,7 @@ if __name__ == "__main__":
     '''
     Ab hier werden die fuer die Minimierung benötigten Variablen definiert
     '''
-    Iter = 25                                      #Die Anzahl der temperaturiterationen
+    Iter = 30                                      #Die Anzahl der temperaturiterationen
     hilfsarray_fuer_temp = np.linspace(0.01,5,Iter)
     Amplitude = 0.5                                #Amplitude der Fluktuation
                                                    #der Temperatur
@@ -304,8 +321,8 @@ if __name__ == "__main__":
     passe ich es für mehrere dim. an.
     '''
 #   Anzahl_N = 4
-    Minimum  = []
-
+    Minimum  = [[9.7903003749135973, 1.0428185324876262], np.array([ 0.24596702,
+        0.25134433]), [0, 1]]
 #   first = 3
     for j in range(first,Anzahl_N+1):
         w_Liste = eval(w_List)
@@ -326,7 +343,8 @@ if __name__ == "__main__":
         Factor = 1
         print('liste2', liste2)
         if var_Rho == True:
-            Rho_Liste = get_rho_values(j, Factor, 1, Constant, liste2, SameValues  = True)
+            Rho_Liste = get_rho_values(j, Factor, 1, Constant, liste2,
+                    SameValues  = false)
             print('Rho', Rho_Liste)
 
         else:
@@ -334,7 +352,7 @@ if __name__ == "__main__":
 
         print('Rho_Liste = ', Rho_Liste)
         Minimum = Minimierer(j, first, liste2, Minimum, var_K,
-                var_Rho, var_w, K_Liste, Rho_Liste, w_Liste )
-        gg = open('Minimum3.txt', 'a')
+                var_Rho, var_w, K_Liste, Rho_Liste, w_Liste, Ausnahme)
+        gg = open('Minimum4.txt', 'a')
         gg.write('Minimum fuer N = %d'%(j) + str(Minimum)+'\n')
         gg.close()

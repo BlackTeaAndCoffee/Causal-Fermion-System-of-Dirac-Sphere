@@ -79,14 +79,15 @@ def get_rho_values(N_r, Factor, for_rho, Constant, liste_in, SameValues = True):
 
     for ll in range(len(rho_values)-1):
         s_t+= liste_in[ll]*rho_values[ll]
+        print('s_t, ll, liste_in[ll], rho_values', s_t, ll, liste_in[ll], rho_values[ll])
     s_t+= rho_values[-1]*(diracEigenvalues(N_r)**2 - 0.25)/2
     print('Summe',s_t)
     return rho_values
 
 if __name__ == "__main__":
-    N = 3
+    N = 7
     Constant = 1
-    for_rho = 1
+    for_rho = 0
     Factor = 1
     rho = symbols('rho0:N')
     liste = subs_coeffs(N, Constant, rho)
