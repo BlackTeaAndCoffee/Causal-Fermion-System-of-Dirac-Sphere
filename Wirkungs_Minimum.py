@@ -45,8 +45,8 @@ def diag_plot2(x_Achse, y_Achse, X_Title, Y_Title, Kurv_Name, PDFTitle, keypos):
     c.plot(graph.data.values(x = x_Achse, y = y_Achse, title  = Kurv_Name),[graph.style.line([color.gradient.Rainbow])])
     c.writePDFfile(PDFTitle)
 
-def diracEigenvalues(n):
-     return (2*n + 1)/2
+def diracEigenvalues(nn):
+     return (2*nn + 1)/2
 
 
 '''
@@ -71,19 +71,30 @@ def subs_coeffs(NN, Constant, rho):
     if NN == 1:
         return [1]
     else:
-        for i in range(NN - 1):
-            liste.append(Poly(subs).coeff_monomial(rho[i]))
+        for ii in range(NN - 1):
+            liste.append(Poly(subs).coeff_monomial(rho[ii]))
     return liste
 
-def get_rho_values(N_r, Factor, for_rho, Constant, liste_in, SameValues = True):
-    mix_list = np.arange(N_r-1)
-    np.random.shuffle(mix_list)
+def listmaker(NN, Constant):
+    listim = []
+    for ni in range(1, NN+1):
+        listim.append((diracEigenvalues(ni)**2 -0.25)/2)
 
+    return listim
+
+def get_rho_values(N_r, Factor, for_rho, Constant, liste_in, SameValues = True):
+    mix_list = np.arange(N_r)
+    np.random.shuffle(mix_list)
+    ultimo = mix_list[-1]
+    while for_rho == ultimo:
+        np.random.shuffle(mix_list)
+        ultimo = mix_list[-1]
+        print('haha')
     if SameValues:
         s_m = 0
-        for i in range(1, N_r+1):
-            s_m += (diracEigenvalues(i)**2 - 0.25)
-        rho_values = [Constant/s_m for i in range(N_r)]
+        for il in range(1, N_r+1):
+            s_m += (diracEigenvalues(il)**2 - 0.25)
+        rho_values = [Constant/s_m for il in range(N_r)]
     else:
         wert = Constant
         rho_values = np.zeros(N_r)
@@ -98,46 +109,44 @@ def get_rho_values(N_r, Factor, for_rho, Constant, liste_in, SameValues = True):
 
 #           rho_values[N_r-1] = 2*wert/(diracEigenvalues(N_r)**2-0.25)
         else:
-            subb2 = Factor*wert
             rho_values[for_rho] = Factor*wert/liste_in[for_rho]
             wert = wert - rho_values[for_rho]*liste_in[for_rho]
+            if wert == 0:
+                return rho_values
 
 
             for jl,listval  in enumerate(mix_list):
-                if wert ==0:
-                    return rho_values
+                if listval == ultimo:
+                    continue
                 elif listval == for_rho:
                     continue
                 else:
-                    a = random.random()
-                    subb3 = a*wert
-                    rho_values[listval] = a*wert/liste_in[listval]
+                    print('listval',listval)
+                    al = random.random()
+                    rho_values[listval] = al*wert/liste_in[listval]
                     wert = wert - rho_values[listval]*liste_in[listval]
+                    if wert < 0:
+                        print('wert <0 ')
                     if wert == 0:
                         return rho_values
 
-            rho_values[N_r-1] = 2*wert/(diracEigenvalues(N_r)**2 - 0.25)
+            rho_values[ultimo] = wert/liste_in[ultimo]
     s_t = 0
-
-    for ll in range(len(rho_values)-1):
+    print('rhovals, liste', rho_values, liste_in)
+    for ll in range(len(rho_values)):
         s_t+= liste_in[ll]*rho_values[ll]
-    s_t+= rho_values[-1]*(diracEigenvalues(N_r)**2 - 0.25)/2
     print('Summe',s_t)
     return rho_values
 
 def Zeilensparer(liste3, Minimum2, N_Z,first, x_fitn2, var_K, var_Rho,var_w,
         variant, Ausnahme):
-    print('Ausnahme', Ausnahme)
 
     if Ausnahme:
-        print('Minimum', Minimum2, type(Minimum2))
         x_fitn2[0]= [*Minimum2[0],0]
         x_fitn2[1]= [*Minimum2[1], 0]
         x_fitn2[2] = [*Minimum2[2], 0]
 
-        print('lolaaaa, x_fitn2, liste', x_fitn2, liste3)
         fitn_wert_y2 =  get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn2, kappa, False, False, 1)
-        print('fitnwerty2', fitn_wert_y2)
     elif first ==N_Z:
         if var_K:
             x_fitn2[0]= np.random.random_sample(N_Z)*(K_End - K_Anf)
@@ -154,9 +163,7 @@ def Zeilensparer(liste3, Minimum2, N_Z,first, x_fitn2, var_K, var_Rho,var_w,
             x_fitn2[1]= [*Minimum2[0][1], 0]
         if var_w:
             x_fitn2[2] = [*Minimum2[0][2], 0]
-        print('x_fitn2 = ', x_fitn2)
         fitn_wert_y2 =  get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn2, kappa, False, False, 1)
-    print('x_fitn2 = ', x_fitn2)
     return x_fitn2, fitn_wert_y2
 
 def x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste):
@@ -224,10 +231,9 @@ def Minimierer(N_M, first, liste_M, Minimum, var_K, var_Rho, var_w, K_Liste,
     x_fitn, fitn_wert_y = Zeilensparer(liste_M, Minimum, N_M, first, x_fitn,
             var_K, var_Rho,var_w, variant,Ausnahme )
     x_y_min = [x_fitn, fitn_wert_y]
-    print('x_fitn =', x_fitn)
     Mittelgr = 2
     K_M = x_y_min[1]/Mittelgr
-    for i in range(Mittelgr):
+    for _ in range(Mittelgr):
         x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
         x_fitn, fitn_wert_x = Zeilensparer(liste_M, Minimum, N_M, first, x_fitn,
                 var_K, var_Rho, var_w, variant, False)
@@ -237,22 +243,17 @@ def Minimierer(N_M, first, liste_M, Minimum, var_K, var_Rho, var_w, K_Liste,
             x_y_min[0] = x_fitn
         K_M += fitn_wert_y/Mittelgr
 
-    K_randomi = np.random.random_sample(N_M)*(K_End - K_Anf)
-    w_randomi = np.random.random_sample(N_M)*(w_End - w_Anf)
 
     for m,tt in enumerate(temp):
+        K_randomi = np.random.random_sample(N_M)*(K_End - K_Anf)
+        w_randomi = np.random.random_sample(N_M)*(w_End - w_Anf)
         rho_randomi = np.random.random()
-        if N_M==1 or N_M ==2:
-            for_rho= 1
-        else:
-            for_rho = np.random.randint(N_M -1)
+        for_rho = np.random.randint(N_M)
         for _ in range(4):
             x_fitn = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
             x_fitn = Variierer (N_M, K_randomi, rho_randomi, for_rho
              ,w_randomi, variant, x_fitn, var_Rho, var_K, var_w)
 
-            print('Rho_values2 = ', x_fitn[1])
-            print('K_Liste = ', x_fitn[0])
             fitn_wert_y = get_Wirkung(t, r, N_M, Intgrenze, T,
                     *x_fitn, kappa, False, False, 1)
             boltzi = boltzmann(fitn_wert_x, fitn_wert_y, tt, K_M)
@@ -264,7 +265,6 @@ def Minimierer(N_M, first, liste_M, Minimum, var_K, var_Rho, var_w, K_Liste,
 
             elif (fitn_wert_x < fitn_wert_y) and (random.random() <= boltzi) :
                 fitn_wert_x = fitn_wert_y
-            print('Minimum = ', x_y_min[0], x_y_min[1])
     return x_y_min
 
 if __name__ == "__main__":
@@ -279,7 +279,6 @@ if __name__ == "__main__":
     Anzahl_N, first = configfunktion('Systemgroesse')
     Ausnahme = configfunktion('Test')
 
-    print('Ausnahme', Ausnahme, var_K)
 
     T = np.pi
     r = si.symarray('r', 1)
@@ -324,16 +323,10 @@ if __name__ == "__main__":
     Minimum  = [[9.7903003749135973, 1.0428185324876262], np.array([ 0.24596702,
         0.25134433]), [0, 1]]
 #   first = 3
-    for j in range(first,Anzahl_N+1):
+    for SN in range(first,Anzahl_N+1):
         w_Liste = eval(w_List)
         print('w_Liste', type(w_Liste))
-        rho = symbols('rho0:j')
-        liste = subs_coeffs(j, Constant, rho)
-        print('liste', liste, j, Constant)
-        liste2 = np.array(liste)/liste[0]
-        print('liste2', liste2)
-
-
+        liste2 = listmaker(SN, Constant)
 
         #rho_randomi = j*0.1
         #Rho_Liste =get_rho_values(j,rho_randomi, Constant, liste, SameValues  =False)
@@ -343,7 +336,7 @@ if __name__ == "__main__":
         Factor = 1
         print('liste2', liste2)
         if var_Rho == True:
-            Rho_Liste = get_rho_values(j, Factor, 1, Constant, liste2,
+            Rho_Liste = get_rho_values(SN, Factor, 1, Constant, liste2,
                     SameValues  = false)
             print('Rho', Rho_Liste)
 
@@ -351,8 +344,8 @@ if __name__ == "__main__":
             Rho_Liste = eval(Rho_List)
 
         print('Rho_Liste = ', Rho_Liste)
-        Minimum = Minimierer(j, first, liste2, Minimum, var_K,
+        Minimum = Minimierer(SN, first, liste2, Minimum, var_K,
                 var_Rho, var_w, K_Liste, Rho_Liste, w_Liste, Ausnahme)
         gg = open('Minimum4.txt', 'a')
-        gg.write('Minimum fuer N = %d'%(j) + str(Minimum)+'\n')
+        gg.write('Minimum fuer N = %d'%(SN) + str(Minimum)+'\n')
         gg.close()

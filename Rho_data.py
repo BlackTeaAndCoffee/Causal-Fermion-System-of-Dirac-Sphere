@@ -33,7 +33,10 @@ def subs_coeffs(N, Constant, rho):
 def get_rho_values(N_r, Factor, for_rho, Constant, liste_in, SameValues = True):
     mix_list = np.arange(N_r-1)
     np.random.shuffle(mix_list)
-
+    ultimo = mix_list[-1]
+    while for_rho == ultimo:
+        np.random.shuffle(mix_list)
+        ultimo = mix_list[-1]
     if SameValues:
         s_m = 0
         for i in range(1, N_r+1):
@@ -44,62 +47,60 @@ def get_rho_values(N_r, Factor, for_rho, Constant, liste_in, SameValues = True):
         rho_values = np.zeros(N_r)
         if N_r ==1:
             return [2]
-        elif N_r ==2:
-            subb = Factor*wert
-            rho_values[0] = subb/liste_in[0]
-            wert = wert - subb
-            if wert == 0:
-                return rho_values
 
-            rho_values[N_r-1] = 2*wert/(diracEigenvalues(N_r)**2-0.25)
         else:
-            subb2 = Factor*wert
             rho_values[for_rho] = Factor*wert/liste_in[for_rho]
             wert = wert - rho_values[for_rho]*liste_in[for_rho]
-
+            if wert ==0:
+                return rho_values
 
             for jl,listval  in enumerate(mix_list):
-                if wert ==0:
-                    return rho_values
+                if listval == ultimo:
+                    continue
                 elif listval == for_rho:
                     continue
                 else:
                     a = random.random()
-                    subb3 = a*wert
                     rho_values[listval] = a*wert/liste_in[listval]    # hier steht ein Minus,weil die
                                                             # Koeffizienten negativ sind,
                                                            # finden aber als positive
                                                            # Zahlen Verwendung.
                     wert = wert - rho_values[listval]*liste_in[listval]
+                    if wert < 0:
+                        print('Wrong')
                     if wert == 0:
                         return rho_values
 
-            rho_values[N_r-1] = 2*wert/(diracEigenvalues(N_r)**2 - 0.25)
+            rho_values[ultimo] = wert/liste_in[ultimo]
     s_t = 0
 
-    for ll in range(len(rho_values)-1):
+    for ll in range(len(rho_values)):
         s_t+= liste_in[ll]*rho_values[ll]
-        print('s_t, ll, liste_in[ll], rho_values', s_t, ll, liste_in[ll], rho_values[ll])
-    s_t+= rho_values[-1]*(diracEigenvalues(N_r)**2 - 0.25)/2
-    print('Summe',s_t)
+    #print('Summe',s_t)
     return rho_values
+
+def listmaker(NN, Constant):
+    listim = []
+    for ni in range(1, NN+1):
+        listim.append((diracEigenvalues(ni)**2 -0.25)/2)
+
+    return listim
+
 
 if __name__ == "__main__":
     N = 7
     Constant = 1
     for_rho = 0
     Factor = 1
-    rho = symbols('rho0:N')
-    liste = subs_coeffs(N, Constant, rho)
-    print('liste', liste, N, Constant)
-    liste2 = np.array(liste)/liste[0]
+    liste2 = listmaker(N, Constant)
+    print('liste2', liste2, N, Constant)
 
 
 
-    rho_values  = get_rho_values(N, Factor, for_rho, Constant,liste2, False)
-    print(rho_values)
 
-    for i in range(200):
+    rho_values  = get_rho_values(N, 0.0000001, for_rho, Constant,liste2, False)
+    print('jops',rho_values)
+
+    for i in range(10000):
         Factor = np.random.random()
         rho_values  = get_rho_values(N, Factor, for_rho, Constant,liste2, False)
-        print(rho_values)
