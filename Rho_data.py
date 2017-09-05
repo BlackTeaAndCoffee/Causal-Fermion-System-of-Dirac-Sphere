@@ -30,29 +30,31 @@ def subs_coeffs(N, Constant, rho):
         liste.append(Poly(subs).coeff_monomial(rho[i]))
     return liste
 
-def get_rho_values(N_r, Factor, for_rho, Constant, liste_in, SameValues = True):
-    mix_list = np.arange(N_r-1)
+def get_rho_values(N_r, Factor, for_rho, Const, liste_in, SameValues = True):
+    mix_list = np.arange(N_r)
     np.random.shuffle(mix_list)
     ultimo = mix_list[-1]
-    while for_rho == ultimo:
-        np.random.shuffle(mix_list)
-        ultimo = mix_list[-1]
+    if N_r != 1:
+        while for_rho == ultimo:
+            np.random.shuffle(mix_list)
+            ultimo = mix_list[-1]
+            print('haha')
     if SameValues:
         s_m = 0
-        for i in range(1, N_r+1):
-            s_m += (diracEigenvalues(i)**2 - 0.25)
-        rho_values = [Constant/s_m for i in range(N_r)]
+        for il in range(1, N_r+1):
+            s_m += (diracEigenvalues(il)**2 - 0.25)
+        rho_values = [Const/s_m for il in range(N_r)]
     else:
-        wert = Constant
+        wert = Const
         rho_values = np.zeros(N_r)
         if N_r ==1:
-            return [2]
-
+            return [1]
         else:
             rho_values[for_rho] = Factor*wert/liste_in[for_rho]
             wert = wert - rho_values[for_rho]*liste_in[for_rho]
-            if wert ==0:
+            if wert == 0:
                 return rho_values
+
 
             for jl,listval  in enumerate(mix_list):
                 if listval == ultimo:
@@ -60,23 +62,22 @@ def get_rho_values(N_r, Factor, for_rho, Constant, liste_in, SameValues = True):
                 elif listval == for_rho:
                     continue
                 else:
-                    a = random.random()
-                    rho_values[listval] = a*wert/liste_in[listval]    # hier steht ein Minus,weil die
-                                                            # Koeffizienten negativ sind,
-                                                           # finden aber als positive
-                                                           # Zahlen Verwendung.
+                    #print('listval',listval)
+                    al = random.random()
+                    rho_values[listval] = al*wert/liste_in[listval]
                     wert = wert - rho_values[listval]*liste_in[listval]
+                    #print('rho_values, wert', rho_values, wert)
                     if wert < 0:
-                        print('Wrong')
+                        print('wert <0 ')
                     if wert == 0:
                         return rho_values
 
             rho_values[ultimo] = wert/liste_in[ultimo]
     s_t = 0
-
+    print('rhovals, liste', rho_values, liste_in)
     for ll in range(len(rho_values)):
         s_t+= liste_in[ll]*rho_values[ll]
-    #print('Summe',s_t)
+    print('Summe',s_t)
     return rho_values
 
 def listmaker(NN, Constant):
@@ -101,6 +102,6 @@ if __name__ == "__main__":
     rho_values  = get_rho_values(N, 0.0000001, for_rho, Constant,liste2, False)
     print('jops',rho_values)
 
-    for i in range(10000):
+    for i in range(10):
         Factor = np.random.random()
         rho_values  = get_rho_values(N, Factor, for_rho, Constant,liste2, False)

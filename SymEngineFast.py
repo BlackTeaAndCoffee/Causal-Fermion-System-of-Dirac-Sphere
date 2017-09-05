@@ -13,6 +13,7 @@ import os
 import Rho_data
 import scipy.misc
 import ctypes
+import subprocess
 
 sigma1 = si.zeros(2)
 sigma1[1,0] = 1
@@ -53,10 +54,10 @@ def diracEigenvalues(n):
 
 def integralKernelPlus(n, r, theta, phi):
     n=n-1
-    lala1 = sy.jacobi(n, 1/2, 3/2, r[0])
-    lala2 = sy.jacobi(n, 3/2, 1/2, r[0])
-    return prefactor(n)*(si.cos(r[0]/2)*lala1*ident -
-                        I*si.sin(r[0]/2)*lala2*sigma_r(theta, phi))
+    lala11 = sy.jacobi(n, 1/2, 3/2, r[0])
+    lala21 = sy.jacobi(n, 3/2, 1/2, r[0])
+    return prefactor(n)*(si.cos(r[0]/2)*lala11*ident -
+                        I*si.sin(r[0]/2)*lala21*sigma_r(theta, phi))
 
 def integralKernelMinus(n, r, theta, phi):
     n=n-1
@@ -69,10 +70,9 @@ def sigma_r(theta, phi):
     aa = si.sin(theta)*si.cos(phi)*sigma1 + si.sin(theta)*si.sin(phi)*sigma2
     bb =  si.cos(theta)*sigma3
 
-    return aa +bb
+    return aa + bb
 
-def preMatrixPlus(n,K_Liste):
-    a = K_Liste[n-1]
+def preMatrixPlus(n,a):
     b = si.sqrt(1 + a**2)
     matrix = si.zeros(2)
 
@@ -82,8 +82,7 @@ def preMatrixPlus(n,K_Liste):
     matrix[1,1]= 1+b
     return matrix
 
-def preMatrixMinus(n,K_Liste):
-    a = K_Liste[n-1]
+def preMatrixMinus(n, a):
     b = si.sqrt(1 + a**2)
     matrix = si.zeros(2)
 
@@ -93,26 +92,26 @@ def preMatrixMinus(n,K_Liste):
     matrix[1,1]= 1+b
     return matrix
 
-def projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
+def projector(t, r, theta, phi, N, Rho_Liste2, w_Liste2, K_Liste2):
     mat = np.zeros((4,4), dtype = object)
     for n in range(1,N + 1):
-        Koef =Rho_Liste[n-1]*sy.exp(-I*w_Liste[n-1]*t[0])
+        Koef =Rho_Liste2[n-1]*sy.exp(-I*w_Liste2[n-1]*t[0])
         #print(Rho_Liste[n-1], sy.exp(-1j*w_Liste[n-1]*t))
-        Term1 = TensorProduct(preMatrixPlus(n,K_Liste),integralKernelPlus(n, r, theta, phi))
-        Term2 = TensorProduct(preMatrixMinus(n,K_Liste),integralKernelMinus(n, r, theta,phi))
-        mat += Koef*(Term1 + Term2)
+        Term11 = TensorProduct(preMatrixPlus(n,K_Liste2[n-1]),integralKernelPlus(n, r, theta, phi))
+        Term21 = TensorProduct(preMatrixMinus(n,K_Liste2[n-1]),integralKernelMinus(n, r, theta,phi))
+        mat += Koef*(Term11 + Term21)
         #print(Koef, mat)
     return mat
 
-def projectorAdj(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
-    mat = np.zeros((4,4),  dtype = object)
+def projectorAdj(t, r, theta, phi, N, Rho_Liste3, w_Liste3, K_Liste3):
+    mat1 = np.zeros((4,4),  dtype = object)
 
     for n in range(1, N+1):
-        Koeff = Rho_Liste[n-1]*sy.exp(I*w_Liste[n-1]*t[0])
-        Term1 = TensorProduct(preMatrixPlus(n,K_Liste),integralKernelMinus(n, r, theta, phi))
-        Term2 = TensorProduct(preMatrixMinus(n,K_Liste),integralKernelPlus(n, r,theta, phi))
-        mat += Koeff*(Term1 +Term2)
-    return mat
+        Koeff = Rho_Liste3[n-1]*sy.exp(I*w_Liste3[n-1]*t[0])
+        Term12 = TensorProduct(preMatrixPlus(n,K_Liste3[n-1]),integralKernelMinus(n, r, theta, phi))
+        Term22 = TensorProduct(preMatrixMinus(n,K_Liste3[n-1]),integralKernelPlus(n, r,theta, phi))
+        mat1 += Koeff*(Term12 +Term22)
+    return mat1
 
 def closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
     #print(projector(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)*projectorAdj(t, r, theta,phi, N, Rho_Liste, w_Liste, K_Liste))
@@ -120,9 +119,9 @@ def closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste):
         K_Liste),projectorAdj(t, r, theta,phi, N, Rho_Liste, w_Liste, K_Liste))
 
 def lagrangian_without_bound_constr(t, r, theta, phi,N, Rho_Liste, w_Liste, K_Liste):
-    sub = closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
+    sub1 = closedChain(t, r, theta, phi, N, Rho_Liste, w_Liste, K_Liste)
     #print(np.shape(sub),type(sub),sub)
-    return np.trace(np.dot(sub,sub)) - 0.25 * np.trace(sub)*np.trace(sub)
+    return np.trace(np.dot(sub1,sub1)) - 0.25 * np.trace(sub1)*np.trace(sub1)
 
 '''
 Needed parts for the Integrand
@@ -174,13 +173,13 @@ def get_Integrand_with_c(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
     Prototypen = 'static float xsav;\n'+ 'static float(*nrfunc)(float,float);\n'
     Integranddef = "float f(float r, float t)"+ "{return"
     Begin_von_Func = "(fmax(creall("
-    Func1 = a.replace("exp","cexp").replace("pow","cpow")
+    Func1 = a.replace("exp","cexp").replace("pow","cpow").replace("r_0","r").replace("t_0","t")
     Func1_End = "),0)"
 
     GesamtString += Bibliotheken + Prototypen + Integranddef + Begin_von_Func +Func1+ Func1_End
 
     Func2_Anf = "+ creall("
-    Func2 =  b.replace("exp", "cexp").replace("pow","cpow" )
+    Func2 =  b.replace("exp", "cexp").replace("pow","cpow" ).replace("r_0","r").replace("t_0","t")
 
     if Schwartzfunktion:
         Func22 = '))*sin(1.0L*r)*sin(1.0L*r)'
@@ -275,14 +274,15 @@ def get_Test_Integrandt(T):
 def get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion = True, Comp_String = False, Type = 1):
     if Type == 1:
-        '''Cytpes'''
+        '''Integration with Cytpes'''
         get_Integrand_with_ctypes(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
             kappa, Schwartzfunktion, Comp_String)
         aa = time.time()
         lib=ctypes.CDLL('/home/mustafa/Regensburg/Reproduktion_Von_Nikkis_Ergebnissen/Progs_mit_Sympy/testlib2.so')
         lib.f.restype = ctypes.c_double
         lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
-        zup = integrate.nquad(lib.f,[[0,np.pi],[0,T]])
+        zup = integrate.nquad(lib.f,[[0,np.pi],[0,T]],opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },{
+                    'epsabs': 10e-10, 'epsrel' : 10e-10} ] )
         print('(Wirkung, abserr)=',zup)
         handle = lib._handle # obtain the SO handle
 
@@ -293,27 +293,38 @@ def get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
         print('yay',zup)
         return zup[0]
     elif Type ==2:
-        '''C'''
+        '''Integration with C. Up until here i basically construct the
+        integrand  and then C takes over.'''#Stimmt was nicht.Also irgendwas
         get_Integrand_with_c(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion, Comp_String)
         tt = time.time()
-        os.system('./testlib2')
+
+        result = subprocess.run(['./testlib2'], stdout=subprocess.PIPE)
+        integr_val = result.stdout.decode('utf-8')
+        print('result', result.stdout.decode('utf-8'))
         aa = time.time()
-        print(aa-tt)
+        print('time', aa-tt)
+        return float(integr_val)
     elif  Type ==3:
-        '''Test'''
+        '''Test_Typ'''
         get_Test_Integrandt(T)
         aa = time.time()
         lib=ctypes.CDLL('/home/mustafa/Regensburg/Reproduktion_Von_Nikkis_Ergebnissen/Progs_mit_Sympy/testlib2.so')
         lib.f.restype = ctypes.c_double
         lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
-        print(integrate.nquad(lib.f, [[0,np.pi]]))
+        result = integrate.nquad(lib.f, [[0,np.pi]])
         tt = time.time()
         print(aa-tt)
+        return result
     elif Type == 4:
+        '''Scipy quadpack'''
+
         integrand = Integrand(t, r, N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion)
         tt = time.time()
-        Wirkung = integrate.nquad(lambda r1, t1 : integrand(t1,r1), [[0,np.pi],[0,T]])
+        Wirkung = integrate.nquad(lambda r1, t1 : integrand(t1,r1),
+                [[0,np.pi],[0,T]], opts=[{'epsabs' :10e-10, 'epsrel': 10e-10 },{
+                    'epsabs': 10e-10, 'epsrel' : 10e-10} ])
+
         aa = time.time()
         print('Für die Integration benötigte Zeit in sec:',aa - tt)
         print(Wirkung)
@@ -333,23 +344,8 @@ def get_integrand_values(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,
     os.system('gcc -o yolo testlib2.c -lm')
     os.system('./yolo')
 
-if __name__ == "__main__":
 
-    si.var('theta phi')
-    r = si.symarray('r', 1)
-    t = si.symarray('t', 1)
-
-    var_K, var_Rho, var_w = configfunktion('SollVarr?')
-    K_Anf, K_End, K_List = configfunktion('Impuls')
-    w_Anf, w_End, w_List = configfunktion('Frequenz')
-    Constant, kappa, Rho_List = configfunktion('Einschraenkungen')
-    Anzahl_N, first = configfunktion('Systemgroesse')
-
-
-
-    T = 1 #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
-    N = Anzahl_N
-
+def TwodPic():
     K_Anzahl=N
 
     K_An = 25
@@ -357,11 +353,7 @@ if __name__ == "__main__":
     K1_Liste = np.linspace(0,K_End,K_An)
     K2_Liste = np.linspace(0,K_End,K_An)
 
-    kappa_Anzahl = 1
 
-
-    x_Anf = 0.
-    x_End = np.pi
 
     Kurve_Names=[]
 
@@ -397,3 +389,38 @@ if __name__ == "__main__":
         f.write('K_1, K_2, Wirkung\n')
         os.system("cat NumbFor3d.txt >> " +PDFName+".pdf" )
 
+
+
+if __name__ == "__main__":
+
+    si.var('theta phi')
+    r = si.symarray('r', 1)
+    t = si.symarray('t', 1)
+
+    var_K, var_Rho, var_w = configfunktion('SollVarr?')
+    K_Anf, K_End, K_List = configfunktion('Impuls')
+    w_Anf, w_End, w_List = configfunktion('Frequenz')
+    Constant, kappa, Rho_List = configfunktion('Einschraenkungen')
+    Anzahl_N, first = configfunktion('Systemgroesse')
+
+
+
+    T = 1 #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
+    N = 4
+
+
+    kappa_Anzahl = 1
+
+
+    x_Anf = 0.
+    x_End = np.pi
+
+    Kurve_Names=[]
+
+    Intgrenze = [x_Anf, x_End]
+    Wirk = []
+    w_Liste = [1,2,3,4]#eval(w_List)
+    K_Liste = [9.7903003749135973, 1.0428185324876262, 0,0.1]
+    Rho_Liste = np.array([ 0.23596702, 0.244134433,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
+    Wirkun = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste, w_Liste,kappa, False,False, 1)
+    print(Wirkun)

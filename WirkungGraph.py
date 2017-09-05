@@ -4,7 +4,7 @@ import Rho_data
 import symengine as si
 import PyxSchar
 import numpy as np
-
+import os
 
 def func(t, r, N, Intgrenze, T, Rho_Liste,w_Liste,kappa,k1):
     K_Liste[ind]= k1
@@ -20,10 +20,10 @@ if __name__ == "__main__":
     r = si.symarray('r', 1)
     t = si.symarray('t', 1)
 
-    T = 1 #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
+    T = 2*np.pi #Lebensdauer des Universums, wird fuer die Schwartzfunktion benoetigt
     N = 2
 
-    kappa = 0.0001
+    kappa = 0.05
     kappa_Anzahl = 1
 
     x_Anf = 0
@@ -35,18 +35,18 @@ if __name__ == "__main__":
 
     w_Liste = [0.,1.]
     K_Liste = [0.,0.]
-    AnzahlGewichte = 11
+    AnzahlGewichte = 7
     Kurve_Names = []
-    PDFTitle = 'N_%d_GewichteScharAnz%dVarK_%1dKappa_%1.5f'%(N,AnzahlGewichte,
+    PDFTitle = 'Rout_Wechs_N_%d_GewichteScharAnz%dVarK_%1dKappa_%1.5f'%(N,AnzahlGewichte,
             ind+1, kappa)
 
-    c = PyxSchar.initialXY(0,20,0,1.5, r'$K_%1d$'%(ind+1),'Wirkung',10,10 , 'tr')
+    c = PyxSchar.initialXY(0,20,0,4, r'$K_%1d$'%(ind+1),'Wirkung',10,10 , 'tr')
 
     dd=[]
 
-    for k in range( AnzahlGewichte):
+    for k in range(5,AnzahlGewichte):
         rho1 = 0.1*k
-        Rho_Liste = [rho1, (1- rho1)/3]
+        Rho_Liste =[rho1, (1- rho1)/3]
         dk = 0.1
         k1 = 0.
         WertListe = []
@@ -54,6 +54,7 @@ if __name__ == "__main__":
         while 1:
             WertListe, KK = func(t, r, N, Intgrenze, T, Rho_Liste,
                 w_Liste,kappa, k1)
+            print('WertListe', WertListe)
             l1 = len(WertListe) - 1
             if  l1>=2 :
                 a = abs((WertListe[l1-2] - WertListe[l1-1])/(KK[l1-2] -
@@ -86,10 +87,10 @@ if __name__ == "__main__":
 
             k1 += dk
         LL = np.array(WertListe)
-        LL = LL/LL[0]
+        LL2 = LL/LL[0]
         print('LL=', LL,'KK=', KK)
-        dd.append(PyxSchar.set_values(KK, LL,
-            r"$\rho_1=%2.2f, \rho_2=%2.2f$"%(Rho_Liste[0], Rho_Liste[1])))
+        dd.append(PyxSchar.set_values(KK, LL2,
+            r"$\rho_1=%2.4f, \rho_2=%2.4f$"%(Rho_Liste[0], Rho_Liste[1])))
 
 
     if ind ==0:
@@ -99,3 +100,7 @@ if __name__ == "__main__":
         PyxSchar.plot_diag(dd, '$kappa=%2.5f, K_{%1d}=%2.2f$'%(kappa, 1, 0),
             (5,10), PDFTitle, c)
 
+    f = open(PDFTitle+'.pdf', 'a')
+    f.write('x_values'+str(KK)+'\n')
+    f.write('y_values'+ str(LL2)+'\n'+'unnormed values\n' +str(LL))
+    f.close()
