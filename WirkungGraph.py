@@ -1,4 +1,4 @@
-from SymEngineFast import get_Wirkung
+from SymEngineFast import get_Action
 import Diag_Schar
 import Rho_data
 import symengine as si
@@ -9,7 +9,7 @@ import os
 def func(t, r, N, Intgrenze, T, Rho_Liste,w_Liste,kappa,k1):
     K_Liste[ind]= k1
     print('K_Liste=', K_Liste, 'WertListe=',WertListe, 'yaaaaaaay1')
-    Wert = get_Wirkung(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,w_Liste,kappa,
+    Wert = get_Action(t, r, N, Intgrenze, T, K_Liste, Rho_Liste,w_Liste,kappa,
             False, False, 1)
     print(Wert)
     WertListe.append(Wert)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     PDFTitle = 'Rout_Wechs_N_%d_GewichteScharAnz%dVarK_%1dKappa_%1.5f'%(N,AnzahlGewichte,
             ind+1, kappa)
 
-    c = PyxSchar.initialXY(0,20,0,4, r'$K_%1d$'%(ind+1),'Wirkung',10,10 , 'tr')
+    c = PyxSchar.initialXY(0,20,0,4, r'$K_%1d$'%(ind+1),'Action',10,10 , 'tr')
 
     dd=[]
 

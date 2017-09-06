@@ -17,6 +17,32 @@ import ctypes
 from SymEngineFast import *
 from SimTest import *
 
+'''
+This Programm contains the code for minimizing the Action.
+With the help of some Minimum finder, i want to find ideally
+the global Minimum of the Action. The Action as encoded in
+SymEngineFast.py has the parameters K_List, Rho_List and w_List.
+By parameters i mean, the elements of these Lists.
+
+The Paramater space is in general infinite dimensional. Our idea is
+to take N=1 and the corresponding sub-parameter-space and find the minimum
+there. Then we expand to the subspace corresponding to N=2, which contains
+the subspace for N=1 and find the Minimum there. Ideally we wish
+to find some convergency for higher getting N.
+
+The Minimizer we choose is the simulated annealing procedure. The reason
+for that is, that the Action must not be smooth.
+    * A Problem with that, which already seems to get an issue is that
+    each evaluation of the action takes to much time. On Average higher
+    N means longer evaluation time. For higher N we also need to probe the
+    Paramater space more often. So the simulated annealing method might
+    not be good enough.
+
+    *There is another method called bayesian optimization. I haven't tried
+    this one out yet. But i will definitely do so soon.
+
+'''
+
 def diag_plot(x_Achse, y_matrix, X_Title, Y_Title, Kurv_Names, PDFTitle, keypos):
     c = graph.graphxy(width=10,height=10,
         x = graph.axis.linear(min = min(x_Achse), max = max(x_Achse),
@@ -45,18 +71,18 @@ def diag_plot2(x_Achse, y_Achse, X_Title, Y_Title, Kurv_Name, PDFTitle, keypos):
     c.plot(graph.data.values(x = x_Achse, y = y_Achse, title  = Kurv_Name),[graph.style.line([color.gradient.Rainbow])])
     c.writePDFfile(PDFTitle)
 
-def diracEigenvalues(nn):
-     return (2*nn + 1)/2
+def diracEigenvalues(n):
+     return (2*n + 1)/2
 
 
 '''
 Constraints
 '''
-def traceConstraint(N_t, Constant, rho):
+def traceConstraint(N, Constant, rho):
     #dann benutze rho[0] usw.
     addd = Constant
-    for n_t in range(1, N_t):
-        addd -= rho[n_t-1]*(diracEigenvalues(n_t)**2 - 0.25)
+    for n in range(1, N):
+        addd -= rho[n-1]*(diracEigenvalues(n)**2 - 0.25)
 
     return addd
 
@@ -65,88 +91,40 @@ def traceConstraint(N_t, Constant, rho):
 Constraints
 '''
 
-def subs_coeffs(NN, Constant, rho):
+def subs_coeffs(N, Constant, rho):
     subs  = traceConstraint(NN, Constant, rho)
     liste = []
-    if NN == 1:
+    if N == 1:
         return [1]
     else:
-        for ii in range(NN - 1):
+        for ii in range(N - 1):
             liste.append(Poly(subs).coeff_monomial(rho[ii]))
     return liste
 
-def listmaker(NN, Constant):
+def listmaker(N, Constant):
     listim = []
-    for ni in range(1, NN+1):
+    for ni in range(1, N+1):
         listim.append((diracEigenvalues(ni)**2 -0.25)/2)
 
     return listim
 
-def get_rho_values2(N_r, Factor89,for_rho, Const, Rho_Koeffs_List, SameValues=True):
+def get_rho_values2(N, Factor89,for_rho, Const, Rho_Koeffs_List, SameValues=True):
     Sum = 0
-    for i in range(N_r):
+    for i in range(N):
         Sum += Rho_Koeffs_List[i]*Factor89[i]
     rho_values = Factor89/Sum
     return rho_values
 
-def get_rho_values(N_r, Factor, for_rho, Const, Rho_Koeffs_List, SameValues = True):
-    mix_list = np.arange(N_r)
-    np.random.shuffle(mix_list)
-    ultimo = mix_list[-1]
-    if N_r != 1:
-        while for_rho == ultimo:
-            np.random.shuffle(mix_list)
-            ultimo = mix_list[-1]
-            print('haha')
-    if SameValues:
-        s_m = 0
-        for il in range(1, N_r+1):
-            s_m += (diracEigenvalues(il)**2 - 0.25)
-        rho_values = [Const/s_m for il in range(N_r)]
-    else:
-        wert = Const
-        rho_values = np.zeros(N_r)
-        if N_r ==1:
-            return [1]
-        else:
-            rho_values[for_rho] = Factor*wert/Rho_Koeffs_List[for_rho]
-            wert = wert - rho_values[for_rho]*Rho_Koeffs_List[for_rho]
-            if wert == 0:
-                return rho_values
-
-
-            for jl,listval  in enumerate(mix_list):
-                if listval == ultimo:
-                    continue
-                elif listval == for_rho:
-                    continue
-                else:
-                    print('listval',listval)
-                    al = random.random()
-                    rho_values[listval] = al*wert/Rho_Koeffs_List[listval]
-                    wert = wert - rho_values[listval]*Rho_Koeffs_List[listval]
-                    print('rho_values, wert', rho_values, wert)
-                    if wert < 0:
-                        print('wert <0 ')
-                    if wert == 0:
-                        return rho_values
-
-            rho_values[ultimo] = wert/Rho_Koeffs_List[ultimo]
-    s_t = 0
-    for ll in range(len(rho_values)):
-        s_t+= Rho_Koeffs_List[ll]*rho_values[ll]
-    return rho_values
-
-def Fitness(Dada, N_Z, x_fitn2):
+def Fitness(Dada, N, x_fitn2):
     if Dada ==1:
-        return get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn2, kappa, False, False, 1)
+        return get_Action(t, r, N, Intgrenze, T, *x_fitn2, kappa, False, False, 1)
     if Dada ==2:
-        return help_Wirk(N_Z, *x_fitn2)
-def Zeilensparer(Rho_Koeffs_List, Minimum2, N_Z,first, x_fitn2, var_K, var_Rho,var_w,
+        return help_Wirk(N, *x_fitn2)
+def Zeilensparer(Rho_Koeffs_List, Minimum2, N,first, x_fitn2, var_K, var_Rho,var_w,
         variant, SartWithGivenMinima):
 
-    if SartWithGivenMinima and N_Z != 1 :  #Diese SartWithGivenMinima ist dafuer da, dass ich beim testen mit der
-                  #HilfsWirkung ohne auf die Falle weiter unten einzugehen
+    if SartWithGivenMinima and N != 1 :  #Diese SartWithGivenMinima ist dafuer da, dass ich beim testen mit der
+                  #HilfsAction ohne auf die Falle weiter unten einzugehen
                   #fortfahren kann.
         #print(x_fitn2)
         if var_K:
@@ -157,16 +135,16 @@ def Zeilensparer(Rho_Koeffs_List, Minimum2, N_Z,first, x_fitn2, var_K, var_Rho,v
             x_fitn2[2]= [*Minimum2[0][2],0]
         #print('lala', x_fitn2)
 
-        fitn_wert_y2 = Fitness(Fitness_Nr, N_Z, x_fitn2)#help_Wirk(N_Z, *x_fitn2)#get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn2, kappa, False, False, 1)
+        fitn_wert_y2 = Fitness(Fitness_Nr, N, x_fitn2)#help_Wirk(N, *x_fitn2)#get_Action(t, r, N, Intgrenze, T, *x_fitn2, kappa, False, False, 1)
     else:
         if var_K:
-            x_fitn2[0]= np.random.random_sample(N_Z)*(K_End - K_Anf)
+            x_fitn2[0]= np.random.random_sample(N)*(K_End - K_Anf)
         if var_Rho:
-            rho_randomi = np.random.random_sample(N_Z)
-            x_fitn2[1]= get_rho_values2(N_Z,rho_randomi,0, Constant, Rho_Koeffs_List, SameValues  =False)
+            rho_randomi = np.random.random_sample(N)
+            x_fitn2[1]= get_rho_values2(N,rho_randomi,0, Constant, Rho_Koeffs_List, SameValues  =False)
         if var_w:
-            x_fitn2[2] = np.random.random_sample(N_Z)*(w_End - w_Anf)
-        fitn_wert_y2 = Fitness(Fitness_Nr, N_Z, x_fitn2)#help_Wirk(N_Z, *x_fitn2)#get_Wirkung(t, r, N_Z, Intgrenze, T, *x_fitn2, kappa, False, False, 1)
+            x_fitn2[2] = np.random.random_sample(N)*(w_End - w_Anf)
+        fitn_wert_y2 = Fitness(Fitness_Nr, N, x_fitn2)#help_Wirk(N, *x_fitn2)#get_Action(t, r, N, Intgrenze, T, *x_fitn2, kappa, False, False, 1)
     return x_fitn2, fitn_wert_y2
 
 def x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste):
@@ -189,21 +167,21 @@ def x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste):
 
     return x_fitn5
 
-def Variierer(N_V, x_fitn22, var_rho = True, var_K = True, var_w = True):
+def Variierer(N, x_fitn22, var_rho = True, var_K = True, var_w = True):
 
-#       K_randomi = np.random.random_sample(N_M)*(K_End - K_Anf)
-#       w_randomi = np.random.random_sample(N_M)*(w_End - w_Anf)
+#       K_randomi = np.random.random_sample(N)*(K_End - K_Anf)
+#       w_randomi = np.random.random_sample(N)*(w_End - w_Anf)
 
-#       K_randomi = np.absolute(x_y_min[0][0] + (2*np.random.random_sample(N_M)
+#       K_randomi = np.absolute(x_y_min[0][0] + (2*np.random.random_sample(N)
 #           - 1)*(K_End - K_Anf))
 #       print('K_randomi = ', K_randomi)
-#       w_randomi = np.absolute(x_y_min[0][2] + (2*np.random.random_sample(N_M)
+#       w_randomi = np.absolute(x_y_min[0][2] + (2*np.random.random_sample(N)
 #           - 1)*(w_End - w_Anf))
-#       rho_randomi = np.random.random_sample(N_M)
-#       for_rho = np.random.randint(0,N_M)
+#       rho_randomi = np.random.random_sample(N)
+#       for_rho = np.random.randint(0,N)
 
     if var_K:
-        randomi2 = (2*np.random.random_sample(N_V) - 1)*(K_End - K_Anf)/10
+        randomi2 = (2*np.random.random_sample(N) - 1)*(K_End - K_Anf)/10
         K_randomi5 = np.absolute(x_fitn22[0] + randomi2)
         x_fitn22[0]= list(K_randomi5)
 #   if var_rho:
@@ -212,16 +190,16 @@ def Variierer(N_V, x_fitn22, var_rho = True, var_K = True, var_w = True):
 #       while rho_randomi6 > 1:
 #           randomi2 = (2*np.random.random() - 1)/10
 #           rho_randomi6 = np.absolute(rho_randomi5 + randomi2)
-#       x_fitn[1] = get_rho_values2(N_V,rho_randomi6,for_rho,Constant,Rho_Koeffs_List, SameValues  =False)
+#       x_fitn[1] = get_rho_values2(N,rho_randomi6,for_rho,Constant,Rho_Koeffs_List, SameValues  =False)
 #       print('rho_randomi5 =', rho_randomi5)
     if var_rho:
-        randomi2 = (2*np.random.random_sample(N_V) - 1)/10
+        randomi2 = (2*np.random.random_sample(N) - 1)/10
         rho_randomi6 = np.absolute(x_fitn22[1] + randomi2)/np.array(Rho_Koeffs_List)
-        x_fitn22[1] = get_rho_values2(N_V,rho_randomi6,for_rho,Constant,Rho_Koeffs_List, SameValues  =False)
+        x_fitn22[1] = get_rho_values2(N,rho_randomi6,for_rho,Constant,Rho_Koeffs_List, SameValues  =False)
 
 
     if var_w:
-        randomi2 = (2*np.random.random_sample(N_V) -1)*(w_End - w_Anf)/10
+        randomi2 = (2*np.random.random_sample(N) -1)*(w_End - w_Anf)/10
         w_randomi5 = np.absolute(x_fitn22[2] + randomi2)
         x_fitn22[2] = list(w_randomi5)
 
@@ -245,14 +223,14 @@ def which_variant(var_K, var_Rho, var_w):
     elif var_K ==True  and var_Rho==True  and var_w==True:
         return 8
 
-def help_Wirk(N_M, K_Lte, Rho_Lte, w_Lte):
+def help_Wirk(N, K_Lte, Rho_Lte, w_Lte):
     s = 0
-    w_Min = [o for o in range(N_M)]
-    R_Min = [o for o in range(N_M)]
-    K_Min = [o for o in range(N_M)]
+    w_Min = [o for o in range(N)]
+    R_Min = [o for o in range(N)]
+    K_Min = [o for o in range(N)]
 
     Min = [w_Min, R_Min, K_Min]
-    for ii in range(N_M):
+    for ii in range(N):
         if var_K:
             s += (K_Lte[ii] - Min[0][ii])**2
         if var_Rho:
@@ -261,7 +239,7 @@ def help_Wirk(N_M, K_Lte, Rho_Lte, w_Lte):
             s+= (w_Lte[ii] - Min[2][ii])**2
     return s
 
-def K_BoltzmanFinder(Selbst, Rho_Koeffs_List, N_M, first, var_K, var_Rho,
+def K_BoltzmanFinder(Selbst, Rho_Koeffs_List, N, first, var_K, var_Rho,
         var_w, variant, StartWithGivenMinima):
     K_Boltz = 0
     if Selbst:
@@ -269,7 +247,7 @@ def K_BoltzmanFinder(Selbst, Rho_Koeffs_List, N_M, first, var_K, var_Rho,
     else:
         for _ in range(Mittelgr):
             x_fitn5 = x_fitn_func(variant, K_Liste, Rho_Liste, w_Liste)
-            x_fitn5, fitn_wert_y5 = Zeilensparer(Rho_Koeffs_List, Minimum, N_M,
+            x_fitn5, fitn_wert_y5 = Zeilensparer(Rho_Koeffs_List, Minimum, N,
                     first, x_fitn5, var_K, var_Rho, var_w, variant, False)
 
             K_Boltz += fitn_wert_y5/Mittelgr
@@ -277,10 +255,10 @@ def K_BoltzmanFinder(Selbst, Rho_Koeffs_List, N_M, first, var_K, var_Rho,
     return K_Boltz
 
 
-def Minimierer(N_M, first, Rho_Koeffs_List, var_K, var_Rho, var_w,
+def Minimierer(N, first, Rho_Koeffs_List, var_K, var_Rho, var_w,
          variant, StartWithGivenMinima, x_y_min):
 
-    K_Boltz =K_BoltzmanFinder(True,Rho_Koeffs_List, N_M, first, var_K, var_Rho,
+    K_Boltz =K_BoltzmanFinder(True,Rho_Koeffs_List, N, first, var_K, var_Rho,
             var_w, variant, StartWithGivenMinima)
     kol = open('iterk.txt', 'a')
     x_y_min = Initial_State
@@ -297,20 +275,20 @@ def Minimierer(N_M, first, Rho_Koeffs_List, var_K, var_Rho, var_w,
 #           w_randomi = [*Minimum[1],0]
 #           rho_randomi = [*Minimum[2],0]
 #       else:
-#           K_randomi = np.random.random_sample(N_M)*(K_End - K_Anf)
-#           w_randomi = np.random.random_sample(N_M)*(w_End - w_Anf)
+#           K_randomi = np.random.random_sample(N)*(K_End - K_Anf)
+#           w_randomi = np.random.random_sample(N)*(w_End - w_Anf)
 
-#       K_randomi = np.absolute(x_y_min[0][0] + (2*np.random.random_sample(N_M)
+#       K_randomi = np.absolute(x_y_min[0][0] + (2*np.random.random_sample(N)
 #           - 1)*(K_End - K_Anf))
 #       print('K_randomi = ', K_randomi)
-#       w_randomi = np.absolute(x_y_min[0][2] + (2*np.random.random_sample(N_M)
+#       w_randomi = np.absolute(x_y_min[0][2] + (2*np.random.random_sample(N)
 #           - 1)*(w_End - w_Anf))
-#           rho_randomi = np.random.random_sample(N_M)
-#       for_rho = np.random.randint(0,N_M)
+#           rho_randomi = np.random.random_sample(N)
+#       for_rho = np.random.randint(0,N)
         for _ in range(4):
             iterat +=1
-            x_fitn33 = Variierer (N_M, x_fitn_i, var_Rho, var_K, var_w)
-            fitn_wert_y = Fitness(Fitness_Nr, N_M, x_fitn33)#help_Wirk(N_M, *x_fitn) #get_Wirkung(t, r, N_M, Intgrenze, T,
+            x_fitn33 = Variierer (N, x_fitn_i, var_Rho, var_K, var_w)
+            fitn_wert_y = Fitness(Fitness_Nr, N, x_fitn33)#help_Wirk(N, *x_fitn) #get_Action(t, r, N, Intgrenze, T,
                     #*x_fitn, kappa, False, False, 1)
 #           K_randomi = x_fitn[0]
 #           w_randomi  = x_fitn[2]
@@ -335,11 +313,11 @@ if __name__ == "__main__":
     Variablen für das kausale System werden nachfolgend deklariert
     '''
 
-    var_K, var_Rho, var_w = configfunktion('SollVarr?')
+    var_K, var_Rho, var_w = configfunktion('Vary_Parameters_bool')
     K_Anf, K_End, K_List = configfunktion('Impuls')
     w_Anf, w_End, w_List = configfunktion('Frequenz')
-    Constant, kappa, Rho_List = configfunktion('Einschraenkungen')
-    Anzahl_N, first = configfunktion('Systemgroesse')
+    Constant, kappa, Rho_List = configfunktion('Constraints')
+    Anzahl_N, first = configfunktion('System_sizes')
     StartWithGivenMinima, Fitness_Nr = configfunktion('Test')
     variant = which_variant(var_K, var_Rho, var_w)
 
