@@ -202,11 +202,19 @@ def get_Integrand_with_c(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Li
     What's happening is, that a C-File with the function, which will get
     integrated over later on, gets created and compiled.
 
+    The generated C-code has not the form i need it to be, so some symbols
+    need to be modified. Like exp to cexp and so on.
+
     I have an option Comp_String, which when True causes the C-File to
     get compiled in one OS-Command instead of seperate commands. I tried
     this out, because i thought that the first option could be faster.
     But it was not, if i remember correctly. Also that's not the Bottleneck
     of my programm, so i didn't focus on that any longer.
+
+    Since the integration algorithm is in another file and is except for
+    the integration boundaries fixed, i decided just to do it by hand every
+    time. Those boundaries are for now also fixed, so it's ok.
+
     '''
 
     a = ccode(lagrangian_without_bound_constr(t,r,N, Rho_Liste,
@@ -247,6 +255,7 @@ def get_Integrand_with_c(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Li
 
 def get_Integrand_with_ctypes(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion, Comp_String):
+
     a = ccode(lagrangian_without_bound_constr(t,r,N, Rho_Liste,
                 w_Liste, K_Liste))
     b = ccode(boundedness_constraint(t,r,N,Rho_Liste,
@@ -328,7 +337,8 @@ def get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
     '''
     Inputs are
 
-    t,r          both symarrays with 1 dimension
+    t,r          both 1 dimensional symarrays, these are also the integration
+                 variables.
 
     N            Integer, from 1,2,....  .
                  Physically speaking the Shell-Number of the Causal-Fermin system
@@ -390,11 +400,11 @@ def get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
         aa = time.time()
 
         lib=ctypes.CDLL('./testlib2.so')
-        #lib=ctypes.CDLL('/home/mustafa/Regensburg/Reproduktion_Von_Nikkis_Ergebnissen/Progs_mit_Sympy/testlib2.so')
         lib.f.restype = ctypes.c_double
         lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
-        zup = integrate.nquad(lib.f,[[0,np.pi],[0,T]],opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },{
-                    'epsabs': 10e-10, 'epsrel' : 10e-10} ] )
+        zup = integrate.nquad(lib.f,[Integration_bound[0],Integration_bound[1]],
+                opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },
+                    {'epsabs': 10e-10, 'epsrel' : 10e-10} ] )
         print('(Action, abserr)=',zup)
         handle = lib._handle # obtain the SO handle
 
@@ -532,10 +542,11 @@ if __name__ == "__main__":
 
     Kurve_Names=[]
 
-    Integration_bound = [x_Anf, x_End]
+    Integration_bound = [[x_Anf, x_End], [0, 2*np.pi]]
     Wirk = []
     w_Liste = [1,2,3,4]#eval(w_List)
     K_Liste = [9.7903003749135973, 1.0428185324876262, 0,0.1]
     Rho_Liste = np.array([ 0.23596702, 0.244134433,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
-    Wirkun = get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,kappa, False,False, 1)
+    Wirkun = get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste,
+            w_Liste,kappa, False,False, 1)
     print(Wirkun)
