@@ -510,7 +510,7 @@ def Two_Dim_Pic():
         Plot("NumbFor3d.txt", PDFName)
         f = open(PDFName +'.pdf', 'a')
         g = open("NumbFor3d.txt", "r")
-        os.system("cat Anfangswerte.cfg >> " +PDFName + ".pdf")
+        os.system("cat Settings.cfg >> " +PDFName + ".pdf")
 
         f.write('K_1, K_2, Action\n')
         os.system("cat NumbFor3d.txt >> " +PDFName+".pdf" )

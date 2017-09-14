@@ -441,9 +441,6 @@ def Minimierer(N, first, Rho_Koeffs_List,Initial_State):
     return Candidate_Minimum
 
 if __name__ == "__main__":
-    '''
-    Variablen für das kausale System werden nachfolgend deklariert
-    '''
 
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters') #boolean
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
@@ -471,15 +468,7 @@ if __name__ == "__main__":
     for_rho = 1
 
 
-    '''
-    Ab hier werden die fuer die Minimierung benötigten Variablen definiert
-    '''
-    '''
-    Ich passe das Minimieren zuerst fuer den eindim. Fall an, danach
-    passe ich es für mehrere dim. an.
-    '''
     #Minimum =[[[0.61402128722400451, 5.4919577589099093], [0.96197069,  0.01267644], [0, 1]], 0.007515003816659801]
-
     Constant = 1
     pre2_w_List = eval(pre_w_List)
 
