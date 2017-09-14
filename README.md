@@ -17,7 +17,7 @@ For this project you need to install
 - Sympy
 - SymEngine 
 - I use [Pyx](http://pyx.sourceforge.net/) for plotting, but you are free to choose any other package for plotting. 
-                                      Pyx is at first not so easy to us, but the moment you got used to it, you can do
+                                      Pyx is at first not so easy to use, but the moment you got used to it, you can do
                                       a lot of things with it. 
                                       
 - You need to be able to run C programms. 
