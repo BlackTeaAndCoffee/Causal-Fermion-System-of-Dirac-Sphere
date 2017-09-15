@@ -299,8 +299,14 @@ def get_Integrand_with_ctypes(t, r, N, Integration_bound, T, K_Liste, Rho_Liste,
 
 def get_Test_Integrandt(T):
     '''
-    This function is here for testing various ideas. I don't remeber anymore
-    why it's there. :)
+    This function is for testing the different integration routines,
+    which are implemented here.
+
+    Basically one can choose a function (The Analytic Result should best be
+    known. Than one can compare the results. I have a sinus function, and
+    and additional peak.
+
+    So we can test, which routine is more capable in detecting the peak.)
     '''
     Whole_String = ''
 
@@ -545,7 +551,7 @@ if __name__ == "__main__":
     Wirk = []
     w_Liste = [1,2,3,4]#eval(w_List)
     K_Liste = [9.7903003749135973, 1.0428185324876262, 0,0.1]
-    Rho_Liste = np.array([ 0.23596702, 0.244134433,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
+    Rho_Liste = np.array([ 0.23596702, (1- 0.23596702)/3])#,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
     Wirkun = get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste,
             w_Liste,kappa, False,False, 1)
     print(Wirkun)
