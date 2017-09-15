@@ -7,3 +7,20 @@ This code is being developed for my Phd-Thesis. It is here for all who are inter
 maybe wan't to see how i did the calculations, use it for their own work or give me any useful hints.
 This work is based on the Master Thesis of Nikki Kilbertus, of which you can download a copy on the wiki-page of this project.
 
+# Install
+
+I am an Ubuntu User, so FYI in any case.
+
+For this project you need to install 
+
+- Python3 (Numpy, Scipy)
+- Sympy
+- SymEngine 
+- I use [Pyx](http://pyx.sourceforge.net/) for plotting, but you are free to choose any other package for plotting. 
+                                      Pyx is at first not so easy to use, but the moment you got used to it, you can do
+                                      a lot of things with it. 
+                                      
+- You need to be able to run C programms. 
+
+
+
