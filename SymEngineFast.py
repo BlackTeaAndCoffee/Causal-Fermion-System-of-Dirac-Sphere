@@ -1,7 +1,6 @@
 from sympy.printing import ccode
 from scipy import integrate
 from symengine import I
-from SimTest import *
 from PyxPlot3d import *
 from configfunktion import configfunktion
 import sympy as sy
@@ -522,7 +521,7 @@ if __name__ == "__main__":
     r = si.symarray('r', 1)
     t = si.symarray('t', 1)
 
-    var_K, var_Rho, var_w = configfunktion('Vary_Parameters_bool')
+    var_K, var_Rho, var_w = configfunktion('Vary_Parameters')
     K_Anf, K_End, K_List = configfunktion('Impuls')
     w_Anf, w_End, w_List = configfunktion('Frequenz')
     Constant, kappa, Rho_List = configfunktion('Constraints')
@@ -531,7 +530,7 @@ if __name__ == "__main__":
 
 
     T = 1 #Liftime of the universe, it's needed for the Schwartzfunction
-    N = 4
+    N = 2
 
 
     kappa_Anzahl = 1
