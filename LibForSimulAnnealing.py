@@ -2,12 +2,12 @@ import random
 import numpy as np
 
 
-def boltzmann(f_x, f_y, temperatur, Boltzmann_Konst):
+def boltzmann(f_x, f_y, temperatur, Boltzmann_Konstant):
     print('f_x,f_y', f_x, f_y)
     diff = abs(f_y - f_x)
     print('diff', diff)
     wert = np.exp(- diff/(temperatur*Boltzmann_Konstant))
-    return freqert
+    return wert
 
 def Temperatur_Function(tempus, decay_const, freq, Amplitude):
     return np.exp(-decay_const*tempus**2)*(Amplitude*np.cos(freq*tempus*0.5) + 1)
