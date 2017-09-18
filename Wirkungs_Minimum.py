@@ -11,7 +11,6 @@ import random
 import time
 import os
 import sys
-import Rho_data
 import scipy.misc
 import ctypes
 from SymEngineFast import *
