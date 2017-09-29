@@ -406,36 +406,35 @@ def K_BoltzmanFinder(Selbst, Rho_Koeffs_List, N):
     return K_Boltz
 
 
-def Minimierer(N, first, Rho_Koeffs_List,Initial_State):
+def Minimierer(N, first, Rho_Koeffs_List, Candidate_Minimum):
 
     K_Boltz =K_BoltzmanFinder(True,Rho_Koeffs_List, N)
     kol = open('iterk.txt', 'a')
-    Candidate_Minimum = Initial_State
-    fitn_wert_x = Initial_State[1]
-    x_fitn_i = Initial_State[0]
-    K_Iter_List = [x_fitn_i[0][0]]
-    m_list = [0,1,2,3]
+    #Candidate_Minimum = Initial_State
+    print('id(Candidate)',id(Candidate_Minimum[0]))
 
+    fitn_wert_x = Candidate_Minimum[1]#Initial_State[1]
+    x_fitn_i = [*Candidate_Minimum[0]]# Initial_State[0]
     iterat = 0
     for m,tt in enumerate(temp):
         for _ in range(4):
             iterat +=1
             new_param_values = Variation (N, x_fitn_i)
             energy_new_param = Fitness(Which_Fitness, N, new_param_values)
-
             kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
                     +str(energy_new_param)+'\n')
-            print('VArs and y_val', new_param_values, energy_new_param)
             boltzi = boltzmann(fitn_wert_x, energy_new_param, tt, K_Boltz)
+
             if fitn_wert_x > energy_new_param:
-                fitn_wert_x=energy_new_param
+                fitn_wert_x = energy_new_param
+                x_fitn_i =  new_param_values
                 if Candidate_Minimum[1] > energy_new_param:
                     Candidate_Minimum[0]= new_param_values
                     Candidate_Minimum[1]= energy_new_param
-
+                    print('Cand1', Candidate_Minimum)
             elif (fitn_wert_x < energy_new_param) and (random.random() <= boltzi) :
-                print(fitn_wert_x, energy_new_param, 'jump')
                 fitn_wert_x = energy_new_param
+                x_fitn_i =  new_param_values
     kol.close()
     return Candidate_Minimum
 
@@ -476,7 +475,7 @@ if __name__ == "__main__":
     pre2_Rho_List = eval(pre_Rho_List)
 
     for SN in range(first,Anzahl_N+1):
-        Iter = 2*SN                        #Number of temperatur iterations
+        Iter = SN                        #Number of temperatur iterations
         hilfsarray_fuer_temp = np.linspace(0.01,5,Iter)
         Amplitude = 0.1                     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
