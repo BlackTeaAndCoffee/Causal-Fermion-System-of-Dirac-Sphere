@@ -520,10 +520,7 @@ def Two_Dim_Pic():
         f.write('K_1, K_2, Action\n')
         os.system("cat NumbFor3d.txt >> " +PDFName+".pdf" )
 
-
-
-if __name__ == "__main__":
-
+def MainProg():
     r = si.symarray('r', 1)
     t = si.symarray('t', 1)
 
@@ -555,3 +552,6 @@ if __name__ == "__main__":
     Wirkun = get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste,
             w_Liste,kappa, False,False, 1)
     print(Wirkun)
+
+if __name__ == "__main__":
+    MainProg()

@@ -32,7 +32,7 @@ if __name__ == "__main__":
                             #       Schwartzfunktion
     N = 2                   #integer, Shell-Number
 
-    kappa = 0.05            #float, Needed for boundary constant
+    kappa = 0.0001            #float, Needed for boundary constant
     kappa_Anzahl = 1        #float, Needed for plotting a diagram for various
                             # kappas
 
@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     w_List = [0.,1.]
     K_List = [0.,0.]
-    Number_of_Weights = 7
+    Number_of_Weights = 11
     Kurve_Names = []
     PDFTitle = 'Rout_Wechs_N_%d_GewichteScharAnz%dVarK_%1dKappa_%1.5f'%(N,Number_of_Weights,
             ind+1, kappa)

@@ -461,21 +461,21 @@ if __name__ == "__main__":
 
     Integration_bound = [[x_Anf, x_End], [0,2*np.pi]]
     Wirk = []
-    Selbstval_K_Boltz =0.001
+    Selbstval_K_Boltz =0.00005
     Mittelgr = 4
     for_rho = 1
 
 
     #Minimum =[[[0.61402128722400451, 5.4919577589099093], [0.96197069,  0.01267644], [0, 1]], 0.007515003816659801]
     Constant = 1
-    pre2_w_List = eval(pre_w_List)
+#    pre2_w_List = eval(pre_w_List)
 
     pre2_K_List = eval(pre_K_List)
 
     pre2_Rho_List = eval(pre_Rho_List)
 
     for SN in range(first,Anzahl_N+1):
-        Iter = SN                        #Number of temperatur iterations
+        Iter = SN**2                        #Number of temperatur iterations
         hilfsarray_fuer_temp = np.linspace(0.01,5,Iter)
         Amplitude = 0.1                     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
@@ -486,6 +486,11 @@ if __name__ == "__main__":
         Factor = np.random.random_sample(SN)
         Rho_Koeffs_List = listmaker(SN)
 
+        pre2_w_List = eval(pre_w_List) # I put this list assignment here,
+                                    #    should be right. Not entirely sure,
+                                    #    but i want to let the code run for the
+                                    #    next hours and i am in a rush.
+
         x_fitn11, fitn_wert_y11 = Initial_state_constructor(variant,
            pre2_K_List, pre2_Rho_List, pre2_w_List, Rho_Koeffs_List, SN)
 
@@ -495,7 +500,7 @@ if __name__ == "__main__":
         print('Initial_State', Initial_State)
         Minimum = Minimierer(SN, first, Rho_Koeffs_List, Initial_State)
 
-        pre2_w_List = [*Minimum[0][2],0]
+        #pre2_w_List = [*Minimum[0][2],0]
         print('pre2_w_list', pre2_w_List)
         pre2_K_List = [*Minimum[0][0],0]
         pre2_Rho_List = [*Minimum[0][1],0]
