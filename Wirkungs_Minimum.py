@@ -438,8 +438,7 @@ def Minimierer(N, first, Rho_Koeffs_List, Candidate_Minimum):
     kol.close()
     return Candidate_Minimum
 
-if __name__ == "__main__":
-
+def MainProg():
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters') #boolean
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
     w_Anf, w_End, pre_w_List= configfunktion('Frequenz') # flaots and List
@@ -508,3 +507,7 @@ if __name__ == "__main__":
         gg = open('Minimum7.txt', 'a')
         gg.write('Minimum fuer N = %d'%(SN) + str(Minimum)+'\n')
         gg.close()
+
+
+if __name__ == "__main__":
+    MainProg()
