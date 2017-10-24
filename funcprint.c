@@ -10,11 +10,11 @@ int main () {
    fp = fopen("numbers.txt", "w");
 
    for (j = 0; j<100; j++){
-   for ( i = 0; i<100; i++){
-       a[0] =  i*M_PI/100;
-       a[1] = j*0.02;
-       fprintf(fp,"%4.9f %.9f %2.4f\n ", a[0],a[1],f(b,a));
-   }
+       for ( i = 0; i<100; i++){
+           a[0] =  i*M_PI/100;
+           a[1] = j*0.02;
+           fprintf(fp,"%4.9f %.9f %2.4f\n ", a[0],a[1],f(b,a));
+       }
    }
    fclose(fp);
    return 0;
