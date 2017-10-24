@@ -9,7 +9,6 @@ import numpy as np
 import random
 import time
 import os
-import Rho_data
 import scipy.misc
 import ctypes
 import subprocess
