@@ -7,6 +7,6 @@ setup(
     author = "Mustafa Akman",
     author_email = "", # FIXME: add email
     license = "GPL v3", 
-    install_requires = ["pyx", "numpy", "symengine", "scipy"],
+    install_requires = ["pycallgraph", "pyx", "numpy", "symengine", "scipy"],
     packages = find_packages())
 

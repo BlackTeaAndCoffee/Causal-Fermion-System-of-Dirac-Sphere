@@ -1,7 +1,7 @@
 from .SymEngineFast import get_Action
-import .Diag_Schar
+from . import Diag_Schar
 import symengine as si
-import .PyxSchar
+from . import PyxSchar
 import numpy as np
 import os
 '''
