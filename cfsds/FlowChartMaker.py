@@ -2,7 +2,7 @@ from pycallgraph import PyCallGraph
 from pycallgraph import Config
 from pycallgraph.output import GraphvizOutput
 from pycallgraph import GlobbingFilter
-from Wirkungs_Minimum import *
+from .Wirkungs_Minimum import *
 import symengine as si
 import os
 
