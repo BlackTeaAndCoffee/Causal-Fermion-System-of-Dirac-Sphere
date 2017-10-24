@@ -4,7 +4,7 @@ import numpy as np
 
 def configfunktion(section):
     config = configparser.RawConfigParser()
-    config.read('Settings.cfg')
+    config.read('config/Settings.cfg')
 
 
     if section == 'Vary_Parameters':
