@@ -274,7 +274,7 @@ def get_Integrand_with_ctypes(t, r, N, Integration_bound, T, K_Liste, Rho_Liste,
     Func2_Anf = "+ creall("
     Func2 =  b.replace("exp", "cexp").replace("r_0","args[0]").replace("pow",
             "cpow").replace("t_0","args[1]")
-    g = open('funcprint.txt', 'r')
+    g = open('funcprint.c', 'r')
     g1 = g.read()
 
     if Schwartzfunktion:
@@ -314,7 +314,7 @@ def get_Test_Integrandt(T):
     Integranddef = "double f(int n, double args[n])"+ "{return"
     Whole_String+= Bibliotheken + Integranddef
 
-    g = open('funcprint.txt', 'r')
+    g = open('funcprint.c', 'r')
     g1 = g.read()
 
     Func2_1 ='(-1/(cpow(M_PI,0.5)*%2.3f))*'%(T)
