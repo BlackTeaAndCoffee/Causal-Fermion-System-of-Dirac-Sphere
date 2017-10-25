@@ -1,0 +1,6 @@
+
+pycallgraph
+pyx
+numpy
+scipy
+symengine

@@ -2,7 +2,7 @@ from sympy.printing import ccode
 from scipy import integrate
 from symengine import I
 from sympy import *
-from configfunktion import configfunktion
+from .configfunktion import configfunktion
 import configparser
 import sympy as sy
 import symengine as si
@@ -13,8 +13,8 @@ import os
 import sys
 import scipy.misc
 import ctypes
-from SymEngineFast import *
-from LibForSimulAnnealing import *
+from .SymEngineFast import *
+from .LibForSimulAnnealing import *
 
 '''
 This Programm contains the code for minimizing the Action.

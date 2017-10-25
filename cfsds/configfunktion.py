@@ -1,10 +1,11 @@
 import configparser
 import numpy as np
+from . import get_config
 
 
 def configfunktion(section):
     config = configparser.RawConfigParser()
-    config.read('Settings.cfg')
+    config.read(get_config('Settings.cfg'))
 
 
     if section == 'Vary_Parameters':

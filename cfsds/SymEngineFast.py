@@ -1,8 +1,9 @@
 from sympy.printing import ccode
 from scipy import integrate
 from symengine import I
-from PyxPlot3d import *
-from configfunktion import configfunktion
+from .PyxPlot3d import *
+from .configfunktion import configfunktion
+from . import get_data
 import sympy as sy
 import symengine as si
 import numpy as np
@@ -218,7 +219,7 @@ def get_Integrand_with_c(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Li
     a = ccode(lagrangian_without_bound_constr(t,r,N, Rho_Liste,
                 w_Liste, K_Liste))
     b = ccode(boundedness_constraint(t,r,N,Rho_Liste,w_Liste, K_Liste,kappa))
-    g = open('funcprint2.txt', 'r')
+    g = open(get_data('funcprint2.txt'), 'r')
     g1 = g.read()
     g.close()
     Whole_String = ''
@@ -273,7 +274,7 @@ def get_Integrand_with_ctypes(t, r, N, Integration_bound, T, K_Liste, Rho_Liste,
     Func2_Anf = "+ creall("
     Func2 =  b.replace("exp", "cexp").replace("r_0","args[0]").replace("pow",
             "cpow").replace("t_0","args[1]")
-    g = open('funcprint.txt', 'r')
+    g = open(get_data('funcprint.c'), 'r')
     g1 = g.read()
 
     if Schwartzfunktion:
@@ -313,7 +314,7 @@ def get_Test_Integrandt(T):
     Integranddef = "double f(int n, double args[n])"+ "{return"
     Whole_String+= Bibliotheken + Integranddef
 
-    g = open('funcprint.txt', 'r')
+    g = open(get_data('funcprint.c'), 'r')
     g1 = g.read()
 
     Func2_1 ='(-1/(cpow(M_PI,0.5)*%2.3f))*'%(T)

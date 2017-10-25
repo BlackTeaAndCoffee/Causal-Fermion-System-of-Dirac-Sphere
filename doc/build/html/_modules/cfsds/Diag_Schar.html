@@ -1,0 +1,108 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>cfsds.Diag_Schar &#8212; Causal-Fermion-System-of-Dirac-Sphere 0.0.1a documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.1a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cfsds.Diag_Schar</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">pyx</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pyx.graph</span> <span class="k">import</span> <span class="n">axis</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="diag_plot"><a class="viewcode-back" href="../../cfsds.html#cfsds.Diag_Schar.diag_plot">[docs]</a><span class="k">def</span> <span class="nf">diag_plot</span><span class="p">(</span><span class="n">x_Achse</span><span class="p">,</span> <span class="n">y_matrix</span><span class="p">,</span> <span class="n">Title</span><span class="p">,</span> <span class="n">X_Title</span><span class="p">,</span> <span class="n">Y_Title</span><span class="p">,</span> <span class="n">Kurv_Names</span><span class="p">,</span> <span class="n">PDFTitle</span><span class="p">,</span> <span class="n">keypos</span><span class="p">):</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">graphxy</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">height</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="nb">min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x_Achse</span><span class="p">),</span> <span class="nb">max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x_Achse</span><span class="p">),</span>
+                          <span class="n">title</span><span class="o">=</span> <span class="n">X_Title</span><span class="p">),</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="nb">min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">y_matrix</span><span class="p">),</span><span class="nb">max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">y_matrix</span><span class="p">),</span>
+                          <span class="n">title</span><span class="o">=</span> <span class="n">Y_Title</span><span class="p">),</span>
+                      <span class="n">key</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">keypos</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+    <span class="n">dd</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">y_matrix</span><span class="p">)[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">y_values</span> <span class="o">=</span> <span class="n">y_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_values</span><span class="p">))</span>
+        <span class="n">dd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="n">x_Achse</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">y_values</span> <span class="p">,</span><span class="n">title</span> <span class="o">=</span> <span class="n">Kurv_Names</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+
+    <span class="n">c</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">dd</span><span class="p">,[</span><span class="n">graph</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">line</span><span class="p">([</span><span class="n">color</span><span class="o">.</span><span class="n">gradient</span><span class="o">.</span><span class="n">Rainbow</span><span class="p">])])</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">Title</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">writePDFfile</span><span class="p">(</span><span class="n">PDFTitle</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  <li><a href="../cfsds.html">cfsds</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Mustafa Akman, Daniel Knüttel.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
