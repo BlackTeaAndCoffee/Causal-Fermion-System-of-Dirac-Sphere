@@ -8,5 +8,8 @@ setup(
     author_email = "", # FIXME: add email
     license = "GPL v3", 
     install_requires = ["pycallgraph", "pyx", "numpy", "symengine", "scipy"],
+    package_data = {
+    	"cfsds": ["config/*", "data/*"]
+    },
     packages = find_packages())
 

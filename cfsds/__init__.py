@@ -1,8 +1,10 @@
-import os
+import pkg_resources, os
 
-_root = os.path.abspath(os.path.dirname(__file__))
+
 def get_data(path):
-	return os.path.join(_root, "data", path)
+	ressource_name = os.path.join("data", path)
+	return pkg_resources.resource_filename("cfsds", ressource_name)
 
 def get_config(path):
-	return os.path.join(_root, "config", path)
+	ressource_name = os.path.join("config", path)
+	return pkg_resources.resource_filename("cfsds", ressource_name)
