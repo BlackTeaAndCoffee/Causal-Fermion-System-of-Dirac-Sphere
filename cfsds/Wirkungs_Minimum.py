@@ -165,13 +165,11 @@ def which_variant(random_K, random_Rho, random_w):
     the initial_state_constructor
     '''
     if random_K == False and random_Rho== False  and random_w== False:
-        '''
-        This case doesn't make much sense,
-        because of course there is going to be a variation.
-        This case i am using for fixing every paramater initially
-        instead of letting the programm choose a random starting
-        point.
-        '''
+        # This case doesn't make much sense,
+        # because of course there is going to be a variation.
+        # This case i am using for fixing every paramater initially
+        # instead of letting the programm choose a random starting
+        # point.
         return 1
     elif random_K == False and random_Rho== False  and random_w==True:
         return 2
@@ -190,30 +188,32 @@ def which_variant(random_K, random_Rho, random_w):
 
 def Initial_state_constructor(variant, K_List, Rho_List, w_List,
       Rho_Koeffs_List, N):
-    print('erstes N', N)
 
     '''
-    variant                      integer, input comes from which_variant
-    K_List, Rho_List, w_List   Lists of length N, with which the initial
-                                 state gets constructed.
+    variant                      
+    	integer, input comes from which_variant
+    K_List, Rho_List, w_List   
+    	Lists of length N, with which the initial
+        state gets constructed.
 
-    N                            integer, The Shell number is here needed
-                                 to know which parameter space is being
-                                 searched. Because i could start to probe the
-                                 parameter space from the minimizer, which i
-                                 found on one subspace of the regarded
-                                 parameter space.
-                                 Or just simply i could say, start at this
-                                 point and do not take a random starting point
-                                 (which is default).
-                                 By choosing a starting point and then choosing
-                                 the Shell-Number
-                                 we decide wether we expand into a bigger
-                                 parameterspace or not.
-                                 So if N > len(K_List) then we go into a
-                                 bigger parameter space. If N = len(K_List)
-                                 we just decided to start at some fixed point.
-                                 N < len(K_List) will give an error.
+    N                            
+    	integer, The Shell number is here needed
+        to know which parameter space is being
+        searched. Because i could start to probe the
+        parameter space from the minimizer, which i
+        found on one subspace of the regarded
+        parameter space.
+        Or just simply i could say, start at this
+        point and do not take a random starting point
+        (which is default).
+        By choosing a starting point and then choosing
+        the Shell-Number
+        we decide wether we expand into a bigger
+        parameterspace or not.
+        So if N > len(K_List) then we go into a
+        bigger parameter space. If N = len(K_List)
+        we just decided to start at some fixed point.
+        N < len(K_List) will give an error.
 
 
     To set up the initial state, we need to fill up the Lists which are not
@@ -224,6 +224,7 @@ def Initial_state_constructor(variant, K_List, Rho_List, w_List,
 
 
     '''
+    print('erstes N', N)
 
 
     Lists_length = len(K_List)
@@ -289,9 +290,11 @@ def Gap_Filler(N, Rho_Koeffs_List, half_filled_list):
 
 def Variation(N, x_fitn22):
     '''
-    N               integer, Shell-Number
-    x_fitn22        is the array, that contains the parameters of Rho_List,
-                    pre_w_Listand K_List
+    N               
+	integer, Shell-Number
+    x_fitn22        
+	is the array, that contains the parameters of Rho_List,
+        pre_w_Listand K_List
 
     The variation of the state, should not end in a new random state, it
     should be somehow "near" the old state.
@@ -356,20 +359,25 @@ def Control_Action(N, K_Lte, Rho_Lte, w_Lte):
 
 def K_BoltzmanFinder(Selbst, Rho_Koeffs_List, N):
     '''
-    Selbst           boolean, A value that i choose for the Boltz. const
-    Rho_Koeffs_List  List of floats, I need this for the calculation of
-                     the Action
-    N                integer, Shell-Number
-    var_K            boolean, Needed to decide whether the Impuls-variables
-                              should be varied or not
-    var_Rho          boolean, -''-
-    var_w            boolean, -''-
-    variant          integer, it's a number, which is given for every
-                              kombinatin of var_Rho, var_w, var_w(see
-                              fucntion which_variant)
-    '''
+    Selbst           
+        boolean, A value that i choose for the Boltz. const
+    Rho_Koeffs_List  
+        List of floats, I need this for the calculation of
+        the Action
+    N                
+        integer, Shell-Number
+    var_K            
+        boolean, Needed to decide whether the Impuls-variables
+        should be varied or not
+    var_Rho          
+        boolean, -''-
+    var_w            
+        boolean, -''-
+    variant          
+        integer, it's a number, which is given for every
+        kombinatin of var_Rho, var_w, var_w(see
+        fucntion which_variant)
 
-    '''
     For the simulated annealing process i need a thermal function. This thermal
     function should decrease in time and eventually go to zero.
     For this thermal function i need some sort of exponential decay constant

@@ -1,0 +1,11 @@
+build/*
+iterk.txt
+Minimum7.txt
+*/__pycache__/*
+doc/testlib2.c
+doc/testlib2.so
+testlib2.c
+testlib2.so
+*/*.pyc
+cfsds.egg-info/
+dist/

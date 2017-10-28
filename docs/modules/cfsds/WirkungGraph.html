@@ -1,0 +1,202 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>cfsds.WirkungGraph &#8212; Causal-Fermion-System-of-Dirac-Sphere 0.0.1a documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.1a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cfsds.WirkungGraph</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.SymEngineFast</span> <span class="k">import</span> <span class="n">get_Action</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">Diag_Schar</span>
+<span class="kn">import</span> <span class="nn">symengine</span> <span class="k">as</span> <span class="nn">si</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">PyxSchar</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">I wrote this programm to plot the Action against one variable of choice.</span>
+<span class="sd">Here it&#39;s the impuls, it&#39;s either K1 or K2.</span>
+<span class="sd">Maybe one next step would be to generalize this programm,</span>
+<span class="sd">so i can plot the action also against the weigts or frequenz.</span>
+
+<span class="sd">Also i did this only for N = 1 and 2.</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="func"><a class="viewcode-back" href="../../cfsds.html#cfsds.WirkungGraph.func">[docs]</a><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">Integration_bound</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">Rho_List</span><span class="p">,</span><span class="n">w_List</span><span class="p">,</span><span class="n">kappa</span><span class="p">,</span><span class="n">k1</span><span class="p">):</span>
+    <span class="n">K_List</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">=</span> <span class="n">k1</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;K_List=&#39;</span><span class="p">,</span> <span class="n">K_List</span><span class="p">,</span> <span class="s1">&#39;WertListe=&#39;</span><span class="p">,</span><span class="n">WertListe</span><span class="p">,</span> <span class="s1">&#39;yaaaaaaay1&#39;</span><span class="p">)</span>
+    <span class="n">Wert</span> <span class="o">=</span> <span class="n">get_Action</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">Integration_bound</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">K_List</span><span class="p">,</span> <span class="n">Rho_List</span><span class="p">,</span><span class="n">w_List</span><span class="p">,</span><span class="n">kappa</span><span class="p">,</span>
+            <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">Wert</span><span class="p">)</span>
+    <span class="n">WertListe</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Wert</span><span class="p">)</span>
+    <span class="n">KK</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">WertListe</span><span class="p">,</span> <span class="n">KK</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">si</span><span class="o">.</span><span class="n">symarray</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">si</span><span class="o">.</span><span class="n">symarray</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>             <span class="c1">#float, Lifetime of the universe, which is needed for the</span>
+                            <span class="c1">#       Schwartzfunktion</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">2</span>                   <span class="c1">#integer, Shell-Number</span>
+
+    <span class="n">kappa</span> <span class="o">=</span> <span class="mf">0.0001</span>            <span class="c1">#float, Needed for boundary constant</span>
+    <span class="n">kappa_Anzahl</span> <span class="o">=</span> <span class="mi">1</span>        <span class="c1">#float, Needed for plotting a diagram for various</span>
+                            <span class="c1"># kappas</span>
+
+    <span class="n">x_Anf</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">x_End</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+    <span class="n">Integration_bound</span> <span class="o">=</span> <span class="p">[[</span><span class="n">x_Anf</span><span class="p">,</span> <span class="n">x_End</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]]</span>
+
+    <span class="n">ind</span> <span class="o">=</span> <span class="mi">0</span>                 <span class="c1">#Which Impuls should be varied, 0 for K1 and 1 for K2</span>
+
+
+    <span class="n">w_List</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span><span class="mf">1.</span><span class="p">]</span>
+    <span class="n">K_List</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">]</span>
+    <span class="n">Number_of_Weights</span> <span class="o">=</span> <span class="mi">11</span>
+    <span class="n">Kurve_Names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">PDFTitle</span> <span class="o">=</span> <span class="s1">&#39;Rout_Wechs_N_</span><span class="si">%d</span><span class="s1">_GewichteScharAnz</span><span class="si">%d</span><span class="s1">VarK_</span><span class="si">%1d</span><span class="s1">Kappa_</span><span class="si">%1.5f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">Number_of_Weights</span><span class="p">,</span>
+            <span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">kappa</span><span class="p">)</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">PyxSchar</span><span class="o">.</span><span class="n">initialXY</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$K_</span><span class="si">%1d</span><span class="s1">$&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39;Action&#39;</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span> <span class="p">,</span> <span class="s1">&#39;tr&#39;</span><span class="p">)</span>
+
+    <span class="n">dd</span><span class="o">=</span><span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="n">Number_of_Weights</span><span class="p">):</span>
+        <span class="n">rho1</span> <span class="o">=</span> <span class="mf">0.1</span><span class="o">*</span><span class="n">k</span>
+        <span class="n">Rho_List</span> <span class="o">=</span><span class="p">[</span><span class="n">rho1</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span> <span class="n">rho1</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">dk</span> <span class="o">=</span> <span class="mf">0.1</span>
+        <span class="n">k1</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="n">WertListe</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">KK</span> <span class="o">=</span><span class="p">[]</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">WertListe</span><span class="p">,</span> <span class="n">KK</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">Integration_bound</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">Rho_List</span><span class="p">,</span>
+                <span class="n">w_List</span><span class="p">,</span><span class="n">kappa</span><span class="p">,</span> <span class="n">k1</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;WertListe&#39;</span><span class="p">,</span> <span class="n">WertListe</span><span class="p">)</span>
+            <span class="n">l1</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">WertListe</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="k">if</span>  <span class="n">l1</span><span class="o">&gt;=</span><span class="mi">2</span> <span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">WertListe</span><span class="p">[</span><span class="n">l1</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">WertListe</span><span class="p">[</span><span class="n">l1</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="n">KK</span><span class="p">[</span><span class="n">l1</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span>
+                    <span class="n">KK</span><span class="p">[</span><span class="n">l1</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">WertListe</span><span class="p">[</span><span class="n">l1</span><span class="p">]</span> <span class="o">-</span> <span class="n">WertListe</span><span class="p">[</span><span class="n">l1</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="n">KK</span><span class="p">[</span><span class="n">l1</span><span class="p">]</span> <span class="o">-</span> <span class="n">KK</span><span class="p">[</span><span class="n">l1</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">if</span>  <span class="n">b</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">a</span><span class="o">/</span><span class="n">b</span> <span class="o">&lt;</span> <span class="mf">0.5</span> <span class="ow">or</span> <span class="n">a</span><span class="o">/</span><span class="n">b</span> <span class="o">&gt;</span><span class="mi">2</span><span class="p">):</span>
+                    <span class="n">WertListe</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+                    <span class="n">KK</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+                    <span class="n">k1</span> <span class="o">-=</span> <span class="n">dk</span>
+                    <span class="n">dk</span> <span class="o">=</span> <span class="mf">0.02</span>
+                    <span class="n">k1</span> <span class="o">+=</span> <span class="n">dk</span>
+                    <span class="n">WertListe</span><span class="p">,</span> <span class="n">KK</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">Integration_bound</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">Rho_List</span><span class="p">,</span>
+                <span class="n">w_List</span><span class="p">,</span><span class="n">kappa</span><span class="p">,</span> <span class="n">k1</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">dk</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">b</span><span class="o">/</span><span class="n">a</span> <span class="o">&lt;</span> <span class="mf">0.5</span> <span class="ow">or</span> <span class="n">b</span><span class="o">/</span><span class="n">a</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">):</span>
+                    <span class="n">WertListe</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+                    <span class="n">KK</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+                    <span class="n">k1</span> <span class="o">-=</span> <span class="n">dk</span>
+                    <span class="n">dk</span> <span class="o">=</span> <span class="mf">0.02</span>
+                    <span class="n">k1</span> <span class="o">+=</span> <span class="n">dk</span>
+                    <span class="n">WertListe</span><span class="p">,</span> <span class="n">KK</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">Integration_bound</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">Rho_List</span><span class="p">,</span>
+                <span class="n">w_List</span><span class="p">,</span><span class="n">kappa</span><span class="p">,</span>  <span class="n">k1</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">dk</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dk</span> <span class="o">=</span> <span class="n">dk</span><span class="o">*</span><span class="mi">2</span>
+                    <span class="n">dk</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">dk</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">dk</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">WertListe</span><span class="p">[</span><span class="n">l1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">1.5</span> <span class="ow">or</span> <span class="n">k1</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="n">k1</span> <span class="o">+=</span> <span class="n">dk</span>
+        <span class="n">LL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">WertListe</span><span class="p">)</span>
+        <span class="n">LL2</span> <span class="o">=</span> <span class="n">LL</span><span class="o">/</span><span class="n">LL</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;LL=&#39;</span><span class="p">,</span> <span class="n">LL</span><span class="p">,</span><span class="s1">&#39;KK=&#39;</span><span class="p">,</span> <span class="n">KK</span><span class="p">)</span>
+        <span class="n">dd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PyxSchar</span><span class="o">.</span><span class="n">set_values</span><span class="p">(</span><span class="n">KK</span><span class="p">,</span> <span class="n">LL2</span><span class="p">,</span>
+            <span class="sa">r</span><span class="s2">&quot;$\rho_1=</span><span class="si">%2.4f</span><span class="s2">, \rho_2=</span><span class="si">%2.4f</span><span class="s2">$&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">Rho_List</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Rho_List</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+
+
+    <span class="k">if</span> <span class="n">ind</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">PyxSchar</span><span class="o">.</span><span class="n">plot_diag</span><span class="p">(</span><span class="n">dd</span><span class="p">,</span> <span class="s1">&#39;$kappa=</span><span class="si">%2.5f</span><span class="s1">, K_{</span><span class="si">%1d</span><span class="s1">}=</span><span class="si">%2.2f</span><span class="s1">$&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">kappa</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span> <span class="n">PDFTitle</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">PyxSchar</span><span class="o">.</span><span class="n">plot_diag</span><span class="p">(</span><span class="n">dd</span><span class="p">,</span> <span class="s1">&#39;$kappa=</span><span class="si">%2.5f</span><span class="s1">, K_{</span><span class="si">%1d</span><span class="s1">}=</span><span class="si">%2.2f</span><span class="s1">$&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">kappa</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span> <span class="n">PDFTitle</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">PDFTitle</span><span class="o">+</span><span class="s1">&#39;.pdf&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;x_values&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">KK</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;y_values&#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">LL2</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">+</span><span class="s1">&#39;unnormed values</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">LL</span><span class="p">))</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  <li><a href="../cfsds.html">cfsds</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Mustafa Akman, Daniel Knüttel.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
