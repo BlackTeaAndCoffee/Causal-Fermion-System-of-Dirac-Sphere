@@ -1,7 +1,7 @@
-cfsds
+Numerical_CFS
 =====
 
 .. toctree::
    :maxdepth: 4
 
-   cfsds
+   Numerical_CFS
