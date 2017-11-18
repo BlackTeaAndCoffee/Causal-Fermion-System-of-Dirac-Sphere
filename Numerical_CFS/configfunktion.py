@@ -2,10 +2,13 @@ import configparser
 import numpy as np
 from . import get_config
 
+def _configfunktion(section, parser = None):
 
-def configfunktion(section):
-    config = configparser.RawConfigParser()
-    config.read(get_config('Settings.cfg'))
+    if(not parser):
+        config = configparser.RawConfigParser()
+        config.read(get_config('Settings.cfg'))
+    else:
+        config = parser
 
 
     if section == 'Vary_Parameters':
@@ -52,3 +55,36 @@ def configfunktion(section):
         StartWithGivenMinima = config.getboolean('Test', 'StartWithGivenMinima')
         return StartWithGivenMinima, Fitness_Nr
 
+class Config(object):
+    fields_by_section = \
+        {
+            'Vary_Parameters': ['Gewichte', 'Impulse', 'Frequenz'],
+            'Set_Initialstate_randomly': ['Weights', 'Impuls', 'Frequenz'],
+            'Impuls': ['Anf', 'End', 'List'],
+            'Frequenz': ['Anf', 'End', 'List'],
+            'Constraints': ['List', 'Spur_Konstante', 'Boundary_Konstante'],
+            'System_sizes': ['Erste_Schale', 'Schalen_Anzahl'],
+            'Test': ['Fitness_Nr', 'StartWithGivenMinima']
+        }
+    def __init__(self):
+        self.cfg = configparser.RawConfigParser()
+        self.cfg.read(get_config('Settings.cfg'))
+
+    def configfunktion(self, section):
+        if(not section in Config.fields_by_section):
+            raise KeyError("unknown section: " + str(section))
+        return _configfunktion(section, self.cfg)
+
+    def write_config(self, section, field, value):
+        if(not section in Config.fields_by_section):
+            raise KeyError("unknown section: " + str(section))
+        self.cfg[section][field] = str(value)
+
+        with open(get_config('Settings.cfg'), "w") as f:
+            self.cfg.write(f)
+
+
+config = Config()
+
+configfunktion = config.configfunktion
+writeconfig = config.write_config
