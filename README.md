@@ -28,22 +28,10 @@ The second Part of the Code would be the Minimizing-Problem. For this i currentl
  
 There are a lot of different minimizing methods out there, so another one would be bayesian optimization. It's completely different from Simulated-Annealing and maybe a good alternative. 
 
-# Install
-
-I am an Ubuntu User, so FYI in any case.
-
-For this project you need to install 
-
-- Python3 (Numpy, Scipy)
-- Sympy
-- SymEngine 
-- I use [Pyx](http://pyx.sourceforge.net/) for plotting, but you are free to choose any other package for plotting. 
-                                      Pyx is at first not so easy to use, but the moment you got used to it, you can do
-                                      a lot of things with it. 
-                                      
-- You need to be able to run C programms. 
-
-- To use the FlowChartMaker.py you need to install [PyCallgraph](http://pycallgraph.slowchop.com/en/master/#)
-# Or use Pip
+# For installing use Pip
+For Linux-Users, type into Terminal:
 `pip install Numerical_CFS`
+or download the package from [Numerical_CFS](https://pypi.python.org/pypi/Numerical-CFS) unpack it and then 
+run `python setup.py install`
+
 
