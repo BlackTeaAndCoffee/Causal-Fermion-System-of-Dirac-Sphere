@@ -27,26 +27,20 @@ The second Part of the Code would be the Minimizing-Problem. For this i currentl
    - Another Problem is that for larger sets of paramters, the amount of needed integrations also increases. 
  
 There are a lot of different minimizing methods out there, so another one would be bayesian optimization. It's completely different from Simulated-Annealing and maybe a good alternative. 
-# Required Installations  
- The Main Programms are in Numerical_CFS. 
- Install following:
- - Python3 (Numpy, Scipy)
- - Sympy
- - SymEngine 
- - I use [Pyx](http://pyx.sourceforge.net/) for plotting, but you are free to choose any other package for plotting. 
- Pyx is at first not so easy to use, but the moment you got used to it, you can do
-                                        a lot of things with it. 
-                                        
- - You need to be able to run C programms. 
-  
- - To use the FlowChartMaker.py you need to install [PyCallgraph](http://pycallgraph.slowchop.com/en/master/#)
- 
+
+# From Source
+Clone the project and then run`python3 -m pip install -r requirements.txt`. 
+This is for installing the needed packages "SymEngine, Smypy, Scipy, Numpy, Pyx".
+And then run `python3 setupy.py install`.
 
 # Pip
 For Linux-Users, type into Terminal:
 `pip install Numerical_CFS`
+
 # or 
-Download the package "tar.gz" file from [Numerical_CFS](https://pypi.python.org/pypi/Numerical-CFS) unpack it and then 
-run `python setup.py install`
+For Linux:
+Download the package "tar.gz" file from [Numerical_CFS](https://pypi.python.org/pypi/Numerical-CFS) unpack it, cd into the directory in wich you unpacked it and then run `python setup.py install`.
+For Windows:
+Follow this [Description](https://www.wikihow.com/Install-Python-Packages-on-Windows-7)
 
 
