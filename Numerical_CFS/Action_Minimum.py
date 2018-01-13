@@ -91,7 +91,10 @@ def diag_plot2(x_Achse, y_Achse, X_Title, Y_Title, Kurv_Name, PDFTitle, keypos):
     c.writePDFfile(PDFTitle)
 
 def diracEigenvalues(n):
-     return (2*n + 1)/2
+    '''
+    :param n: Number of current Shell
+    '''
+    return (2*n + 1)/2
 
 
 '''
@@ -190,13 +193,13 @@ def Initial_state_constructor(variant, K_List, Rho_List, w_List,
       Rho_Koeffs_List, N):
 
     '''
-    variant                      
+    variant
     	integer, input comes from which_variant
-    K_List, Rho_List, w_List   
+    K_List, Rho_List, w_List
     	Lists of length N, with which the initial
         state gets constructed.
 
-    N                            
+    N
     	integer, The Shell number is here needed
         to know which parameter space is being
         searched. Because i could start to probe the
@@ -290,9 +293,9 @@ def Gap_Filler(N, Rho_Koeffs_List, half_filled_list):
 
 def Variation(N, x_fitn22):
     '''
-    N               
+    N
 	integer, Shell-Number
-    x_fitn22        
+    x_fitn22
 	is the array, that contains the parameters of Rho_List,
         pre_w_Listand K_List
 
@@ -359,21 +362,21 @@ def Control_Action(N, K_Lte, Rho_Lte, w_Lte):
 
 def K_BoltzmanFinder(Selbst, Rho_Koeffs_List, N):
     '''
-    Selbst           
+    Selbst
         boolean, A value that i choose for the Boltz. const
-    Rho_Koeffs_List  
+    Rho_Koeffs_List
         List of floats, I need this for the calculation of
         the Action
-    N                
+    N
         integer, Shell-Number
-    var_K            
+    var_K
         boolean, Needed to decide whether the Impuls-variables
         should be varied or not
-    var_Rho          
+    var_Rho
         boolean, -''-
-    var_w            
+    var_w
         boolean, -''-
-    variant          
+    variant
         integer, it's a number, which is given for every
         kombinatin of var_Rho, var_w, var_w(see
         fucntion which_variant)

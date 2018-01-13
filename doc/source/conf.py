@@ -15,6 +15,10 @@
 
 import sys
 import os
+sys.path.insert(0, os.path.abspath('/home/mustafa/Regensburg/Causal-Fermion-System-of-Dirac-Sphere/Numerical_CFS'))
+sys.path.insert(0, os.path.abspath('~/.local/share/virtualenvs/CFS_Project/lib/python3.5/site-packages'))
+
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

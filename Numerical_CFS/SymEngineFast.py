@@ -1,5 +1,3 @@
-from sympy.printing import ccode
-from scipy import integrate
 from symengine import I
 from .PyxPlot3d import *
 from .configfunktion import configfunktion
@@ -40,7 +38,9 @@ Codewise speaking this programm can be split into Get_Integrand and Get_Action.
 In Get_Integrand as the name already spills it out, i'm constructing the
 Integrand, which will be later on integrated in Get_Action to get the Action.
 
-*Get_Integrand
+Get_Integrand
+=============
+
     Here my idea was to use sympy to get the analytic form of the
     integrand. So this way ideally only in the numeric integration
     i would get round off errors. The integration is done numerically
@@ -59,7 +59,9 @@ Integrand, which will be later on integrated in Get_Action to get the Action.
     not sure if thats the correct name for it) causes it to be that slow.
     This code is in FullyNumeric.py.
 
-#Get_Action
+Get_Action
+==========
+
     In Get_Action i integrate over the Integrand i get via Get_Integrand.
     Depending on which method i decided to to use, different methods come
     to use.
@@ -70,13 +72,14 @@ Integrand, which will be later on integrated in Get_Action to get the Action.
 
 def TensorProduct(mat11, mat22):
     '''
-    Inputs are two matrices, and the output is the tensoproduct of those two.
-
     I needed a Tensorproduct for two matrices with symbolic elements.
-    Other Tensorproducts oer Direct Products do not what i need.
-    If there is a nicer way,
-    please inform me.
+    Other i "Tensorproducts or Direct" Products do not what i need. So
+    i cheated a bit.
 
+    :type arg1:  2 by 2 numpy.array
+    :type arg2:  2 by 2 numpy.array
+    :return: 4 by 4 matrix, which is the Tensorproduct
+    :rtype:  4 by 4 numpy.array
     '''
     mat1 = np.array(mat11, dtype= object).reshape(2,2)
     mat2 = np.array(mat22, dtype = object).reshape(2,2)
