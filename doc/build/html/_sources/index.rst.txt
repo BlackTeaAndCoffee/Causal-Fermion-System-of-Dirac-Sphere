@@ -6,17 +6,24 @@
 Welcome to Causal-Fermion-System-of-Dirac-Sphere's documentation!
 =================================================================
 
+.. figure:: CMS_Higgs-event.jpg
+   :width: 220px
+   :height: 220px
+   :scale:  110%
+   :align: right   
+   :alt: hallo 
+  
+   Beyond the Standard Model
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
-
+   
    install
    Introduction
    modules
    callgraph
-
-
 
 Indices and tables
 ==================

@@ -71,16 +71,18 @@ Get_Action
 '''
 
 def TensorProduct(mat11, mat22):
-    '''
-    I needed a Tensorproduct for two matrices with symbolic elements.
-    Other i "Tensorproducts or Direct" Products do not what i need. So
-    i cheated a bit.
+    """I needed a Tensorproduct for two matrices with symbolic elements.
+    Other "Tensorproducts or Direct-Products" do not what i need. So
+    i wrote this Product myself.
 
-    :type arg1:  2 by 2 numpy.array
-    :type arg2:  2 by 2 numpy.array
-    :return: 4 by 4 matrix, which is the Tensorproduct
-    :rtype:  4 by 4 numpy.array
-    '''
+    :param arg1: description
+    :param arg2: description
+    :type arg1: 2 by 2 numpy.array.
+    :type arg2: 2 by 2 numpy.array.
+    :return: 4 by 4 matrix, which is the Tensorproduct.
+    :rtype: 4 by 4 numpy.array.
+
+    """
     mat1 = np.array(mat11, dtype= object).reshape(2,2)
     mat2 = np.array(mat22, dtype = object).reshape(2,2)
     return np.bmat([[mat1[0,0]*mat2, mat1[0,1]*mat2] ,[mat1[1,0]*mat2,
