@@ -32,39 +32,50 @@ to find some convergency for higher getting N.
 The Minimizer we choose is the simulated annealing procedure. The reason
 for that is, that the Action must not be smooth.
     * A Problem with that, which already seems to get an issue is that
-    each evaluation of the action takes to much time. On Average higher
-    N means longer evaluation time. For higher N we also need to probe the
-    Paramater space more often. So the simulated annealing method might
-    not be good enough.
+      each evaluation of the action takes to much time. On Average higher
+      N means longer evaluation time. For higher N we also need to probe the
+      Paramater space more often. So the simulated annealing method might
+      not be good enough.
 
-    *There is another method called bayesian optimization. I haven't tried
-    this one out yet. But i will definitely do so soon.
+    * There is another method called bayesian optimization. I haven't tried
+      this one out yet. But i will definitely do so soon.
 
 In the simulated annealing algorithm we basically begin with some initial
 state. A state is just some combinations of the various paramters in
 K_List, Rho_List and w_List.
-    The initial state should either be given by the user or the programm should
-    pick some state.
-        The user would give a state, if he or she want's to give the algorithm
-        a starting point. This we will do by each increase of the Shell-Number
-        N.
 
-    A state always gets an Energyvalue (float number) and the state with the
-    lowest Energy is the desired one. Now we can imagine, that the energy
-    landscape has a lot of mountains and valleys and sometime you need to pass
-    a huge mountain to get to the deepest valley. For this kind of problem
-    the simulated annealing algorithm is very good. Usualy after a change of
-    variables, the combination of parameters with the lowest energy gets picked
-    as the state to be in, but if the temperature is high enough sometimes the
-    algorithm would also jump to state in which the energy is higher.
-    For more details, please look "Simulated annealing" up.
+    * The initial state should either be given by the user or the programm should
+      pick some state.
+
+    * The user would give a state, if he or she want's to give the algorithm
+      a starting point. This we will do by each increase of the Shell-Number
+      N.
+
+    * A state always gets an Energyvalue (float number) and the state with the
+      lowest Energy is the desired one. Now we can imagine, that the energy
+      landscape has a lot of mountains and valleys and sometime you need to pass
+      a huge mountain to get to the deepest valley. For this kind of problem
+      the simulated annealing algorithm is very good. Usualy after a change of
+      variables, the combination of parameters with the lowest energy gets picked
+      as the state to be in, but if the temperature is high enough sometimes the
 
 
 '''
 
-def diag_plot(x_Achse, y_matrix, X_Title, Y_Title, Kurv_Names, PDFTitle, keypos):
+def diag_plot(x_Axis, y_matrix, X_Title, Y_Title, Curve_Names, PDFTitle, keypos):
+
+    '''
+    :param mat11: Mathematically speaking a 2 by 2 matrix.
+    :param mat22: Mathematically speaking a 2 by 2 matrix.
+    :type mat11: 2 by 2 numpy.array.
+    :type mat22: 2 by 2 numpy.array.
+    :return: 4 by 4 matrix, which is the Tensorproduct.
+    :rtype: 4 by 4 numpy.array.
+    '''
+
+
     c = graph.graphxy(width=10,height=10,
-        x = graph.axis.linear(min = min(x_Achse), max = max(x_Achse),
+        x = graph.axis.linear(min = min(x_Axis), max = max(x_Axis),
                           title= X_Title),
         y = graph.axis.linear(min = np.amin(y_matrix),max = np.amax(y_matrix),
                           title= Y_Title),
@@ -73,21 +84,21 @@ def diag_plot(x_Achse, y_matrix, X_Title, Y_Title, Kurv_Names, PDFTitle, keypos)
     for i in range(np.shape(y_matrix)[0]):
         y_values = y_matrix[i,:]
         print (len(y_values))
-        dd.append(graph.data.values(x = x_Achse, y = y_values ,title = Kurv_Names[i]))
+        dd.append(graph.data.values(x = x_Axis, y = y_values ,title = Curve_Names[i]))
 
     c.plot(dd,[graph.style.line([color.gradient.Rainbow])])
 
     c.writePDFfile(PDFTitle)
 
-def diag_plot2(x_Achse, y_Achse, X_Title, Y_Title, Kurv_Name, PDFTitle, keypos):
+def diag_plot2(x_Axis, y_Axis, X_Title, Y_Title, Curve_Names, PDFTitle, keypos):
     c = graph.graphxy(width=10,height=10,
-        x = graph.axis.linear(min = min(x_Achse), max = max(x_Achse),
+        x = graph.axis.linear(min = min(x_Axis), max = max(x_Axis),
                           title= X_Title),
-        y = graph.axis.linear(min = min(y_Achse),max = max(y_Achse),
+        y = graph.axis.linear(min = min(y_Axis),max = max(y_Axis),
                           title= Y_Title),
                       key = graph.key.key(pos=keypos, dist =0.1))
 
-    c.plot(graph.data.values(x = x_Achse, y = y_Achse, title  = Kurv_Name),[graph.style.line([color.gradient.Rainbow])])
+    c.plot(graph.data.values(x = x_Axis, y = y_Axis, title  = Curf_Names),[graph.style.line([color.gradient.Rainbow])])
     c.writePDFfile(PDFTitle)
 
 def diracEigenvalues(n):
@@ -148,7 +159,7 @@ def Fitness(Dada, N, x_fitn2):
 
     print('N', N)
     if Dada ==1:
-        return get_Action(t, r, N, Integration_bound, T, *x_fitn2, kappa, False, False, 1)
+        return get_Action(N, Integration_bound, T, *x_fitn2, kappa, False, False, 1)
     if Dada ==2:
         return help_Wirk(N, *x_fitn2)
 
@@ -189,8 +200,7 @@ def which_variant(random_K, random_Rho, random_w):
     elif random_K ==True  and random_Rho==True  and random_w==True:
         return 8
 
-def Initial_state_constructor(variant, K_List, Rho_List, w_List,
-      Rho_Koeffs_List, N):
+def Initial_state_constructor(variant, K_List, Rho_List, w_List, Rho_Koeffs_List, N):
 
     '''
     variant
@@ -464,8 +474,6 @@ if __name__ == "__main__":
     print(StartWithGivenMinima, "variant = ", variant)
 
     T = 2*np.pi
-    r = si.symarray('r', 1)
-    t = si.symarray('t', 1)
 
     x_Anf = 0
     x_End = np.pi

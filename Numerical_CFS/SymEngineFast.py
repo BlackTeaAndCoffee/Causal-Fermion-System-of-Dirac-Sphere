@@ -1,10 +1,12 @@
 from symengine import I
+from sympy.printing import ccode
 from .PyxPlot3d import *
 from .configfunktion import configfunktion
 from . import get_data
 import sympy as sy
 import symengine as si
 import numpy as np
+from scipy import integrate
 import random
 import time
 import os
@@ -24,6 +26,9 @@ sigma3[1,1] = -1
 ident = si.zeros(2)
 ident[0,0] = 1
 ident[1,1] = 1
+r = si.symarray('r', 1)
+t = si.symarray('t', 1)
+
 
 
 '''
@@ -75,10 +80,10 @@ def TensorProduct(mat11, mat22):
     Other "Tensorproducts or Direct-Products" do not what i need. So
     i wrote this Product myself.
 
-    :param arg1: description
-    :param arg2: description
-    :type arg1: 2 by 2 numpy.array.
-    :type arg2: 2 by 2 numpy.array.
+    :param mat11: Mathematically speaking a 2 by 2 matrix.
+    :param mat22: Mathematically speaking a 2 by 2 matrix.
+    :type mat11: 2 by 2 numpy.array.
+    :type mat22: 2 by 2 numpy.array.
     :return: 4 by 4 matrix, which is the Tensorproduct.
     :rtype: 4 by 4 numpy.array.
 
@@ -96,14 +101,14 @@ def prefactor(n):
 def diracEigenvalues(n):
     return (2*n + 1)/2
 
-def integralKernelPlus(n, r):
+def integralKernelPlus(n):
     n=n-1
     lala11 = sy.jacobi(n, 1/2, 3/2, r[0])
     lala21 = sy.jacobi(n, 3/2, 1/2, r[0])
     return prefactor(n)*(si.cos(r[0]/2)*lala11*ident -
                         I*si.sin(r[0]/2)*lala21*sigma3)
 
-def integralKernelMinus(n, r):
+def integralKernelMinus(n):
     n=n-1
     lala1 = sy.jacobi(n, 1/2, 3/2, r[0])
     lala2 = sy.jacobi(n, 3/2, 1/2, r[0])
@@ -143,50 +148,49 @@ def preMatrixMinus(a):
     matrix[1,1]= 1+b
     return matrix
 
-def projector(t, r, N, Rho_Liste2, w_Liste2, K_Liste2):
+def projector(N, Rho_Liste2, w_Liste2, K_Liste2):
     mat = np.zeros((4,4), dtype = object)
     for n in range(1,N + 1):
         Koef =Rho_Liste2[n-1]*sy.exp(-I*w_Liste2[n-1]*t[0])
-        Term11 = TensorProduct(preMatrixPlus(K_Liste2[n-1]),integralKernelPlus(n, r))
-        Term21 = TensorProduct(preMatrixMinus(K_Liste2[n-1]),integralKernelMinus(n, r))
+        Term11 = TensorProduct(preMatrixPlus(K_Liste2[n-1]),integralKernelPlus(n))
+        Term21 = TensorProduct(preMatrixMinus(K_Liste2[n-1]),integralKernelMinus(n))
         mat += Koef*(Term11 + Term21)
     return mat
 
-def projectorAdj(t, r,  N, Rho_Liste3, w_Liste3, K_Liste3):
+def projectorAdj(N, Rho_Liste3, w_Liste3, K_Liste3):
     mat1 = np.zeros((4,4),  dtype = object)
 
     for n in range(1, N+1):
         Koeff = Rho_Liste3[n-1]*sy.exp(I*w_Liste3[n-1]*t[0])
-        Term12 = TensorProduct(preMatrixPlus(K_Liste3[n-1]),integralKernelMinus(n, r))
-        Term22 = TensorProduct(preMatrixMinus(K_Liste3[n-1]),integralKernelPlus(n, r))
+        Term12 = TensorProduct(preMatrixPlus(K_Liste3[n-1]),integralKernelMinus(n))
+        Term22 = TensorProduct(preMatrixMinus(K_Liste3[n-1]),integralKernelPlus(n))
         mat1 += Koeff*(Term12 +Term22)
     return mat1
 
-def closedChain(t, r,  N, Rho_Liste, w_Liste, K_Liste):
-    return np.dot(projector(t, r,  N, Rho_Liste, w_Liste,
-        K_Liste),projectorAdj(t, r, N, Rho_Liste, w_Liste, K_Liste))
+def closedChain(N, Rho_Liste, w_Liste, K_Liste):
+    return np.dot(projector(N, Rho_Liste, w_Liste,
+        K_Liste),projectorAdj(N, Rho_Liste, w_Liste, K_Liste))
 
-def lagrangian_without_bound_constr(t, r, N, Rho_Liste, w_Liste, K_Liste):
-    sub1 = closedChain(t, r,  N, Rho_Liste, w_Liste, K_Liste)
+def lagrangian_without_bound_constr(N, Rho_Liste, w_Liste, K_Liste):
+    sub1 = closedChain(N, Rho_Liste, w_Liste, K_Liste)
     return np.trace(np.dot(sub1,sub1)) - 0.25 * np.trace(sub1)*np.trace(sub1)
 
 '''
 Constraints
 '''
 
-def boundedness_constraint(t,r, N, Rho_Liste, w_Liste, K_Liste, kappa):
-    sub = closedChain(t, r,  N, Rho_Liste, w_Liste, K_Liste)
+def boundedness_constraint(N, Rho_Liste, w_Liste, K_Liste, kappa):
+    sub = closedChain(N, Rho_Liste, w_Liste, K_Liste)
     return kappa* np.trace(sub)**2
 
 '''
 Integrand and Action
 '''
-def Integrand(t, r, N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion
+def Integrand(N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion
         = True):
-    args = np.concatenate((t,r))
-    exprs = [lagrangian_without_bound_constr(t,r,N,Rho_Liste,w_Liste,K_Liste)]
+    exprs = [lagrangian_without_bound_constr(Rho_Liste,w_Liste,K_Liste)]
     lagr = si.Lambdify(args, exprs, real = False)
-    exprs2 = [boundedness_constraint(t,r,N,Rho_Liste,w_Liste, K_Liste,kappa)]
+    exprs2 = [boundedness_constraint(N,Rho_Liste,w_Liste, K_Liste,kappa)]
     bound = si.Lambdify(args,exprs2, real = False)
 
     if Schwartzfunktion:
@@ -198,7 +202,7 @@ def Integrand(t, r, N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion
 
     return integrand
 
-def get_Integrand_with_c(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
+def get_Integrand_with_c(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion, Comp_String):
     '''
     For all of this i used the ccode function of sympy to generate C code for the integrand.
@@ -221,9 +225,8 @@ def get_Integrand_with_c(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Li
 
     '''
 
-    a = ccode(lagrangian_without_bound_constr(t,r,N, Rho_Liste,
-                w_Liste, K_Liste))
-    b = ccode(boundedness_constraint(t,r,N,Rho_Liste,w_Liste, K_Liste,kappa))
+    a = ccode(lagrangian_without_bound_constr(N, Rho_Liste,w_Liste, K_Liste))
+    b = ccode(boundedness_constraint(N,Rho_Liste,w_Liste, K_Liste,kappa))
     g = open(get_data('funcprint2.txt'), 'r')
     g1 = g.read()
     g.close()
@@ -257,12 +260,12 @@ def get_Integrand_with_c(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Li
         f.close()
         os.system('gcc -o testlib2 testlib2.c -lm')
 
-def get_Integrand_with_ctypes(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
+def get_Integrand_with_ctypes(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion, Comp_String):
 
-    a = ccode(lagrangian_without_bound_constr(t,r,N, Rho_Liste,
+    a = ccode(lagrangian_without_bound_constr(N, Rho_Liste,
                 w_Liste, K_Liste))
-    b = ccode(boundedness_constraint(t,r,N,Rho_Liste,
+    b = ccode(boundedness_constraint(N,Rho_Liste,
         w_Liste, K_Liste,kappa))
 
 
@@ -341,7 +344,7 @@ def get_Test_Integrandt(T):
     g.close()
 
 
-def get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
+def get_Action(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion = True, Comp_String = False, Type = 1):
 
     '''
@@ -405,7 +408,7 @@ def get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
 
     if Type == 1:
         '''Integration with Cytpes'''
-        get_Integrand_with_ctypes(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
+        get_Integrand_with_ctypes(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
             kappa, Schwartzfunktion, Comp_String)
         aa = time.time()
 
@@ -414,7 +417,7 @@ def get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
         lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
         zup = integrate.nquad(lib.f,[Integration_bound[0],Integration_bound[1]],
                 opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },
-                    {'epsabs': 10e-10, 'epsrel' : 10e-10} ] )
+                    {'epsabs': 10e-8, 'epsrel' : 10e-88888888} ] )
         print('(Action, abserr)=',zup)
         handle = lib._handle # obtain the SO handle
 
@@ -426,7 +429,7 @@ def get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
     elif Type ==2:
         '''Integration with C. Up until here i basically construct the
         integrand  and then C takes over.'''#Stimmt was nicht.Also irgendwas
-        get_Integrand_with_c(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
+        get_Integrand_with_c(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion, Comp_String)
         tt = time.time()
 
@@ -450,7 +453,7 @@ def get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
     elif Type == 4:
         '''Scipy quadpack'''
 
-        integrand = Integrand(t, r, N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion)
+        integrand = Integrand(N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion)
         tt = time.time()
         Action = integrate.nquad(lambda r1, t1 : integrand(t1,r1),
                 [[0,np.pi],[0,T]], opts=[{'epsabs' :10e-10, 'epsrel': 10e-10 },{
@@ -462,16 +465,16 @@ def get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
         return Action[0]
     print('done')
 
-def get_integrand_values(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
+def get_integrand_values(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion = True, Comp_String = False, With_Ctypes = True):
     '''
     This method is here for plotting the integrand.
     '''
     if With_Ctypes:
-        get_Integrand_with_ctypes(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
+        get_Integrand_with_ctypes(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
             kappa, Schwartzfunktion, Comp_String)
     else:
-        get_Integrand_with_c(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
+        get_Integrand_with_c(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion, Comp_String)
 
     os.system('gcc -o yolo testlib2.c -lm')
@@ -503,14 +506,14 @@ def Two_Dim_Pic():
         rho_1 = jj*0.05
         Rho_Liste = [rho_1, (1-rho_1)/3]
 
-        norma = get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste,
+        norma = get_Action(N, Integration_bound, T, K_Liste, Rho_Liste,
             w_Liste,kappa, False,False, 1)
         d = open('NumbFor3d.txt', 'w')
 
         for k1 in K1_Liste:
             for k2 in K2_Liste:
                 K_Liste=[k1, k2]
-                Wert = get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,kappa, False,False, 1)
+                Wert = get_Action(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,kappa, False,False, 1)
                 print(Wert)
                 string = "%f %f %f \n" %(k1,k2,Wert/norma)
                 d.write(string)
@@ -526,9 +529,6 @@ def Two_Dim_Pic():
         os.system("cat NumbFor3d.txt >> " +PDFName+".pdf" )
 
 def MainProg():
-    r = si.symarray('r', 1)
-    t = si.symarray('t', 1)
-
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters')
     K_Anf, K_End, K_List = configfunktion('Impuls')
     w_Anf, w_End, w_List = configfunktion('Frequenz')
@@ -554,7 +554,7 @@ def MainProg():
     w_Liste = [1,2,3,4]#eval(w_List)
     K_Liste = [9.7903003749135973, 1.0428185324876262, 0,0.1]
     Rho_Liste = np.array([ 0.23596702, (1- 0.23596702)/3])#,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
-    Wirkun = get_Action(t, r, N, Integration_bound, T, K_Liste, Rho_Liste,
+    Wirkun = get_Action(N, Integration_bound, T, K_Liste, Rho_Liste,
             w_Liste,kappa, False,False, 1)
     print(Wirkun)
 

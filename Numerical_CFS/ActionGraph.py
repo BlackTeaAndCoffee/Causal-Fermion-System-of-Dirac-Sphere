@@ -13,10 +13,10 @@ so i can plot the action also against the weigts or frequenz.
 Also i did this only for N = 1 and 2.
 
 '''
-def func(t, r, N, Integration_bound, T, Rho_List,w_List,kappa,k1):
+def func(N, Integration_bound, T, Rho_List,w_List,kappa,k1):
     K_List[ind]= k1
     print('K_List=', K_List, 'WertListe=',WertListe, 'yaaaaaaay1')
-    Wert = get_Action(t, r, N, Integration_bound, T, K_List, Rho_List,w_List,kappa,
+    Wert = get_Action(N, Integration_bound, T, K_List, Rho_List,w_List,kappa,
             False, False, 1)
     print(Wert)
     WertListe.append(Wert)
@@ -24,9 +24,6 @@ def func(t, r, N, Integration_bound, T, Rho_List,w_List,kappa,k1):
     return WertListe, KK
 
 if __name__ == "__main__":
-    r = si.symarray('r', 1)
-    t = si.symarray('t', 1)
-
     T = 2*np.pi             #float, Lifetime of the universe, which is needed for the
                             #       Schwartzfunktion
     N = 2                   #integer, Shell-Number
@@ -61,7 +58,7 @@ if __name__ == "__main__":
         WertListe = []
         KK =[]
         while 1:
-            WertListe, KK = func(t, r, N, Integration_bound, T, Rho_List,
+            WertListe, KK = func(N, Integration_bound, T, Rho_List,
                 w_List,kappa, k1)
             print('WertListe', WertListe)
             l1 = len(WertListe) - 1
