@@ -212,7 +212,7 @@ def which_variant(random_K, random_Rho, random_w):
     elif random_K ==True  and random_Rho==True  and random_w==True:
         return 8
 
-def Initial_state_constructor(variant, K_List, Rho_List, w_List, Rho_Koeffs_List, N):
+def Initial_state_constructor(variant, K_List, Rho_List, w_List,  N):
 
     '''
     :param variant: input comes from which_variant
@@ -274,43 +274,43 @@ def Initial_state_constructor(variant, K_List, Rho_List, w_List, Rho_Koeffs_List
         half_filled_list[1, :Lists_length] = Rho_List
         half_filled_list[2, :Lists_length] = w_List
 
-        parameters, ftns_for_x = Gap_Filler(N, Rho_Koeffs_List, half_filled_list)
+        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
 
     elif variant ==2:
         half_filled_list[0, :Lists_length] = K_List
         half_filled_list[1, :Lists_length] = Rho_List
 
-        parameters, ftns_for_x = Gap_Filler(N, Rho_Koeffs_List, half_filled_list)
+        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
     elif variant ==3:
         half_filled_list[1, :Lists_length] = Rho_List
         half_filled_list[2, :Lists_length] = w_List
 
-        parameters, ftns_for_x = Gap_Filler(N, Rho_Koeffs_List, half_filled_list)
+        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
     elif variant ==4:
         half_filled_list[0, :Lists_length] = K_List
         half_filled_list[2, :Lists_length] = w_List
 
-        parameters, ftns_for_x = Gap_Filler(N, Rho_Koeffs_List, half_filled_list)
+        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
     elif variant ==5:
         half_filled_list[0, :Lists_length] = K_List
 
-        parameters, ftns_for_x = Gap_Filler(N, Rho_Koeffs_List, half_filled_list)
+        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
     elif variant ==6:
         half_filled_list[1, :Lists_length] = Rho_List
 
-        parameters, ftns_for_x = Gap_Filler(N, Rho_Koeffs_List, half_filled_list)
+        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
     elif variant ==7:
         half_filled_list[2, :Lists_length] = w_List
 
-        parameters, ftns_for_x = Gap_Filler(N, Rho_Koeffs_List, half_filled_list)
+        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
     elif variant ==8:
-        parameters, ftns_for_x = Gap_Filler(N, Rho_Koeffs_List, half_filled_list)
+        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
 
     return parameters, ftns_for_x
 
 
 
-def Gap_Filler(N, Rho_Koeffs_List, half_filled_list):
+def Gap_Filler(N,  half_filled_list):
     if random_K:
         half_filled_list[0]= np.random.random_sample(N)*(K_End - K_Anf)
     if random_Rho:
@@ -326,9 +326,18 @@ def Variation(N, x_fitn22):
     '''
     :param N: Integer.
     :type N: Shell-Number.
-    :param x_fitn22: Is the array, that contains the parameters of Rho_List,\
-        pre_w_Listand K_List.
+    :param x_fitn22: Is the array, that contains the parameters of Rho_List, pre_w_Listand K_List.
     :type  x_fitn22: List of 3 Lists.
+    :param var_K: This is a global variable. We need them in this\
+    function. You need to decide whether the Impuls-variables should be varied or not.
+    :type var_K: boolean.
+    :param var_Rho: This is a global variable. We need them in this\
+    function. You need to decide whether the Weight-variables should be varied or not.
+    :type var_Rho: boolean.
+    :param var_w: This is a global variable. We need them in this\
+    function. You need to decide whether the frequence-variables should be varied or not.
+    :type var_w: boolean.
+    :param variant: It's a number, which is given for every kombinatin of var_Rho, var_w, var_w(see function which_variant).
 
     The variation of the state, should not end in a new random state, it\
     should be somehow "near" the old state.\
@@ -337,14 +346,10 @@ def Variation(N, x_fitn22):
     The second choice with (K_End - K_Anf)/10 is very arbitrary, but i have\
     to start somewhere and it seems to be good.\
     The same goes for the frequencies. \
-
-    I think everything else is self explanatory.\
-
     The way i programmed the whole programm,\
     i only have to change this variation function\
     to for exapmple only vary one element of the weights.\
     This i do not need right now. But in the future maybe.\
-
     '''
 
     if var_K:
@@ -371,7 +376,7 @@ def control_Action(N, K_Lte, Rho_Lte, w_Lte):
 
     '''
     This function serves to test the minimizer.
-    As you can see this is a higher dimensional
+    This is a higher dimensional
     parabola. In first order the action is also a
     parabola so if the minimizer won't work here
     it will definitely fail for the action.
@@ -391,66 +396,31 @@ def control_Action(N, K_Lte, Rho_Lte, w_Lte):
             s+= (w_Lte[ii] - Min[2][ii])**2
     return s
 
-def K_BoltzmanFinder(Selbst, Rho_Koeffs_List, N):
+def K_BoltzmanFinder(Selbst, N):
     '''
-    Selbst
-        boolean, A value that i choose for the Boltz. const
-    Rho_Koeffs_List
-        List of floats, I need this for the calculation of
-        the Action
-    N
-        integer, Shell-Number
-    var_K
-        boolean, Needed to decide whether the Impuls-variables
-        should be varied or not
-    var_Rho
-        boolean, -''-
-    var_w
-        boolean, -''-
-    variant
-        integer, it's a number, which is given for every
-        kombinatin of var_Rho, var_w, var_w(see
-        fucntion which_variant)
-
-    For the simulated annealing process i need a thermal function. This thermal
-    function should decrease in time and eventually go to zero.
-    For this thermal function i need some sort of exponential decay constant
-    (Let's call this the boltzmann constant. You may confuse it with the actual
-    boltzmann constant but for now i will call it that),
-    and basically that's what i am constructing here.
-
-    There is a problem with this approach. The Boltzmann konstant can be
-    calculated to a value which is too high. That is because the process
-    just uses somen random number of evaluations of the action and takes
-    the average of those to be the boltzmann konstant.
-
-    If the boltzmann konstant is to high, the minimizing algorithm allows
-    states to get to higher and higher actions. But the case is, that the
-    action in first order is a parabola, one notices that the algorithm may
-    just get lost climbing the action mountain. One could just construct a
-    better temperatur decay function, but thats all to random. So at some point
-    i choose the boltzmann konstant to be 0.001 and sure enough the minimizers
-    were more easily found.
-
-    So at some point, i will have to find a better approach for this.
+    :param Selbst: If true, a value that i choose for the Boltz. const\
+    is being used. It's Name is "self_Give_val".
+    :type Selbst: Boolean.
+    :return: Boltzman Konstant for simulated annealing algorithm.
+    :rtype: Float.
     '''
 
     K_Boltz = 0
     if Selbst:
-        K_Boltz = Selbstval_K_Boltz
+        K_Boltz = self_Give_val
     else:
         for _ in range(Mittelgr):
             x_fitn5, fitn_wert_y5 = Initial_state_constructor(variant, K_List,
-                    Rho_List, w_List, Rho_Koeffs_List, N)
+                    Rho_List, w_List,  N)
 
             K_Boltz += fitn_wert_y5/Mittelgr
 
     return K_Boltz
 
 
-def Minimierer(N, first, Rho_Koeffs_List, Candidate_Minimum):
+def Minimierer(N, first,  Candidate_Minimum):
 
-    K_Boltz =K_BoltzmanFinder(True,Rho_Koeffs_List, N)
+    K_Boltz =K_BoltzmanFinder(True, N)
     kol = open('iterk.txt', 'a')
     #Candidate_Minimum = Initial_State
     print('id(Candidate)',id(Candidate_Minimum[0]))
@@ -501,7 +471,7 @@ if __name__ == "__main__":
 
     Integration_bound = [[x_Anf, x_End], [0,2*np.pi]]
     Wirk = []
-    Selbstval_K_Boltz =0.00005
+    self_Give_val =0.00005
     Mittelgr = 4
     for_rho = 1
 
@@ -532,13 +502,13 @@ if __name__ == "__main__":
                                     #    next hours and i am in a rush.
 
         x_fitn11, fitn_wert_y11 = Initial_state_constructor(variant,
-           pre2_K_List, pre2_Rho_List, pre2_w_List, Rho_Koeffs_List, SN)
+           pre2_K_List, pre2_Rho_List, pre2_w_List,  SN)
 
 
         print('Heyhooo', x_fitn11)
         Initial_State = [x_fitn11, fitn_wert_y11]
         print('Initial_State', Initial_State)
-        Minimum = Minimierer(SN, first, Rho_Koeffs_List, Initial_State)
+        Minimum = Minimierer(SN, first,  Initial_State)
 
         #pre2_w_List = [*Minimum[0][2],0]
         print('pre2_w_list', pre2_w_List)
