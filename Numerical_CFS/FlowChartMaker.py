@@ -5,7 +5,7 @@ from pycallgraph import GlobbingFilter
 from .Action_Minimum import *
 import symengine as si
 import os
-
+sys.path.insert(0,os.path.abspath('/home/mustafa/graphviz-2.40.1/cmd/dot/'))
 if( __name__ == "__main__"):
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters') #boolean
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
@@ -45,7 +45,7 @@ if( __name__ == "__main__"):
     config.trace_filter = GlobbingFilter(include=[
             'Wirkungs_Minimum*'
                 ])
-    graphviz = GraphvizOutput(output_file='PyCallGraphMinimizer.png')
+    graphviz = GraphvizOutput(output_file='PyCallGraphMinimizer.pdf')
 
     with PyCallGraph(output=graphviz, config=config):
         MainProg()

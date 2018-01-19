@@ -62,15 +62,26 @@ K_List, Rho_List and w_List.
 
 '''
 
-def diag_plot(x_Axis, y_matrix, X_Title, Y_Title, Curve_Names, PDFTitle, keypos):
-
+def diag_plot(x_Axis, y_matrix, X_Title, Y_Title, Curve_Names, PDF_Name, keypos):
     '''
-    :param mat11: Mathematically speaking a 2 by 2 matrix.
-    :param mat22: Mathematically speaking a 2 by 2 matrix.
-    :type mat11: 2 by 2 numpy.array.
-    :type mat22: 2 by 2 numpy.array.
-    :return: 4 by 4 matrix, which is the Tensorproduct.
-    :rtype: 4 by 4 numpy.array.
+    I use `PyX <http://pyx.sourceforge.net>`_ for plotting.
+
+    :param x_Axis: A List with the values of the x-Axis
+    :param y_Matrix: A (Number of Curves)x(Number of elements in x_Axis) Matrix.
+    :param X_Title: Title of x-Axis.
+    :param Y_Title: Title of y-Axis.
+    :param Curve_Names: You can name each and every curve.
+    :param PDF_Name: The name of the PDF.
+    :param keypos: Position of the list of Curvenames in the PDF. You can choose\
+    "t" for top, "l" for left and "r" for right, "b" for bottom, "c" for center and "m" for middle. You can also use a combination. For example "tr".
+    :type x_Axis: A numpy.array, the length of is up to you.
+    :type y_Matrix: A numpy.array.
+    :type X_Title: A String.
+    :type Y_Title: A String.
+    :type Curve_Names: List of Strings.
+    :type PDF_Name: A String.
+    :type keypos: A String.
+    :return: The programm creates a file with "PDF-Title" as it's name in the same directory you have run this programm in.
     '''
 
 
@@ -88,18 +99,8 @@ def diag_plot(x_Axis, y_matrix, X_Title, Y_Title, Curve_Names, PDFTitle, keypos)
 
     c.plot(dd,[graph.style.line([color.gradient.Rainbow])])
 
-    c.writePDFfile(PDFTitle)
+    c.writePDFfile(PDF_Name)
 
-def diag_plot2(x_Axis, y_Axis, X_Title, Y_Title, Curve_Names, PDFTitle, keypos):
-    c = graph.graphxy(width=10,height=10,
-        x = graph.axis.linear(min = min(x_Axis), max = max(x_Axis),
-                          title= X_Title),
-        y = graph.axis.linear(min = min(y_Axis),max = max(y_Axis),
-                          title= Y_Title),
-                      key = graph.key.key(pos=keypos, dist =0.1))
-
-    c.plot(graph.data.values(x = x_Axis, y = y_Axis, title  = Curf_Names),[graph.style.line([color.gradient.Rainbow])])
-    c.writePDFfile(PDFTitle)
 
 def diracEigenvalues(n):
     '''
@@ -155,28 +156,39 @@ def get_rho_values(Factor89, Constant, Rho_Koeffs_List):
     rho_values = Factor89/Sum
     return rho_values*Constant
 
-def Fitness(Dada, N, x_fitn2):
-
-    print('N', N)
-    if Dada ==1:
+def Fitness(N, x_fitn2, Test = False):
+    '''
+    :param N: Current Shell-Number.
+    :param x_fitn2: List of List of Variables. List of Rho_List, K_List and w_List.
+    :param Test: In case the minimzer needs to get tested.
+    :type N: integer.
+    :type x_fitn2: list.
+    :type Test: boolean.
+    :return: The Action for the given set of paramters.
+    :rtype: Float.
+    '''
+    if Test:
+        return control_Action(N, *x_fitn2)
+    else:
         return get_Action(N, Integration_bound, T, *x_fitn2, kappa, False, False, 1)
-    if Dada ==2:
-        return help_Wirk(N, *x_fitn2)
 
 def which_variant(random_K, random_Rho, random_w):
     '''
-    random_K    boolean
-    random_Rho  boolean
-    random_w    boolean
+    :param random_K: This paramter gets its default value from settings.cfg.
+    :param random_Rho: This paramter gets its default value from settings.cfg.
+    :param random_w: This paramter gets its default value from settings.cfg.
+    :type random_K:  boolean
+    :type random_Rho: boolean
+    :type random_K: boolean
 
-    It's not always intended to vary all parameters
-    at the same time. So this function, will return
-    an integeger number, which stands for the variant.
-    In x_fitn_func this output is needed to set up
-    the initial state.
+    It's not always intended to vary all parameters\
+    at the same time. So this function, will return\
+    an integer number, which stands for the variant.\
+    In x_fitn_func this output is needed to set up\
+    the initial state.\
 
-    This function feeds into
-    the initial_state_constructor
+    This function feeds into\
+    the initial_state_constructor.
     '''
     if random_K == False and random_Rho== False  and random_w== False:
         # This case doesn't make much sense,
@@ -203,37 +215,46 @@ def which_variant(random_K, random_Rho, random_w):
 def Initial_state_constructor(variant, K_List, Rho_List, w_List, Rho_Koeffs_List, N):
 
     '''
-    variant
-    	integer, input comes from which_variant
-    K_List, Rho_List, w_List
-    	Lists of length N, with which the initial
-        state gets constructed.
+    :param variant: input comes from which_variant
+    :type variant: Integer
+    :param K_List: These impulse-variables are one part of the set of variables,\
+    which later are needed to be choosen new every time before calculating the action.
+    :type K_List: List of length N.
+    :param w_List: These frequence-variables are one part of the set of variables,\
+    which later are needed to be choosen new every time before calculating the action.
+    :type w_List: List of length N.
+    :param Rho_List: These Weight-variables are one part of the set of variables,\
+    which later are needed to be choosen new every time before calculating the action.
+    :type Rho_List: List of length N.
+    :param Rho_Koeffs_List: This List is needed for the calculation of Rho_List.\
+    The weights are a special case, because they need to obey certain Constraints.
+    :type Rho_Koeffs_List: List of length N.
+    :param N: The Shell number is here needed\
+        to know which parameter space is being\
+        searched. Because i could start to probe the\
+        parameter space from the minimizer, which i\
+        found on one subspace of the regarded\
+        parameter space.\
+        Or just simply i could say, start at this\
+        point and do not take a random starting point\
+        (which is default).\
+        By choosing a starting point and then choosing\
+        the Shell-Number\
+        we decide wether we expand into a bigger\
+        parameterspace or not.\
+        So if N > len(K_List) then we go into a\
+        bigger parameter space. If N = len(K_List)\
+        we just decided to start at some fixed point.\
+        N < len(K_List) will give an error.\
 
-    N
-    	integer, The Shell number is here needed
-        to know which parameter space is being
-        searched. Because i could start to probe the
-        parameter space from the minimizer, which i
-        found on one subspace of the regarded
-        parameter space.
-        Or just simply i could say, start at this
-        point and do not take a random starting point
-        (which is default).
-        By choosing a starting point and then choosing
-        the Shell-Number
-        we decide wether we expand into a bigger
-        parameterspace or not.
-        So if N > len(K_List) then we go into a
-        bigger parameter space. If N = len(K_List)
-        we just decided to start at some fixed point.
-        N < len(K_List) will give an error.
+    :type N: Integer.
 
+    To set up the initial state, we need to fill up the Lists which are not\
+    going to get varied.\
 
-    To set up the initial state, we need to fill up the Lists which are not
-    going to get varied.
-
-    This "filling up" can be used to vary with a starting point in mind or
-    just keep some half_filled_list fixed.
+    This "filling up" can be used to set the starting point or\
+    just keep some half_filled_list as it is. Later on the code \
+    will fill the gaps.
 
 
     '''
@@ -297,32 +318,32 @@ def Gap_Filler(N, Rho_Koeffs_List, half_filled_list):
         half_filled_list[1]= get_rho_values(rho_randomi, Constant, Rho_Koeffs_List)
     if random_w:
         half_filled_list[2] = np.random.random_sample(N)*(w_End - w_Anf)
-    fitn_wert_x = Fitness(Which_Fitness, N, half_filled_list)
+    fitn_wert_x = Fitness(N, half_filled_list, Test = Test_Action)
 
     return half_filled_list, fitn_wert_x
 
 def Variation(N, x_fitn22):
     '''
-    N
-	integer, Shell-Number
-    x_fitn22
-	is the array, that contains the parameters of Rho_List,
-        pre_w_Listand K_List
+    :param N: Integer.
+    :type N: Shell-Number.
+    :param x_fitn22: Is the array, that contains the parameters of Rho_List,\
+        pre_w_Listand K_List.
+    :type  x_fitn22: List of 3 Lists.
 
-    The variation of the state, should not end in a new random state, it
-    should be somehow "near" the old state.
-    So at the first line of each parameter group, i get a random number
-    ranging from -1 to 1 for the weights rho, or -(K_End - K_Anf)/10, + .., .
-    The second choice with (K_End - K_Anf)/10 is very arbitrary, but i have
-    to start somewhere and it seems to be good.
-    The same goes for the frequencies.
+    The variation of the state, should not end in a new random state, it\
+    should be somehow "near" the old state.\
+    So at the first line of each parameter group, i get a random number\
+    ranging from -1 to 1 for the weights rho, or -(K_End - K_Anf)/10, + .., .\
+    The second choice with (K_End - K_Anf)/10 is very arbitrary, but i have\
+    to start somewhere and it seems to be good.\
+    The same goes for the frequencies. \
 
-    I think everything else is self explanatory.
+    I think everything else is self explanatory.\
 
-    The way i programmed the whole programm,
-    i only have to change this variation function
-    to for exapmple only vary one element of the weights.
-    This i do not need right now. But in the future maybe.
+    The way i programmed the whole programm,\
+    i only have to change this variation function\
+    to for exapmple only vary one element of the weights.\
+    This i do not need right now. But in the future maybe.\
 
     '''
 
@@ -346,7 +367,7 @@ def Variation(N, x_fitn22):
     return x_fitn22
 
 
-def Control_Action(N, K_Lte, Rho_Lte, w_Lte):
+def control_Action(N, K_Lte, Rho_Lte, w_Lte):
 
     '''
     This function serves to test the minimizer.
@@ -441,7 +462,7 @@ def Minimierer(N, first, Rho_Koeffs_List, Candidate_Minimum):
         for _ in range(4):
             iterat +=1
             new_param_values = Variation (N, x_fitn_i)
-            energy_new_param = Fitness(Which_Fitness, N, new_param_values)
+            energy_new_param = Fitness(N, new_param_values, Test = Test_Action )
             kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
                     +str(energy_new_param)+'\n')
             boltzi = boltzmann(fitn_wert_x, energy_new_param, tt, K_Boltz)
@@ -466,7 +487,7 @@ if __name__ == "__main__":
     w_Anf, w_End, pre_w_List= configfunktion('Frequenz') # flaots and List
     Constant, kappa, pre_Rho_List = configfunktion('Constraints') #floats and List
     Anzahl_N, first = configfunktion('System_sizes') # integer and integer
-    StartWithGivenMinima, Which_Fitness = configfunktion('Test') #boolean, integer
+    StartWithGivenMinima, Test_Action = configfunktion('Test') #boolean, boolean
     random_K, random_Rho, random_w =  configfunktion('Set_Initialstate_randomly')# boolean
 
     variant = which_variant(random_K, random_Rho, random_w)

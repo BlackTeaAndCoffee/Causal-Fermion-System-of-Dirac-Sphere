@@ -51,9 +51,9 @@ def _configfunktion(section, parser = None):
 
         return Anzahl_N,first
     if section == 'Test':
-        Fitness_Nr = config.getint('Test', 'Fitness_Nr')
+        Test_Action = config.getboolean('Test', 'Test_Action')
         StartWithGivenMinima = config.getboolean('Test', 'StartWithGivenMinima')
-        return StartWithGivenMinima, Fitness_Nr
+        return StartWithGivenMinima, Test_Action
 
 class Config(object):
     fields_by_section = \
@@ -64,7 +64,7 @@ class Config(object):
             'Frequenz': ['Anf', 'End', 'List'],
             'Constraints': ['List', 'Spur_Konstante', 'Boundary_Konstante'],
             'System_sizes': ['Erste_Schale', 'Schalen_Anzahl'],
-            'Test': ['Fitness_Nr', 'StartWithGivenMinima']
+            'Test': ['Test_Action', 'StartWithGivenMinima']
         }
     def __init__(self):
         self.cfg = configparser.RawConfigParser()
