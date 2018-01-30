@@ -1,8 +1,8 @@
 from symengine import I
 from sympy.printing import ccode
-from .PyxPlot3d import *
-from .configfunktion import configfunktion
-from . import get_data
+from Numerical_CFS.PyxPlot3d import *
+from Numerical_CFS.configfunktion import configfunktion
+from Numerical_CFS import get_data
 import sympy as sy
 import symengine as si
 import numpy as np
@@ -348,42 +348,42 @@ def get_Action(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
         kappa, Schwartzfunktion = True, Comp_String = False, Type = 1):
 
     '''
-    Inputs are
-
-    t,r          both 1 dimensional symarrays, these are also the integration
-                 variables.
-
-    N            Integer, from 1,2,....  .
-                 Physically speaking the Shell-Number of the Causal-Fermin system
-
-    Integration_bound   It's a float number
-
-    T            Float, and the life of the Universe, needed for the schwartzfunktion
-
-    K_Liste      List of floats, Impulse variables for which the action is
-                 calculated
-
-    w_Liste      List of floats, Frequenc variables for which the action is
-                 calculated
-
-    Rho_Liste    List of floats, Weihts of the differents shells, for which the
-                 action gets calculated
-
-    kappa        Float, it's needed for the boundednes constraint
-
-    Schwartzfunktion boolean, For integer frequencies the schwartzfunktion can
-                 be omitted, because then the time integration will not be
-                 necessary
-
-    Comp_String  boolean, if true opening, writing, closing of a file gets
-                 skipped and the whole procedure of compiling and running gets
+    :param N:    Codewise, this parameter determines the size of the Paramter-List\
+                 of the weights Rho, impulses K and frequencies w. \
+                 Physically speaking this is the Number of Shells of the Causal-Fermin system.
+    :type N:     Integer.
+    :param Integration_bound:   It's a List of two Lists. The two List should contain the\
+                                the boundary constraints of the Double-Integral. First List\
+                                should contain the time boundaries and the second should\
+                                contain the space boundaries.
+    :type Integration_bound:    List of two List, each containing two floats.
+    :param T:    The life of the Universe, needed for the schwartzfunktion. It's\
+                 also the upper boundary of the time integration. 
+    :type T:    float.
+    :param K_Liste: Impulse variables for which the action is\
+                 calculated.
+    :type K_Liste: List of N floats.
+    :param w_Liste: Frequenc variables for which the action is\
+                 calculated.
+    :type w_Liste: List of N floats.
+    :param Rho_Liste: Weihts of the differents shells, for which the\
+                 action gets calculated.
+    :type Rho_Lsite: List of N floats.
+    :param kappa: It's needed for the boundednes constraint.
+    :type kappa: float.
+    :param Schwartzfunktion: For integer frequencies the schwartzfunktion can\
+                 be omitted. If so the time integration will not be\
+                 necessary. ????????????? Check This. ?????????????
+    :type Schartzfunktion: boolean.
+    :param Comp_String:  If true opening, writing, closing of a file gets\
+                 skipped and the whole procedure of compiling and running gets\
                  done in on line of code.
-
-    Type         integer, type of integration. 1 for C-types, 2 for C, 3 for
-                 testing , 4  Scipy-quadpack . It's not only the integration
-                 method. According to this decision also the integrand gets
+    :type Comp_String: boolean.
+    :param Type: Type of integration. 1 for C-types, 2 for C, 3 for\
+                 testing , 4  Scipy-quadpack . It's not only the integration\
+                 method. According to this decision also the integrand gets\
                  constructed.
-
+    :type Type: 1,2,3 or 4.
     '''
 
 
