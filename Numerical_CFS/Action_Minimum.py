@@ -73,7 +73,8 @@ def diag_plot(x_Axis, y_matrix, X_Title, Y_Title, Curve_Names, PDF_Name, keypos)
     :param Curve_Names: You can name each and every curve.
     :param PDF_Name: The name of the PDF.
     :param keypos: Position of the list of Curvenames in the PDF. You can choose\
-    "t" for top, "l" for left and "r" for right, "b" for bottom, "c" for center and "m" for middle. You can also use a combination. For example "tr".
+    "t" for top, "l" for left and "r" for right, "b" for bottom, "c" for center \
+    and "m" for middle. You can also use a combination. For example "tr".
     :type x_Axis: A numpy.array, the length of is up to you.
     :type y_Matrix: A numpy.array.
     :type X_Title: A String.
@@ -81,7 +82,8 @@ def diag_plot(x_Axis, y_matrix, X_Title, Y_Title, Curve_Names, PDF_Name, keypos)
     :type Curve_Names: List of Strings.
     :type PDF_Name: A String.
     :type keypos: A String.
-    :return: The programm creates a file with "PDF-Title" as it's name in the same directory you have run this programm in.
+    :return: The programm creates a file with "PDF-Title" as it's name in the same\
+    directory you have run this programm in.
     '''
 
 
@@ -101,12 +103,6 @@ def diag_plot(x_Axis, y_matrix, X_Title, Y_Title, Curve_Names, PDF_Name, keypos)
 
     c.writePDFfile(PDF_Name)
 
-
-def diracEigenvalues(n):
-    '''
-    :param n: Number of current Shell
-    '''
-    return (2*n + 1)/2
 
 
 '''
@@ -134,27 +130,13 @@ For this i at first construct a List with the coefficients of the weights
 [1,3,6].  The good thing about that is, that the List for bigger N always
 contains the smaller one. So N=4, would be Rho_Koeff_list = [1,3,6,10].
 
-In the Variationprocess, for which i will write more in the Variation Function,
+In the type_1_variationprocess, for which i will write more in the type_1_variation Function,
 i  basically create a List with floats, for example [5, 7.2, 7.5] in the N=3
 case (This are the same numbers i used before). This list then is the input for
 get_rho_values and in this function, i do exactly what i explained before.  But
 be aware that the input list is not completely random and gets changed
 according to the variationprocess.
 '''
-
-def listmaker(N):
-    listim = []
-    for n in range(1, N+1):
-        listim.append((diracEigenvalues(n)**2 -0.25)/2)
-
-    return listim
-
-def get_rho_values(Factor89, Constant, Rho_Koeffs_List):
-    Sum = 0
-    for i,rho_koeff in  enumerate(Rho_Koeffs_List):
-        Sum += rho_koeff*Factor89[i]
-    rho_values = Factor89/Sum
-    return rho_values*Constant
 
 def Fitness(N, x_fitn2, Test = False):
     '''
@@ -169,210 +151,10 @@ def Fitness(N, x_fitn2, Test = False):
     '''
     if Test:
         return control_Action(N, *x_fitn2)
-    else:
-        return get_Action(N, Integration_bound, T, *x_fitn2, kappa, False, False, 1)
+    else: 
+        return get_Action(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste, kappa, False, False, 1)
 
-def which_variant(random_K, random_Rho, random_w):
-    '''
-    :param random_K: This paramter gets its default value from settings.cfg.
-    :param random_Rho: This paramter gets its default value from settings.cfg.
-    :param random_w: This paramter gets its default value from settings.cfg.
-    :type random_K:  boolean
-    :type random_Rho: boolean
-    :type random_K: boolean
-
-    It's not always intended to vary all parameters\
-    at the same time. So this function, will return\
-    an integer number, which stands for the variant.\
-    In x_fitn_func this output is needed to set up\
-    the initial state.\
-
-    This function feeds into\
-    the initial_state_constructor.
-    '''
-    if random_K == False and random_Rho== False  and random_w== False:
-        # This case doesn't make much sense,
-        # because of course there is going to be a variation.
-        # This case i am using for fixing every paramater initially
-        # instead of letting the programm choose a random starting
-        # point.
-        return 1
-    elif random_K == False and random_Rho== False  and random_w==True:
-        return 2
-    elif random_K == True and random_Rho== False and random_w==False:
-        return 3
-    elif random_K == False and random_Rho==True  and random_w==False:
-        return 4
-    elif random_K == False and random_Rho==True  and random_w==True:
-        return 5
-    elif random_K ==True  and random_Rho== False  and random_w==True:
-        return 6
-    elif random_K ==True  and random_Rho==True  and random_w==False:
-        return 7
-    elif random_K ==True  and random_Rho==True  and random_w==True:
-        return 8
-
-def Initial_state_constructor(variant, K_List, Rho_List, w_List,  N):
-
-    '''
-    :param variant: input comes from which_variant
-    :type variant: Integer
-    :param K_List: These impulse-variables are one part of the set of variables,\
-    which later are needed to be choosen new every time before calculating the action.
-    :type K_List: List of length N.
-    :param w_List: These frequence-variables are one part of the set of variables,\
-    which later are needed to be choosen new every time before calculating the action.
-    :type w_List: List of length N.
-    :param Rho_List: These Weight-variables are one part of the set of variables,\
-    which later are needed to be choosen new every time before calculating the action.
-    :type Rho_List: List of length N.
-    :param Rho_Koeffs_List: This List is needed for the calculation of Rho_List.\
-    The weights are a special case, because they need to obey certain Constraints.
-    :type Rho_Koeffs_List: List of length N.
-    :param N: The Shell number is here needed\
-        to know which parameter space is being\
-        searched. Because i could start to probe the\
-        parameter space from the minimizer, which i\
-        found on one subspace of the regarded\
-        parameter space.\
-        Or just simply i could say, start at this\
-        point and do not take a random starting point\
-        (which is default).\
-        By choosing a starting point and then choosing\
-        the Shell-Number\
-        we decide wether we expand into a bigger\
-        parameterspace or not.\
-        So if N > len(K_List) then we go into a\
-        bigger parameter space. If N = len(K_List)\
-        we just decided to start at some fixed point.\
-        N < len(K_List) will give an error.\
-
-    :type N: Integer.
-
-    To set up the initial state, we need to fill up the Lists which are not\
-    going to get varied.\
-
-    This "filling up" can be used to set the starting point or\
-    just keep some half_filled_list as it is. Later on the code \
-    will fill the gaps.
-
-
-    '''
-    print('erstes N', N)
-
-
-    Lists_length = len(K_List)
-    print(type(Lists_length), Lists_length, type(N))
-    if N < Lists_length:
-        print("Shell-Number %i < List_length %i. Size-Error. Fix the size of K_List and so on, N can only be equally big or bigger!" %(N, Lists_length) )
-        sys.exit()
-
-    half_filled_list = np.zeros((3,N))
-
-    if variant ==1:
-        half_filled_list[0, :Lists_length] = K_List
-        half_filled_list[1, :Lists_length] = Rho_List
-        half_filled_list[2, :Lists_length] = w_List
-
-        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
-
-    elif variant ==2:
-        half_filled_list[0, :Lists_length] = K_List
-        half_filled_list[1, :Lists_length] = Rho_List
-
-        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
-    elif variant ==3:
-        half_filled_list[1, :Lists_length] = Rho_List
-        half_filled_list[2, :Lists_length] = w_List
-
-        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
-    elif variant ==4:
-        half_filled_list[0, :Lists_length] = K_List
-        half_filled_list[2, :Lists_length] = w_List
-
-        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
-    elif variant ==5:
-        half_filled_list[0, :Lists_length] = K_List
-
-        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
-    elif variant ==6:
-        half_filled_list[1, :Lists_length] = Rho_List
-
-        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
-    elif variant ==7:
-        half_filled_list[2, :Lists_length] = w_List
-
-        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
-    elif variant ==8:
-        parameters, ftns_for_x = Gap_Filler(N,  half_filled_list)
-
-    return parameters, ftns_for_x
-
-
-
-def Gap_Filler(N,  half_filled_list):
-    if random_K:
-        half_filled_list[0]= np.random.random_sample(N)*(K_End - K_Anf)
-    if random_Rho:
-        rho_randomi = np.random.random_sample(N)
-        half_filled_list[1]= get_rho_values(rho_randomi, Constant, Rho_Koeffs_List)
-    if random_w:
-        half_filled_list[2] = np.random.random_sample(N)*(w_End - w_Anf)
-    fitn_wert_x = Fitness(N, half_filled_list, Test = Test_Action)
-
-    return half_filled_list, fitn_wert_x
-
-def Variation(N, x_fitn22):
-    '''
-    :param N: Integer.
-    :type N: Shell-Number.
-    :param x_fitn22: Is the array, that contains the parameters of Rho_List, pre_w_Listand K_List.
-    :type  x_fitn22: List of 3 Lists.
-    :param var_K: This is a global variable. We need them in this\
-    function. You need to decide whether the Impuls-variables should be varied or not.
-    :type var_K: boolean.
-    :param var_Rho: This is a global variable. We need them in this\
-    function. You need to decide whether the Weight-variables should be varied or not.
-    :type var_Rho: boolean.
-    :param var_w: This is a global variable. We need them in this\
-    function. You need to decide whether the frequence-variables should be varied or not.
-    :type var_w: boolean.
-    :param variant: It's a number, which is given for every kombinatin of var_Rho, var_w, var_w(see function which_variant).
-
-    The variation of the state, should not end in a new random state, it\
-    should be somehow "near" the old state.\
-    So at the first line of each parameter group, i get a random number\
-    ranging from -1 to 1 for the weights rho, or -(K_End - K_Anf)/10, + .., .\
-    The second choice with (K_End - K_Anf)/10 is very arbitrary, but i have\
-    to start somewhere and it seems to be good.\
-    The same goes for the frequencies. \
-    The way i programmed the whole programm,\
-    i only have to change this variation function\
-    to for exapmple only vary one element of the weights.\
-    This i do not need right now. But in the future maybe.\
-    '''
-
-    if var_K:
-        randomi2 = (2*np.random.random_sample(N) - 1)*(K_End - K_Anf)/10
-        K_randomi5 = np.absolute(x_fitn22[0] + randomi2)
-        x_fitn22[0]= list(K_randomi5)
-
-    if var_Rho:
-        randomi2 = (2*np.random.random_sample(N) - 1)/10
-        rho_randomi6 = np.absolute(x_fitn22[1] + randomi2)/np.array(Rho_Koeffs_List)
-        x_fitn22[1] = get_rho_values(rho_randomi6, Constant,
-                Rho_Koeffs_List)
-
-
-    if var_w:
-        randomi2 = (2*np.random.random_sample(N) -1)*(w_End - w_Anf)/10
-        w_randomi5 = np.absolute(x_fitn22[2] + randomi2)
-        x_fitn22[2] = list(w_randomi5)
-
-    return x_fitn22
-
-
-def control_Action(N, K_Lte, Rho_Lte, w_Lte):
+def control_Action(self, N, K_Lte, Rho_Lte, w_Lte):
 
     '''
     This function serves to test the minimizer.
@@ -396,59 +178,305 @@ def control_Action(N, K_Lte, Rho_Lte, w_Lte):
             s+= (w_Lte[ii] - Min[2][ii])**2
     return s
 
-def K_BoltzmanFinder(Selbst, N):
-    '''
-    :param Selbst: If true, a value that i choose for the Boltz. const\
-    is being used. It's Name is "self_Give_val".
-    :type Selbst: Boolean.
-    :return: Boltzman Konstant for simulated annealing algorithm.
-    :rtype: Float.
-    '''
+class Initial_state():
+    def __init__(random_K, random_Rho, random_w, K_List, w_List, Rho_List, N, Constant):
+        self.random_K = random_K 
+        self.random_Rho = random_Rho
+        self.random_w = random_w
+        self.K_List = K_List
+        self.w_List = w_List
+        self.Rho_List = Rho_List
+        self.N = N
+        self.Constant = Constant
+    def which_variant(self):
+        '''
+        :param random_K: This paramter gets its default value from settings.cfg.
+        :param random_Rho: This paramter gets its default value from settings.cfg.
+        :param random_w: This paramter gets its default value from settings.cfg.
+        :type random_K:  boolean
+        :type random_Rho: boolean
+        :type random_K: boolean
 
-    K_Boltz = 0
-    if Selbst:
-        K_Boltz = self_Give_val
-    else:
-        for _ in range(Mittelgr):
-            x_fitn5, fitn_wert_y5 = Initial_state_constructor(variant, K_List,
-                    Rho_List, w_List,  N)
+        It's not always intended to vary all parameters.\
+        Some just fixed values.\
+        So this function, will return\
+        an integer number, which stands for the variant.\
+        In x_fitn_func this output is needed to set up\
+        the initial state.\
 
-            K_Boltz += fitn_wert_y5/Mittelgr
+        This function feeds into\
+        the initial_state_constructor.
+        '''
+        if self.random_K == False and self.random_Rho== False  and self.random_w== False:
+            # This case doesn't make much sense,
+            # because of course there is going to be a variation.
+            # This case i am using for fixing every paramater initially
+            # instead of letting the programm choose a random starting
+            # point.
+            return 1
+        elif self.random_K == False and self.random_Rho== False  and self.random_w==True:
+            return 2
+        elif self.random_K == True and self.random_Rho== False and self.random_w==False:
+            return 3
+        elif self.random_K == False and self.random_Rho==True  and self.random_w==False:
+            return 4
+        elif self.random_K == False and self.random_Rho==True  and self.random_w==True:
+            return 5
+        elif self.random_K == True and self.random_Rho== False  and self.random_w==True:
+            return 6
+        elif self.random_K == True and self.random_Rho==True  and self.random_w==False:
+            return 7
+        elif self.random_K == True and self.random_Rho==True  and self.random_w==True:
+            return 8
 
-    return K_Boltz
+    def Initial_state_constructor(self):
+
+        '''
+        :param variant: input comes from which_variant
+        :type variant: Integer
+        :param K_List: These impulse-variables are one part of the set of variables,\
+        which later are needed to be choosen new every time before calculating the action.
+        :type K_List: List of length N.
+        :param w_List: These frequence-variables are one part of the set of variables,\
+        which later are needed to be choosen new every time before calculating the action.
+        :type w_List: List of length N.
+        :param Rho_List: These Weight-variables are one part of the set of variables,\
+        which later are needed to be choosen new every time before calculating the action.
+        :type Rho_List: List of length N.
+        :param Rho_Koeffs_List(SN): This List is needed for the calculation of Rho_List.\
+        The weights are a special case, because they need to obey certain Constraints.
+        :type Rho_Koeffs_List(SN): List of length N.
+        :param N: The Shell number is here needed\
+            to know which parameter space is being\
+            searched. Because i could start to probe the\
+            parameter space from the minimizer, which i\
+            found on one subspace of the regarded\
+            parameter space.\
+            Or just simply i could say, start at this\
+            point and do not take a random starting point\
+            (which is default).\
+            By choosing a starting point and then choosing\
+            the Shell-Number\
+            we decide wether we expand into a bigger\
+            parameterspace or not.\
+            So if N > len(K_List) then we go into a\
+            bigger parameter space. If N = len(K_List)\
+            we just decided to start at some fixed point.\
+            N < len(K_List) will give an error.\
+
+        :type N: Integer.
+
+        To set up the initial state, we need to fill up the Lists which are not\
+        going to get varied.\
+
+        This "filling up" can be used to set the starting point or\
+        just keep some half_filled_list as it is. Later on the code \
+        will fill the gaps.
 
 
-def Minimierer(N, first,  Candidate_Minimum):
+        '''
+        print('erstes N', self.N)
 
-    K_Boltz =K_BoltzmanFinder(True, N)
-    kol = open('iterk.txt', 'a')
-    #Candidate_Minimum = Initial_State
-    print('id(Candidate)',id(Candidate_Minimum[0]))
 
-    fitn_wert_x = Candidate_Minimum[1]#Initial_State[1]
-    x_fitn_i = [*Candidate_Minimum[0]]# Initial_State[0]
-    iterat = 0
-    for m,tt in enumerate(temp):
-        for _ in range(4):
-            iterat +=1
-            new_param_values = Variation (N, x_fitn_i)
-            energy_new_param = Fitness(N, new_param_values, Test = Test_Action )
-            kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
-                    +str(energy_new_param)+'\n')
-            boltzi = boltzmann(fitn_wert_x, energy_new_param, tt, K_Boltz)
+        Lists_length = len(self.K_List)
+        print(type(Lists_length), Lists_length, type(N))
+        if N < Lists_length:
+            raise ValueError("Shell-Number %i < List_length %i. Size-Error. Fix the size of K_List 
+            and so on, N can only be equally big or bigger!" %(N, Lists_length) )
+            sys.exit()
 
-            if fitn_wert_x > energy_new_param:
-                fitn_wert_x = energy_new_param
-                x_fitn_i =  new_param_values
-                if Candidate_Minimum[1] > energy_new_param:
-                    Candidate_Minimum[0]= new_param_values
-                    Candidate_Minimum[1]= energy_new_param
-                    print('Cand1', Candidate_Minimum)
-            elif (fitn_wert_x < energy_new_param) and (random.random() <= boltzi) :
-                fitn_wert_x = energy_new_param
-                x_fitn_i =  new_param_values
-    kol.close()
-    return Candidate_Minimum
+        half_filled_list = np.zeros((3,N))
+
+        if variant ==1:
+            half_filled_list[0, :Lists_length] = self.K_List
+            half_filled_list[1, :Lists_length] = self.Rho_List
+            half_filled_list[2, :Lists_length] = self.w_List
+
+            parameters = self.Gap_Filler(half_filled_list)
+
+        elif variant ==2:
+            half_filled_list[0, :Lists_length] = self.K_List
+            half_filled_list[1, :Lists_length] = self.Rho_List
+
+            parameters = self.Gap_Filler(half_filled_list)
+        elif variant ==3:
+            half_filled_list[1, :Lists_length] = self.Rho_List
+            half_filled_list[2, :Lists_length] = self.w_List
+
+            parameters = self.Gap_Filler(half_filled_list)
+        elif variant ==4:
+            half_filled_list[0, :Lists_length] = self.K_List
+            half_filled_list[2, :Lists_length] = self.w_List
+
+            parameters = self.Gap_Filler( half_filled_list)
+        elif variant ==5:
+            half_filled_list[0, :Lists_length] = self.K_List
+
+            parameters = self.Gap_Filler(half_filled_list)
+        elif variant ==6:
+            half_filled_list[1, :Lists_length] = self.Rho_List
+
+            parameters = self.Gap_Filler(half_filled_list)
+        elif variant ==7:
+            half_filled_list[2, :Lists_length] = self.w_List
+
+            parameters = self.Gap_Filler(half_filled_list)
+        elif variant ==8:
+            parameters = self.Gap_Filler(half_filled_list)
+
+        return parameters, ftns_for_x
+
+
+
+    def Gap_Filler(self, half_filled_list):
+        if random_K:
+            half_filled_list[0]= np.random.random_sample(self.N)*(K_End - K_Anf)
+        if random_Rho:
+            rho_randomi = np.random.random_sample(self.N)
+            half_filled_list[1]= Rho_values(rho_randomi, self.Constant)()
+        if random_w:
+            half_filled_list[2] = np.random.random_sample(self.N)*(w_End - w_Anf)
+        return half_filled_list
+
+class Variation_of_Parameters():
+    def __init__(self, N, Input_List):
+        self.Input_List = Input_List 
+    
+    def type_1_variation(self):
+        '''
+        :param N: Integer.
+        :type N: Shell-Number.
+        :param self.Input_List: Is the array, that contains the parameters of Rho_List,\ 
+                         pre_w_Listand K_List.
+        :type  self.Input_List: List of 3 Lists.
+        :param var_K: This is a global variable. We need them in this\
+        function. You need to decide whether the Impuls-variables should be varied or not.
+        :type var_K: boolean.
+        :param var_Rho: This is a global variable. We need them in this\
+        function. You need to decide whether the Weight-variables should be varied or not.
+        :type var_Rho: boolean.
+        :param var_w: This is a global variable. We need them in this\
+        function. You need to decide whether the frequence-variables should be varied or not.
+        :type var_w: boolean.
+        :param variant: It's a number, which is given for every kombinatin of var_Rho, 
+                        var_w, var_w(see function which_variant).\
+
+        The variation of the state, should not end in a new random state, it\
+        should be somehow "near" the old state.\
+        So at the first line of each parameter group, i get a random number\
+        ranging from -1 to 1 for the weights rho, or -(K_End - K_Anf)/10, + .., .\
+        The second choice with (K_End - K_Anf)/10 is very arbitrary, but i have\
+        to start somewhere and it seems to be good.\
+        The same goes for the frequencies. \
+        The way i programmed the whole programm,\
+        i only have to change this variation function\
+        to for exapmple only vary one element of the weights.\
+        This i do not need right now. But in the future maybe.\
+        '''
+        Output = [[],[],[]]
+        if var_K:
+            randomi2 = (2*np.random.random_sample(N) - 1)*(K_End - K_Anf)/10
+            K_randomi5 = np.absolute(self.Input_List[0] + randomi2)
+            self.Input_List[0]= list(K_randomi5)
+
+        if var_Rho:
+            randomi2 = (2*np.random.random_sample(N) - 1)/10
+            rho_randomi6 = np.absolute(self.Input_List[1] + randomi2)
+            self.Input_List[1] = Rho_values(rho_randomi6, Constant)()
+
+        if var_w:
+            randomi2 = (2*np.random.random_sample(N) -1)*(w_End - w_Anf)/10
+            w_randomi5 = np.absolute(self.Input_List[2] + randomi2)
+            self.Input_List[2] = list(w_randomi5)
+
+        return self.Input_List
+
+class Rho_Values:
+    def __init__(N, Incoming_List, Constant):
+        self.Incoming_List = Incoming_List
+        self.Constant = Constant
+        self.N = N
+    def __call__(self):
+        Sum = 0
+        for i,rho_koeff in  enumerate(self.Rho_Koeffs_List(N)):
+            Sum += rho_koeff*self.Incoming_List[i]
+        rho_values = self.Incoming_List/Sum
+        return rho_values*Constant
+    
+    def Rho_Koeffs_List(self):
+        listim = []
+        for n in range(1, self.N+1):
+            listim.append((self.diracEigenvalues(n)**2 -0.25)/2)
+
+        return listim
+
+ 
+    def diracEigenvalues(self, n):
+        '''
+        :param n: Number of current Shell
+        '''
+        return (2*n + 1)/2
+
+
+
+class Simulated_Annealing():
+    def __init__(self, Selbst, N, B_K_of_Own_Choice, ):
+        self.N = N
+        self.Selbst = Selbst
+
+    def K_BoltzmanFinder(self, Selbst, N):
+        '''
+        :param Selbst: If true, a value that i choose for the Boltz. const\
+        is being used. It's Name is "B_K_of_Own_Choice".
+        :type Selbst: Boolean.
+        :return: Boltzman Konstant for simulated annealing algorithm.
+        :rtype: Float.
+        '''
+
+        K_Boltz = 0
+        if Selbst:
+            K_Boltz = B_K_of_Own_Choice
+        else:
+            for _ in range(Mittelgr):
+                x_fitn5, fitn_wert_y5 = Initial_state_constructor(variant, K_List,
+                        Rho_List, w_List,  N)
+
+                K_Boltz += fitn_wert_y5/Mittelgr
+
+        return K_Boltz
+
+
+    def Minimierer(self, N, first,  Candidate_Minimum):
+
+        K_Boltz =K_BoltzmanFinder(True, N)
+        kol = open('iterk.txt', 'a')
+        #Candidate_Minimum = Initial_State
+        print('id(Candidate)',id(Candidate_Minimum[0]))
+
+        fitn_wert_x = Candidate_Minimum[1]#Initial_State[1]
+        x_fitn_i = [*Candidate_Minimum[0]]# Initial_State[0]
+        iterat = 0
+        for m,tt in enumerate(temp):
+            for _ in range(4):
+                iterat +=1
+                new_param_values = type_1_variation(N, x_fitn_i)
+                energy_new_param = Fitness(N, new_param_values, Test = Test_Action )
+                kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
+                        +str(energy_new_param)+'\n')
+                boltzi = boltzmann(fitn_wert_x, energy_new_param, tt, K_Boltz)
+
+                if fitn_wert_x > energy_new_param:
+                    fitn_wert_x = energy_new_param
+                    x_fitn_i =  new_param_values
+                    if Candidate_Minimum[1] > energy_new_param:
+                        Candidate_Minimum[0]= new_param_values
+                        Candidate_Minimum[1]= energy_new_param
+                        print('Cand1', Candidate_Minimum)
+                elif (fitn_wert_x < energy_new_param) and (random.random() <= boltzi) :
+                    fitn_wert_x = energy_new_param
+                    x_fitn_i =  new_param_values
+        kol.close()
+        return Candidate_Minimum
 
 
 if __name__ == "__main__":
@@ -471,7 +499,7 @@ if __name__ == "__main__":
 
     Integration_bound = [[x_Anf, x_End], [0,2*np.pi]]
     Wirk = []
-    self_Give_val =0.00005
+    B_K_of_Own_Choice =0.00005
     Mittelgr = 4
     for_rho = 1
 
@@ -484,7 +512,7 @@ if __name__ == "__main__":
 
     pre2_Rho_List = eval(pre_Rho_List)
 
-    for SN in range(first,Anzahl_N+1):
+    for SN in range(first, Anzahl_N+1):
         Iter = SN**2                        #Number of temperatur iterations
         hilfsarray_fuer_temp = np.linspace(0.01,5,Iter)
         Amplitude = 0.1                     #Amplitude of tempearatur oszillation
@@ -494,16 +522,15 @@ if __name__ == "__main__":
         halb = 0.001                        #exponential decay constant
         temp = temperatur(Iter, hilfsarray_fuer_temp, halb, freq, Amplitude)
         Factor = np.random.random_sample(SN)
-        Rho_Koeffs_List = listmaker(SN)
 
         pre2_w_List = eval(pre_w_List) # I put this list assignment here,
                                     #    should be right. Not entirely sure,
                                     #    but i want to let the code run for the
                                     #    next hours and i am in a rush.
 
-        x_fitn11, fitn_wert_y11 = Initial_state_constructor(variant,
+        x_fitn11 = Initial_state_constructor(variant,
            pre2_K_List, pre2_Rho_List, pre2_w_List,  SN)
-
+        fitn_wert_y11 = Fitness(N, x_fitn11, Test = Test_Action)
 
         print('Heyhooo', x_fitn11)
         Initial_State = [x_fitn11, fitn_wert_y11]

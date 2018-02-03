@@ -74,283 +74,11 @@ Get_Action
     with c.
 
 '''
-
-def TensorProduct(mat11, mat22):
-    """I needed a Tensorproduct for two matrices with symbolic elements.
-    Other "Tensorproducts or Direct-Products" do not what i need. So
-    i wrote this Product myself.
-
-    :param mat11: Mathematically speaking a 2 by 2 matrix.
-    :param mat22: Mathematically speaking a 2 by 2 matrix.
-    :type mat11: 2 by 2 numpy.array.
-    :type mat22: 2 by 2 numpy.array.
-    :return: 4 by 4 matrix, which is the Tensorproduct.
-    :rtype: 4 by 4 numpy.array.
-
-    """
-    mat1 = np.array(mat11, dtype= object).reshape(2,2)
-    mat2 = np.array(mat22, dtype = object).reshape(2,2)
-    return np.bmat([[mat1[0,0]*mat2, mat1[0,1]*mat2] ,[mat1[1,0]*mat2,
-        mat1[1,1]*mat2]]).reshape(4,4)
-
-
-def prefactor(n):
-    return int(scipy.misc.factorial(n + 2))/(8 *
-            si.pi**(3/2)*sy.gamma('%d/%d'%(3+2*n,2)))
-
-def diracEigenvalues(n):
-    return (2*n + 1)/2
-
-def integralKernelPlus(n):
-    n=n-1
-    lala11 = sy.jacobi(n, 1/2, 3/2, r[0])
-    lala21 = sy.jacobi(n, 3/2, 1/2, r[0])
-    return prefactor(n)*(si.cos(r[0]/2)*lala11*ident -
-                        I*si.sin(r[0]/2)*lala21*sigma3)
-
-def integralKernelMinus(n):
-    n=n-1
-    lala1 = sy.jacobi(n, 1/2, 3/2, r[0])
-    lala2 = sy.jacobi(n, 3/2, 1/2, r[0])
-
-    return prefactor(n)*(si.cos(r[0]/2)*lala1*ident +
-                        I*si.sin(r[0]/2)*lala2*sigma3)
-
-'''
-def sigma_r():
-    aa = si.sin(theta)*si.cos(phi)*sigma1 + si.sin(theta)*si.sin(phi)*sigma2
-    bb =  si.cos(theta)*sigma3
-
-    return aa + bb
-
-In IntegralKernelPlus and Minus, at the end of the function is sigma3 instead
-of sigma_r, because theta and phi are zero.
-
-'''
-
-def preMatrixPlus(a):
-    b = si.sqrt(1 + a**2)
-    matrix = si.zeros(2)
-
-    matrix[0,0]= 1-b
-    matrix[0,1]= a
-    matrix[1,0]= -a
-    matrix[1,1]= 1+b
-    return matrix
-
-def preMatrixMinus(a):
-    b = si.sqrt(1 + a**2)
-    matrix = si.zeros(2)
-
-    matrix[0,0]= 1-b
-    matrix[0,1]= -a
-    matrix[1,0]= a
-    matrix[1,1]= 1+b
-    return matrix
-
-def projector(N, Rho_Liste2, w_Liste2, K_Liste2):
-    mat = np.zeros((4,4), dtype = object)
-    for n in range(1,N + 1):
-        Koef =Rho_Liste2[n-1]*sy.exp(-I*w_Liste2[n-1]*t[0])
-        Term11 = TensorProduct(preMatrixPlus(K_Liste2[n-1]),integralKernelPlus(n))
-        Term21 = TensorProduct(preMatrixMinus(K_Liste2[n-1]),integralKernelMinus(n))
-        mat += Koef*(Term11 + Term21)
-    return mat
-
-def projectorAdj(N, Rho_Liste3, w_Liste3, K_Liste3):
-    mat1 = np.zeros((4,4),  dtype = object)
-
-    for n in range(1, N+1):
-        Koeff = Rho_Liste3[n-1]*sy.exp(I*w_Liste3[n-1]*t[0])
-        Term12 = TensorProduct(preMatrixPlus(K_Liste3[n-1]),integralKernelMinus(n))
-        Term22 = TensorProduct(preMatrixMinus(K_Liste3[n-1]),integralKernelPlus(n))
-        mat1 += Koeff*(Term12 +Term22)
-    return mat1
-
-def closedChain(N, Rho_Liste, w_Liste, K_Liste):
-    return np.dot(projector(N, Rho_Liste, w_Liste,
-        K_Liste),projectorAdj(N, Rho_Liste, w_Liste, K_Liste))
-
-def lagrangian_without_bound_constr(N, Rho_Liste, w_Liste, K_Liste):
-    sub1 = closedChain(N, Rho_Liste, w_Liste, K_Liste)
-    return np.trace(np.dot(sub1,sub1)) - 0.25 * np.trace(sub1)*np.trace(sub1)
-
-'''
-Constraints
-'''
-
-def boundedness_constraint(N, Rho_Liste, w_Liste, K_Liste, kappa):
-    sub = closedChain(N, Rho_Liste, w_Liste, K_Liste)
-    return kappa* np.trace(sub)**2
-
-'''
-Integrand and Action
-'''
-def Integrand(N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion
-        = True):
-    exprs = [lagrangian_without_bound_constr(Rho_Liste,w_Liste,K_Liste)]
-    lagr = si.Lambdify(args, exprs, real = False)
-    exprs2 = [boundedness_constraint(N,Rho_Liste,w_Liste, K_Liste,kappa)]
-    bound = si.Lambdify(args,exprs2, real = False)
-
-    if Schwartzfunktion:
-        integrand = lambda t1, r1: (max(lagr(t1, r1).real,0) +
-                bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1)**2/T)
-    else:
-        integrand = lambda t1, r1 : (max(lagr([t1, r1]).real,0) +
-                bound([t1,r1]).real)*np.sin(r1)**2
-
-    return integrand
-
-def get_Integrand_with_c(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
-        kappa, Schwartzfunktion, Comp_String):
-    '''
-    For all of this i used the ccode function of sympy to generate C code for the integrand.
-
-    What's happening is, that a C-File with the function, which will get
-    integrated over later on, gets created and compiled.
-
-    The generated C-code has not the form i need it to be, so some symbols
-    need to be modified. Like exp to cexp and so on.
-
-    I have an option Comp_String, which when True causes the C-File to
-    get compiled in one OS-Command instead of seperate commands. I tried
-    this out, because i thought that the first option could be faster.
-    But it was not, if i remember correctly. Also that's not the Bottleneck
-    of my programm, so i didn't focus on that any longer.
-
-    Since the integration algorithm is in another file and is except for
-    the integration boundaries fixed, i decided just to do it by hand every
-    time. Those boundaries are for now also fixed, so it's ok.
-
-    '''
-
-    a = ccode(lagrangian_without_bound_constr(N, Rho_Liste,w_Liste, K_Liste))
-    b = ccode(boundedness_constraint(N,Rho_Liste,w_Liste, K_Liste,kappa))
-    g = open(get_data('funcprint2.txt'), 'r')
-    g1 = g.read()
-    g.close()
-    Whole_String = ''
-    Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
-    Prototypen = 'static float xsav;\n'+ 'static float(*nrfunc)(float,float);\n'
-    Integranddef = "float f(float r, float t)"+ "{return"
-    Begin_von_Func = "(fmax(creall("
-    Func1 = a.replace("exp","cexp").replace("pow","cpow").replace("r_0","r").replace("t_0","t")
-    Func1_End = "),0)"
-
-    Whole_String += Bibliotheken + Prototypen + Integranddef + Begin_von_Func +Func1+ Func1_End
-
-    Func2_Anf = "+ creall("
-    Func2 =  b.replace("exp", "cexp").replace("pow","cpow" ).replace("r_0","r").replace("t_0","t")
-
-    if Schwartzfunktion:
-        Func22 = '))*sin(1.0L*r)*sin(1.0L*r)'
-        Func2_End = '*cexp(-(cpow(t,2)/'+"cpow(%2.0f,2)))"%(T)+';'+'}\n'
-        Whole_String += Func2_Anf + Func2 + Func22+ Func2_End + g1
-    else:
-        Func22 = '))*sin(1.0L*r)*sin(1.0L*r);}\n'
-        Whole_String += Func2_Anf + Func2 + Func22+g1
-
-
-    if Comp_String:
-        os.system('gcc -o testlib2'+' << EOF '+Whole_String+ 'EOF -lm')
-    else:
-        f = open('testlib2.c', 'w')
-        f.write(Whole_String)
-        f.close()
-        os.system('gcc -o testlib2 testlib2.c -lm')
-
-def get_Integrand_with_ctypes(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
-        kappa, Schwartzfunktion, Comp_String):
-
-    a = ccode(lagrangian_without_bound_constr(N, Rho_Liste,
-                w_Liste, K_Liste))
-    b = ccode(boundedness_constraint(N,Rho_Liste,
-        w_Liste, K_Liste,kappa))
-
-
-    Whole_String = ''
-
-    Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
-    Integranddef = "double f(int n, double args[n])"+ "{return"
-    Begin_von_Func = "(fmax(creall("
-    Func1 = a.replace("exp","cexp").replace("r_0","args[0]").replace("pow",
-            "cpow").replace("t_0","args[1]")
-    Func1_End = "),0)"
-    Whole_String+= Bibliotheken + Integranddef + Begin_von_Func + Func1+Func1_End
-
-    Func2_Anf = "+ creall("
-    Func2 =  b.replace("exp", "cexp").replace("r_0","args[0]").replace("pow",
-            "cpow").replace("t_0","args[1]")
-    g = open(get_data('funcprint.c'), 'r')
-    g1 = g.read()
-
-    if Schwartzfunktion:
-        Func22 = '))*sin(1.0L*args[0])*sin(1.0L*args[0])'
-        Func2_End = '*cexp(-(cpow(args[1],2)/'+"cpow(%2.0f,2)))"%(T)+';'+'}\n'
-        Whole_String += Func2_Anf + Func2 + Func22+ Func2_End + g1
-    else:
-        Func22 = '))*sin(1.0L*args[0])*sin(1.0L*args[0]);}\n'
-        Whole_String += Func2_Anf + Func2 + Func22 + g1
-
-    if Comp_String:
-        os.system('gcc -x c -shared -o testlib2.so -fPIC'+' << EOF '+Whole_String+ 'EOF')
-    else:
-
-        f = open('testlib2.c', 'w')
-        f.write(Whole_String)
-        f.close()
-
-        os.system('gcc -x c -shared -o testlib2.so -fPIC testlib2.c')
-
-    g.close()
-
-def get_Test_Integrandt(T):
-    '''
-    This function is for testing the different integration routines,
-    which are implemented here.
-
-    Basically one can choose a function (The Analytic Result should best be
-    known. Than one can compare the results. I have a sinus function, and
-    and additional peak.
-
-    So we can test, which routine is more capable in detecting the peak.)
-    '''
-    Whole_String = ''
-
-    Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
-    Integranddef = "double f(int n, double args[n])"+ "{return"
-    Whole_String+= Bibliotheken + Integranddef
-
-    g = open(get_data('funcprint.c'), 'r')
-    g1 = g.read()
-
-    Func2_1 ='(-1/(cpow(M_PI,0.5)*%2.3f))*'%(T)
-    Func2_2 = "cexp(-(cpow(args[0]-1,2)/cpow(%2.3f,2)))"%(T)
-
-    Func2_3 = '+  sin(args[0])'+';'+'}\n'
-#    Intdef2 = "double gf(int n, double args[n])"+ "{return 0. ;}"
-#    Intdef3 = "double hf(int n, double args[n])"+ "{return 2. ;}"
-
-    Whole_String += Func2_1 + Func2_2 + Func2_3 + g1
-
-
-    f = open('testlib2.c', 'w')
-    f.write(Whole_String)
-    f.close()
-
-    os.system('gcc -x c -shared -o testlib2.so -fPIC testlib2.c')
-
-    g.close()
-
-
-def get_Action(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
-        kappa, Schwartzfunktion = True, Comp_String = False, Type = 1):
-
+class C_F_S:
     '''
     :param N:    Codewise, this parameter determines the size of the Paramter-List\
-                 of the weights Rho, impulses K and frequencies w. \
-                 Physically speaking this is the Number of Shells of the Causal-Fermin system.
+                of the weights Rho, impulses K and frequencies w. \
+                Physically speaking this is the Number of Shells of the Causal-Fermin system.
     :type N:     Integer.
     :param Integration_bound:   It's a List of two Lists. The two List should contain the\
                                 the boundary constraints of the Double-Integral. First List\
@@ -358,132 +86,398 @@ def get_Action(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
                                 contain the space boundaries.
     :type Integration_bound:    List of two List, each containing two floats.
     :param T:    The life of the Universe, needed for the schwartzfunktion. It's\
-                 also the upper boundary of the time integration. 
+                also the upper boundary of the time integration. 
     :type T:    float.
     :param K_Liste: Impulse variables for which the action is\
-                 calculated.
+                calculated.
     :type K_Liste: List of N floats.
     :param w_Liste: Frequenc variables for which the action is\
-                 calculated.
+                calculated.
     :type w_Liste: List of N floats.
     :param Rho_Liste: Weihts of the differents shells, for which the\
-                 action gets calculated.
+                action gets calculated.
     :type Rho_Lsite: List of N floats.
     :param kappa: It's needed for the boundednes constraint.
     :type kappa: float.
     :param Schwartzfunktion: For integer frequencies the schwartzfunktion can\
-                 be omitted. If so the time integration will not be\
-                 necessary. ????????????? Check This. ?????????????
+                be omitted. If so the time integration will not be\
+                necessary. ????????????? Check This. ?????????????
     :type Schartzfunktion: boolean.
     :param Comp_String:  If true opening, writing, closing of a file gets\
-                 skipped and the whole procedure of compiling and running gets\
-                 done in on line of code.
+                skipped and the whole procedure of compiling and running gets\
+                done in on line of code.
     :type Comp_String: boolean.
-    :param Type: Type of integration. 1 for C-types, 2 for C, 3 for\
-                 testing , 4  Scipy-quadpack . It's not only the integration\
-                 method. According to this decision also the integrand gets\
-                 constructed.
-    :type Type: 1,2,3 or 4.
+    :param Integration_Type: Integration_Type of integration. 1 for C-types, 2 for C, 3 for\
+                testing , 4  Scipy-quadpack . It's not only the integration\
+                method. According to this decision also the integrand gets\
+                constructed.
+    :type Integration_Type: 1,2,3 or 4.
+    ''' 
+    def __init__(self, N, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
+                 Comp_String = False, Integration_Type = 1):
+        self.N = N
+        self.Integration_bound = Integration_bound
+        self.T = T
+        self.K_Liste = System_Parameters[0]
+        self.w_Liste = System_Parameters[1]
+        self.Rho_Liste = System_Parameters[2]
+        self.kappa = System_Parameters[3]
+        self.Schwartzfunktion = Schwartzfunktion
+        self.Comp_String = Comp_String
+        self.Integration_Type = Integration_Type
+
+
+    def TensorProduct(self, mat11, mat22):
+        """I needed a Tensorproduct for two matrices with symbolic elements.
+        Other "Tensorproducts or Direct-Products" do not what i need. So
+        i wrote this Product myself.
+
+        :param mat11: Mathematically speaking a 2 by 2 matrix.
+        :param mat22: Mathematically speaking a 2 by 2 matrix.
+        :type mat11: 2 by 2 numpy.array.
+        :type mat22: 2 by 2 numpy.array.
+        :return: 4 by 4 matrix, which is the Tensorproduct.
+        :rtype: 4 by 4 numpy.array.
+
+        """
+        mat1 = np.array(mat11, dtype= object).reshape(2,2)
+        mat2 = np.array(mat22, dtype = object).reshape(2,2)
+        return np.bmat([[mat1[0,0]*mat2, mat1[0,1]*mat2] ,[mat1[1,0]*mat2,
+            mat1[1,1]*mat2]]).reshape(4,4)
+
+
+    def prefactor(self, n):
+        return int(scipy.misc.factorial(n + 2))/(8 *
+                si.pi**(3/2)*sy.gamma('%d/%d'%(3+2*n,2)))
+
+    def diracEigenvalues(self, n):
+        return (2*n + 1)/2
+
+    def integralKernelPlus(self, n):
+        n=n-1
+        lala11 = sy.jacobi(n, 1/2, 3/2, r[0])
+        lala21 = sy.jacobi(n, 3/2, 1/2, r[0])
+        return self.prefactor(n)*(si.cos(r[0]/2)*lala11*ident -
+                            I*si.sin(r[0]/2)*lala21*sigma3)
+
+    def integralKernelMinus(self, n):
+        n=n-1
+        lala1 = sy.jacobi(n, 1/2, 3/2, r[0])
+        lala2 = sy.jacobi(n, 3/2, 1/2, r[0])
+
+        return self.prefactor(n)*(si.cos(r[0]/2)*lala1*ident +
+                            I*si.sin(r[0]/2)*lala2*sigma3)
+
+    def preMatrixPlus(self, a):
+        b = si.sqrt(1 + a**2)
+        matrix = si.zeros(2)
+
+        matrix[0,0]= 1-b
+        matrix[0,1]= a
+        matrix[1,0]= -a
+        matrix[1,1]= 1+b
+        return matrix
+
+    def preMatrixMinus(self, a):
+        b = si.sqrt(1 + a**2)
+        matrix = si.zeros(2)
+
+        matrix[0,0]= 1-b
+        matrix[0,1]= -a
+        matrix[1,0]= a
+        matrix[1,1]= 1+b
+        return matrix
+
+    def projector(self):
+        mat = np.zeros((4,4), dtype = object)
+        for n in range(1, self.N + 1):
+            Koef =self.Rho_Liste[n-1]*sy.exp(-I*self.w_Liste[n-1]*t[0])
+            Term11 = self.TensorProduct(self.preMatrixPlus(self.K_Liste[n-1]),self.integralKernelPlus(n))
+            Term21 = self.TensorProduct(self.preMatrixMinus(self.K_Liste[n-1]),self.integralKernelMinus(n))
+            mat += Koef*(Term11 + Term21)
+        return mat
+
+    def projectorAdj(self):
+        mat1 = np.zeros((4,4),  dtype = object)
+
+        for n in range(1, self.N + 1):
+            Koeff = self.Rho_Liste[n-1]*sy.exp(I*self.w_Liste[n-1]*t[0])
+            Term12 = self.TensorProduct(self.preMatrixPlus(self.K_Liste[n-1]),self.integralKernelMinus(n))
+            Term22 = self.TensorProduct(self.preMatrixMinus(self.K_Liste[n-1]),self.integralKernelPlus(n))
+            mat1 += Koeff*(Term12 +Term22)
+        return mat1
+
+    def closedChain(self):
+        return np.dot(self.projector(),self.projectorAdj())
+
+    def lagrangian_without_bound_constr(self):
+        sub1 = self.closedChain()
+        return np.trace(np.dot(sub1,sub1)) - 0.25 * np.trace(sub1)*np.trace(sub1)
+
+    '''
+    Constraints
     '''
 
-
-
-    '''
-    I wanted to test out, how much faster it would be to do the integration with C.
-    I tried out a simple double quad integration method (see integration2.c),
-    but this simple method, wasn't able to detect delta peak like structures in
-    the integrand.
-
-    (I will include what i mean exactly with delta peak like structures. Because
-    the more thinner the delta peak gets, at some point every method will
-    fail.)
-
-    So i would need to write a more refined integration method.
-    At some point i will do that. But at first i wanted to try out, ctypes
-    (I used ctypes and the nquad integration method of scipy, and indeed its
-    much faster than simply nquad in scipy and also it detects much better the
-    delta peaks than my simple quad integration method in C.) cython and maybe julia.
+    def boundadness_constraint(self):
+        sub = self.closedChain()
+        return self.kappa* np.trace(sub)**2
 
     '''
-
-    if Type == 1:
-        '''Integration with Cytpes'''
-        get_Integrand_with_ctypes(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
-            kappa, Schwartzfunktion, Comp_String)
-        aa = time.time()
-
-        lib=ctypes.CDLL('./testlib2.so')
-        lib.f.restype = ctypes.c_double
-        lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
-        zup = integrate.nquad(lib.f,[Integration_bound[0],Integration_bound[1]],
-                opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },
-                    {'epsabs': 10e-8, 'epsrel' : 10e-88888888} ] )
-        print('(Action, abserr)=',zup)
-        handle = lib._handle # obtain the SO handle
-
-        ctypes.cdll.LoadLibrary('libdl.so').dlclose(handle)
-
-        tt = time.time()
-        print('Passed time during integration in sec:',tt-aa)
-        return zup[0]
-    elif Type ==2:
-        '''Integration with C. Up until here i basically construct the
-        integrand  and then C takes over.'''#Stimmt was nicht.Also irgendwas
-        get_Integrand_with_c(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
-        kappa, Schwartzfunktion, Comp_String)
-        tt = time.time()
-
-        result = subprocess.run(['./testlib2'], stdout=subprocess.PIPE)
-        integr_val = result.stdout.decode('utf-8')
-        print('result', result.stdout.decode('utf-8'))
-        aa = time.time()
-        print('time', aa-tt)
-        return float(integr_val)
-    elif  Type ==3:
-        '''Test_Typ'''
-        get_Test_Integrandt(T)
-        aa = time.time()
-        lib=ctypes.CDLL('./testlib2.so')
-        lib.f.restype = ctypes.c_double
-        lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
-        result = integrate.nquad(lib.f, [[0,np.pi]])
-        tt = time.time()
-        print(aa-tt)
-        return result
-    elif Type == 4:
-        '''Scipy quadpack'''
-
-        integrand = Integrand(N, Rho_Liste, w_Liste, K_Liste, kappa, T, Schwartzfunktion)
-        tt = time.time()
-        Action = integrate.nquad(lambda r1, t1 : integrand(t1,r1),
-                [[0,np.pi],[0,T]], opts=[{'epsabs' :10e-10, 'epsrel': 10e-10 },{
-                    'epsabs': 10e-10, 'epsrel' : 10e-10} ])
-
-        aa = time.time()
-        print('Time it took to integrate in sec:',aa - tt)
-        print(Action)
-        return Action[0]
-    print('done')
-
-def get_integrand_values(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
-        kappa, Schwartzfunktion = True, Comp_String = False, With_Ctypes = True):
+    Integrand and Action
     '''
-    This method is here for plotting the integrand.
-    '''
-    if With_Ctypes:
-        get_Integrand_with_ctypes(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
-            kappa, Schwartzfunktion, Comp_String)
-    else:
-        get_Integrand_with_c(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,
-        kappa, Schwartzfunktion, Comp_String)
+    def Integrand(self):
+        exprs = [self.lagrangian_without_bound_constr()]
+        lagr = si.Lambdify(args, exprs, real = False)
+        exprs2 = [self.boundadness_constraint()]
+        bound = si.Lambdify(args,exprs2, real = False)
 
-    os.system('gcc -o yolo testlib2.c -lm')
-    os.system('./yolo')
+        if self.Schwartzfunktion:
+            integrand = lambda t1, r1: (max(lagr(t1, r1).real,0) +
+                    bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1)**2/T)
+        else:
+            integrand = lambda t1, r1 : (max(lagr([t1, r1]).real,0) +
+                    bound([t1,r1]).real)*np.sin(r1)**2
+
+        return integrand
+
+    def get_Integrand_with_c(self):
+        '''
+        For all of this i used the ccode function of sympy to generate C code for the integrand.
+
+        What's happening is, that a C-File with the function, which will get
+        integrated over later on, gets created and compiled.
+
+        The generated C-code has not the form i need it to be, so some symbols
+        need to be modified. Like exp to cexp and so on.
+
+        I have an option self.Comp_String, which when True causes the C-File to
+        get compiled in one OS-Command instead of seperate commands. I tried
+        this out, because i thought that the first option could be faster.
+        But it was not, if i remember correctly. Also that's not the Bottleneck
+        of my programm, so i didn't focus on that any longer.
+
+        Since the integration algorithm is in another file and is except for
+        the integration boundaries fixed, i decided just to do it by hand every
+        time. Those boundaries are for now also fixed, so it's ok.
+
+        '''
+
+        a = ccode(self.lagrangian_without_bound_constr())
+        b = ccode(self.boundadness_constraint())
+        g = open(get_data('funcprint2.txt'), 'r')
+        g1 = g.read()
+        g.close()
+        Whole_String = ''
+        Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
+        Prototypen = 'static float xsav;\n'+ 'static float(*nrfunc)(float,float);\n'
+        Integranddef = "float f(float r, float t)"+ "{return"
+        Begin_von_Func = "(fmax(creall("
+        Func1 = a.replace("exp","cexp").replace("pow","cpow").replace("r_0","r").replace("t_0","t")
+        Func1_End = "),0)"
+
+        Whole_String += Bibliotheken + Prototypen + Integranddef + Begin_von_Func +Func1+ Func1_End
+
+        Func2_Anf = "+ creall("
+        Func2 =  b.replace("exp", "cexp").replace("pow","cpow" ).replace("r_0","r").replace("t_0","t")
+
+        if self.Schwartzfunktion:
+            Func22 = '))*sin(1.0L*r)*sin(1.0L*r)'
+            Func2_End = '*cexp(-(cpow(t,2)/'+"cpow(%2.0f,2)))"%(T)+';'+'}\n'
+            Whole_String += Func2_Anf + Func2 + Func22+ Func2_End + g1
+        else:
+            Func22 = '))*sin(1.0L*r)*sin(1.0L*r);}\n'
+            Whole_String += Func2_Anf + Func2 + Func22+g1
+
+
+        if self.Comp_String:
+            os.system('gcc -o testlib2'+' << EOF '+Whole_String+ 'EOF -lm')
+        else:
+            f = open('testlib2.c', 'w')
+            f.write(Whole_String)
+            f.close()
+            os.system('gcc -o testlib2 testlib2.c -lm')
+
+    def get_Integrand_with_ctypes(self):
+
+        a = ccode(self.lagrangian_without_bound_constr())
+        b = ccode(self.boundadness_constraint())
+
+
+        Whole_String = ''
+
+        Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
+        Integranddef = "double f(int n, double args[n])"+ "{return"
+        Begin_von_Func = "(fmax(creall("
+        Func1 = a.replace("exp","cexp").replace("r_0","args[0]").replace("pow",
+                "cpow").replace("t_0","args[1]")
+        Func1_End = "),0)"
+        Whole_String+= Bibliotheken + Integranddef + Begin_von_Func + Func1+Func1_End
+
+        Func2_Anf = "+ creall("
+        Func2 =  b.replace("exp", "cexp").replace("r_0","args[0]").replace("pow",
+                "cpow").replace("t_0","args[1]")
+        g = open(get_data('funcprint.c'), 'r')
+        g1 = g.read()
+
+        if self.Schwartzfunktion:
+            Func22 = '))*sin(1.0L*args[0])*sin(1.0L*args[0])'
+            Func2_End = '*cexp(-(cpow(args[1],2)/'+"cpow(%2.0f,2)))"%(self.T)+';'+'}\n'
+            Whole_String += Func2_Anf + Func2 + Func22+ Func2_End + g1
+        else:
+            Func22 = '))*sin(1.0L*args[0])*sin(1.0L*args[0]);}\n'
+            Whole_String += Func2_Anf + Func2 + Func22 + g1
+
+        if self.Comp_String:
+            os.system('gcc -x c -shared -o testlib2.so -fPIC'+' << EOF '+Whole_String+ 'EOF')
+        else:
+
+            f = open('testlib2.c', 'w')
+            f.write(Whole_String)
+            f.close()
+
+            os.system('gcc -x c -shared -o testlib2.so -fPIC testlib2.c')
+
+        g.close()
+
+    def get_Test_Integrandt(self):
+        '''
+        This function is for testing the different integration routines,
+        which are implemented here.
+
+        Basically one can choose a function (The Analytic Result should best be
+        known. Than one can compare the results. I have a sinus function, and
+        and additional peak.
+
+        So we can test, which routine is more capable in detecting the peak.)
+        '''
+        Whole_String = ''
+
+        Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
+        Integranddef = "double f(int n, double args[n])"+ "{return"
+        Whole_String+= Bibliotheken + Integranddef
+
+        g = open(get_data('funcprint.c'), 'r')
+        g1 = g.read()
+
+        Func2_1 ='(-1/(cpow(M_PI,0.5)*%2.3f))*'%(self.T)
+        Func2_2 = "cexp(-(cpow(args[0]-1,2)/cpow(%2.3f,2)))"%(self.T)
+
+        Func2_3 = '+  sin(args[0])'+';'+'}\n'
+    #    Intdef2 = "double gf(int n, double args[n])"+ "{return 0. ;}"
+    #    Intdef3 = "double hf(int n, double args[n])"+ "{return 2. ;}"
+
+        Whole_String += Func2_1 + Func2_2 + Func2_3 + g1
+
+
+        f = open('testlib2.c', 'w')
+        f.write(Whole_String)
+        f.close()
+
+        os.system('gcc -x c -shared -o testlib2.so -fPIC testlib2.c')
+
+        g.close()
+
+
+    def get_Action(self):
+
+        '''
+        I wanted to test out, how much faster it would be to do the integration with C.
+        I tried out a simple double quad integration method (see integration2.c),
+        but this simple method, wasn't able to detect delta peak like structures in
+        the integrand.
+
+        (I will include what i mean exactly with delta peak like structures. Because
+        the more thinner the delta peak gets, at some point every method will
+        fail.)
+
+        So i would need to write a more refined integration method.
+        At some point i will do that. But at first i wanted to try out, ctypes
+        (I used ctypes and the nquad integration method of scipy, and indeed its
+        much faster than simply nquad in scipy and also it detects much better the
+        delta peaks than my simple quad integration method in C.) cython and maybe julia.
+
+        '''
+
+        if self.Integration_Type == 1:
+            '''Integration with Cytpes'''
+            self.get_Integrand_with_ctypes()
+            aa = time.time()
+
+            lib=ctypes.CDLL('./testlib2.so')
+            lib.f.restype = ctypes.c_double
+            lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
+            zup = integrate.nquad(lib.f,[self.Integration_bound[0],self.Integration_bound[1]],
+                    opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },
+                        {'epsabs': 10e-8, 'epsrel' : 10e-8} ] )
+            print('(Action, abserr)=',zup)
+            handle = lib._handle # obtain the SO handle
+
+            ctypes.cdll.LoadLibrary('libdl.so').dlclose(handle)
+
+            tt = time.time()
+            print('Passed time during integration in sec:',tt-aa)
+            return zup[0]
+        elif self.Integration_Type ==2:
+            '''Integration with C. Up until here i basically construct the
+            integrand  and then C takes over.'''#Stimmt was nicht.Also irgendwas
+            self.get_Integrand_with_c()
+            tt = time.time()
+
+            result = subprocess.run(['./testlib2'], stdout=subprocess.PIPE)
+            integr_val = result.stdout.decode('utf-8')
+            print('result', result.stdout.decode('utf-8'))
+            aa = time.time()
+            print('time', aa-tt)
+            return float(integr_val)
+        elif  self.Integration_Type ==3:
+            '''Test_Typ'''
+            self.get_Test_Integrandt(self.T)
+            aa = time.time()
+            lib=ctypes.CDLL('./testlib2.so')
+            lib.f.restype = ctypes.c_double
+            lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
+            result = integrate.nquad(lib.f, [self.Integration_bound[0]])
+            tt = time.time()
+            print(aa-tt)
+            return result
+        elif self.Integration_Type == 4:
+            '''Scipy quadpack'''
+
+            integrand = self.Integrand()
+            tt = time.time()
+            Action = integrate.nquad(lambda t1, r1 : integrand(t1,r1),
+                    self.Integration_bound, opts=[{'epsabs' :10e-10, 'epsrel': 10e-10 },{
+                        'epsabs': 10e-10, 'epsrel' : 10e-10} ])
+
+            aa = time.time()
+            print('Time it took to integrate in sec:',aa - tt)
+            print(Action)
+            return Action[0]
+        print('done')
+
+    def get_integrand_values(self):
+        '''
+        This method is here for plotting the integrand.
+        '''
+        if self.Integration_Type == 1:
+            self.get_Integrand_with_ctypes()
+            os.system('gcc -o yolo testlib2.c -lm')
+            os.system('./yolo')
+
+
+        elif self.Integration_Type ==2:
+            self.get_Integrand_with_c()
+
+            os.system('gcc -o yolo testlib2.c -lm')
+            os.system('./yolo')
+
+        else: 
+            raise ValueError("Integration_Type must be 1 or 2 for this to work.")
 
 
 def Two_Dim_Pic():
     '''
-    For N=2 i plotted the Action with respect to K_1 = K_Liste[1] and K_2
+    For N =2 i plotted the Action with respect to K_1 = K_Liste[1] and K_2
     '''
     K_Anzahl=N
 
@@ -506,14 +500,13 @@ def Two_Dim_Pic():
         rho_1 = jj*0.05
         Rho_Liste = [rho_1, (1-rho_1)/3]
 
-        norma = get_Action(N, Integration_bound, T, K_Liste, Rho_Liste,
-            w_Liste,kappa, False,False, 1)
+        norma = get_Action()
         d = open('NumbFor3d.txt', 'w')
 
         for k1 in K1_Liste:
             for k2 in K2_Liste:
                 K_Liste=[k1, k2]
-                Wert = get_Action(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste,kappa, False,False, 1)
+                Wert = get_Action()
                 print(Wert)
                 string = "%f %f %f \n" %(k1,k2,Wert/norma)
                 d.write(string)
@@ -554,8 +547,11 @@ def MainProg():
     w_Liste = [1,2,3,4]#eval(w_List)
     K_Liste = [9.7903003749135973, 1.0428185324876262, 0,0.1]
     Rho_Liste = np.array([ 0.23596702, (1- 0.23596702)/3])#,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
-    Wirkun = get_Action(N, Integration_bound, T, K_Liste, Rho_Liste,
-            w_Liste,kappa, False,False, 1)
+    Sys_Params = [K_Liste, Rho_Liste, w_Liste, kappa] 
+    CFS_Action = C_F_S(N, Integration_bound, T, Sys_Params, Schwartzfunktion = True, 
+                Comp_String = False, Integration_Type = 1)
+    
+    Wirkun = CFS_Action.get_Action()
     print(Wirkun)
 
 if __name__ == "__main__":
