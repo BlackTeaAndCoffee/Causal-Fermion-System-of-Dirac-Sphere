@@ -4,3 +4,5 @@ pyx
 numpy
 scipy
 symengine
+sympy
+pycallgraph
