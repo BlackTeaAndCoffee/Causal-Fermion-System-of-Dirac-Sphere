@@ -138,7 +138,7 @@ be aware that the input list is not completely random and gets changed
 according to the variationprocess.
 '''
 
-def Fitness(N, x_fitn2, Test = False):
+def Fitness(x_fitn2, Test = False):
     '''
     :param N: Current Shell-Number.
     :param x_fitn2: List of List of Variables. List of Rho_List, K_List and w_List.
@@ -150,9 +150,13 @@ def Fitness(N, x_fitn2, Test = False):
     :rtype: Float.
     '''
     if Test:
-        return control_Action(N, *x_fitn2)
-    else: 
-        return get_Action(N, Integration_bound, T, K_Liste, Rho_Liste, w_Liste, kappa, False, False, 1)
+        return control_Action(*x_fitn2)
+    else:
+        C_F_S.K_Liste = x_fitn2[0]
+        C_F_S.Rho_Liste = x_fitn2[1]
+        C_F_S.w_Liste = x_fitn2[2]
+        C_F_S.kappa = kappa 
+        return Action.get_Action()
 
 def control_Action(self, N, K_Lte, Rho_Lte, w_Lte):
 
@@ -178,16 +182,17 @@ def control_Action(self, N, K_Lte, Rho_Lte, w_Lte):
             s+= (w_Lte[ii] - Min[2][ii])**2
     return s
 
-class Initial_state():
-    def __init__(random_K, random_Rho, random_w, K_List, w_List, Rho_List, N, Constant):
+class Initial_System_Params():
+    def __init__(random_K, random_Rho, random_w, K_List, w_List, Rho_List, Constant):
         self.random_K = random_K 
         self.random_Rho = random_Rho
         self.random_w = random_w
         self.K_List = K_List
         self.w_List = w_List
         self.Rho_List = Rho_List
-        self.N = N
         self.Constant = Constant
+        N = len(w_List) #w_List, K_List and Rho_List have all the same length.
+ 
     def which_variant(self):
         '''
         :param random_K: This paramter gets its default value from settings.cfg.
@@ -229,7 +234,7 @@ class Initial_state():
         elif self.random_K == True and self.random_Rho==True  and self.random_w==True:
             return 8
 
-    def Initial_state_constructor(self):
+    def Initial_Params_Constructor(self):
 
         '''
         :param variant: input comes from which_variant
@@ -275,14 +280,13 @@ class Initial_state():
 
 
         '''
-        print('erstes N', self.N)
+        print('erstes N', N)
 
 
         Lists_length = len(self.K_List)
         print(type(Lists_length), Lists_length, type(N))
         if N < Lists_length:
-            raise ValueError("Shell-Number %i < List_length %i. Size-Error. Fix the size of K_List 
-            and so on, N can only be equally big or bigger!" %(N, Lists_length) )
+            raise ValueError("Shell-Number %i < List_length %i. Size-Error. Fix the size of K_List and so on, N can only be equally big or bigger!" %(N, Lists_length))
             sys.exit()
 
         half_filled_list = np.zeros((3,N))
@@ -324,25 +328,29 @@ class Initial_state():
         elif variant ==8:
             parameters = self.Gap_Filler(half_filled_list)
 
-        return parameters, ftns_for_x
-
-
+        return parameters
 
     def Gap_Filler(self, half_filled_list):
         if random_K:
-            half_filled_list[0]= np.random.random_sample(self.N)*(K_End - K_Anf)
+            half_filled_list[0]= np.random.random_sample(N)*(K_End - K_Anf)
         if random_Rho:
-            rho_randomi = np.random.random_sample(self.N)
+            rho_randomi = np.random.random_sample(N)
             half_filled_list[1]= Rho_values(rho_randomi, self.Constant)()
         if random_w:
-            half_filled_list[2] = np.random.random_sample(self.N)*(w_End - w_Anf)
+            half_filled_list[2] = np.random.random_sample(N)*(w_End - w_Anf)
         return half_filled_list
 
 class Variation_of_Parameters():
-    def __init__(self, N, Input_List):
-        self.Input_List = Input_List 
-    
-    def type_1_variation(self):
+    def __init__(self, var_K, var_w, var_Rho, delta_K, delta_w, delta_Rho):
+        self.var_K = var_K 
+        self.var_Rho = var_Rho
+        self.var_w = var_w
+        self.delta_K = delta_K
+        self.delta_w = delta_w
+        self.delta_Rho = delta_Rho
+        N = len(Input_List)
+ 
+    def __call__(self, Input_List):
         '''
         :param N: Integer.
         :type N: Shell-Number.
@@ -373,39 +381,37 @@ class Variation_of_Parameters():
         to for exapmple only vary one element of the weights.\
         This i do not need right now. But in the future maybe.\
         '''
-        Output = [[],[],[]]
         if var_K:
-            randomi2 = (2*np.random.random_sample(N) - 1)*(K_End - K_Anf)/10
-            K_randomi5 = np.absolute(self.Input_List[0] + randomi2)
-            self.Input_List[0]= list(K_randomi5)
+            randomi2 = (2*np.random.random_sample(N) - 1)*delta_K
+            K_randomi5 = np.absolute(Input_List[0] + randomi2)
+            Input_List[0]= list(K_randomi5)
 
         if var_Rho:
-            randomi2 = (2*np.random.random_sample(N) - 1)/10
-            rho_randomi6 = np.absolute(self.Input_List[1] + randomi2)
-            self.Input_List[1] = Rho_values(rho_randomi6, Constant)()
+            randomi2 = (2*np.random.random_sample(N) - 1)*delta_Rho
+            rho_randomi6 = np.absolute(Input_List[1] + randomi2)
+            Input_List[1] = Rho_values(rho_randomi6, Constant)
 
         if var_w:
-            randomi2 = (2*np.random.random_sample(N) -1)*(w_End - w_Anf)/10
-            w_randomi5 = np.absolute(self.Input_List[2] + randomi2)
-            self.Input_List[2] = list(w_randomi5)
+            randomi2 = (2*np.random.random_sample(N) -1)*delta_w
+            w_randomi5 = np.absolute(Input_List[2] + randomi2)
+            Input_List[2] = list(w_randomi5)
 
-        return self.Input_List
+        return Input_List
 
-class Rho_Values:
-    def __init__(N, Incoming_List, Constant):
-        self.Incoming_List = Incoming_List
-        self.Constant = Constant
-        self.N = N
-    def __call__(self):
+class Rho_Class:
+    def __init__(N):
+        N = self.N
+        Rho_List = Rho_Koeffs_List(self)
+    def __call__(self, Incoming_List, Constant):
         Sum = 0
-        for i,rho_koeff in  enumerate(self.Rho_Koeffs_List(N)):
-            Sum += rho_koeff*self.Incoming_List[i]
-        rho_values = self.Incoming_List/Sum
+        for i,rho_koeff in  enumerate(self.Rho_List()):
+            Sum += rho_koeff*Incoming_List[i]
+        rho_values = Incoming_List/Sum
         return rho_values*Constant
     
     def Rho_Koeffs_List(self):
         listim = []
-        for n in range(1, self.N+1):
+        for n in range(1, self.N + 1):
             listim.append((self.diracEigenvalues(n)**2 -0.25)/2)
 
         return listim
@@ -420,35 +426,43 @@ class Rho_Values:
 
 
 class Simulated_Annealing():
-    def __init__(self, Selbst, N, B_K_of_Own_Choice, ):
-        self.N = N
-        self.Selbst = Selbst
+    def __init__(self, BaseArrayForTemp, Boltzmann_Constant, decay_constant, freq, Amplitude):
+        self.Boltzmann_Constant = Boltzmann_Constant
+        self.BaseArrayForTemp = BaseArrayForTemp
+        self.decay_constant = decay_constant
+        self.freq = freq
+        self.Amplitude = Amplitude
 
-    def K_BoltzmanFinder(self, Selbst, N):
+    def boltzmann(f_x, f_y, temp):
         '''
-        :param Selbst: If true, a value that i choose for the Boltz. const\
-        is being used. It's Name is "B_K_of_Own_Choice".
-        :type Selbst: Boolean.
-        :return: Boltzman Konstant for simulated annealing algorithm.
-        :rtype: Float.
+        This function will return for an Energydifferenz = f_x - f_y, the boltzmann\
+        probability.
         '''
+        
+        print('f_x,f_y', f_x, f_y)
+        diff = abs(f_y - f_x)
+        print('diff', diff)
+        return np.exp(- diff/(tt*self.Boltzmann_Constant))
 
-        K_Boltz = 0
-        if Selbst:
-            K_Boltz = B_K_of_Own_Choice
-        else:
-            for _ in range(Mittelgr):
-                x_fitn5, fitn_wert_y5 = Initial_state_constructor(variant, K_List,
-                        Rho_List, w_List,  N)
+    def Temperatur_Function(temp_iter):
+        '''
+        This function i need for nonlinear Temperatur-curves.
+        :return: Temperatur with, witt Temperatur that is nonlinear..
+        '''
+        return np.exp(- self.decay_const*temp_iter**2)*(self.Amplitude*np.cos(self.freq*temp_iter*0.5) + 1)
 
-                K_Boltz += fitn_wert_y5/Mittelgr
+    def temperatur():
+        '''
+        The Temperatur which shall be put in the boltzmann-function
+        gets put together here.
+        '''
+        temperatur_list =[]
+        for heat_value in self.BaseArrayForTemp:
+            temperatur_list.append(Temperatur_Function(heat_value))
+        return temperatur_list
 
-        return K_Boltz
-
-
-    def Minimierer(self, N, first,  Candidate_Minimum):
-
-        K_Boltz =K_BoltzmanFinder(True, N)
+    def Minimierer(self, Candidate_Minimum):
+        N = len(Candidtate_Minimum[0,1])
         kol = open('iterk.txt', 'a')
         #Candidate_Minimum = Initial_State
         print('id(Candidate)',id(Candidate_Minimum[0]))
@@ -459,11 +473,11 @@ class Simulated_Annealing():
         for m,tt in enumerate(temp):
             for _ in range(4):
                 iterat +=1
-                new_param_values = type_1_variation(N, x_fitn_i)
-                energy_new_param = Fitness(N, new_param_values, Test = Test_Action )
+                new_param_values = vary(x_fitn_i)
+                energy_new_param = Fitness(new_param_values, Test = Test_Action )
                 kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
                         +str(energy_new_param)+'\n')
-                boltzi = boltzmann(fitn_wert_x, energy_new_param, tt, K_Boltz)
+                boltzi = boltzmann(fitn_wert_x, energy_new_param, tt)
 
                 if fitn_wert_x > energy_new_param:
                     fitn_wert_x = energy_new_param
@@ -492,6 +506,11 @@ if __name__ == "__main__":
 
     print(StartWithGivenMinima, "variant = ", variant)
 
+    
+    delta_K = 1/10
+    delta_w = 1/10
+    delta_Rho = 1/10
+    
     T = 2*np.pi
 
     x_Anf = 0
@@ -499,7 +518,7 @@ if __name__ == "__main__":
 
     Integration_bound = [[x_Anf, x_End], [0,2*np.pi]]
     Wirk = []
-    B_K_of_Own_Choice =0.00005
+    Boltzmann_Constant =0.00005
     Mittelgr = 4
     for_rho = 1
 
@@ -512,30 +531,39 @@ if __name__ == "__main__":
 
     pre2_Rho_List = eval(pre_Rho_List)
 
+    
     for SN in range(first, Anzahl_N+1):
         Iter = SN**2                        #Number of temperatur iterations
-        hilfsarray_fuer_temp = np.linspace(0.01,5,Iter)
+        BaseArrayForTemp = np.linspace(0.01,5,Iter)
         Amplitude = 0.1                     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
                                             #temperatur
         freq = np.pi                        #Frequenz for oscillation
         halb = 0.001                        #exponential decay constant
-        temp = temperatur(Iter, hilfsarray_fuer_temp, halb, freq, Amplitude)
-        Factor = np.random.random_sample(SN)
+        
+        Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, decay_constant, freq, Amplitude)
 
         pre2_w_List = eval(pre_w_List) # I put this list assignment here,
-                                    #    should be right. Not entirely sure,
-                                    #    but i want to let the code run for the
-                                    #    next hours and i am in a rush.
-
-        x_fitn11 = Initial_state_constructor(variant,
+                                       #I set the list in settings.cfs, and it's like 
+                                       #[i for i in range(SN)]. So i need SN.
+        Rho_Values = Rho_Class(SN)
+        Sys_Params= Initial_System_params(variant,
            pre2_K_List, pre2_Rho_List, pre2_w_List,  SN)
-        fitn_wert_y11 = Fitness(N, x_fitn11, Test = Test_Action)
+ 
+        x_fitn11 = Sys_Params.Initial_Params_Constructor()
+       
+        System_Parameters = [x_fitn11, kappa]
+        Action = C_F_S(N, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
+                 Comp_String = False, Integration_Type = 1)
+
+        fitn_wert_y11 = Fitness(System_Parameters, Test = Test_Action)
 
         print('Heyhooo', x_fitn11)
         Initial_State = [x_fitn11, fitn_wert_y11]
         print('Initial_State', Initial_State)
-        Minimum = Minimierer(SN, first,  Initial_State)
+        vary = Variation_of_Parameters(var_K, var_w, var_Rho, delta_K, delta_w, delta_Rho)
+ 
+        Minimum = Minimum_Finder.Minimierer(SN, first, Initial_State)
 
         #pre2_w_List = [*Minimum[0][2],0]
         print('pre2_w_list', pre2_w_List)
