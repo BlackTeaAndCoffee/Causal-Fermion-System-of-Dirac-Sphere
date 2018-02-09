@@ -114,18 +114,18 @@ class C_F_S:
     :type Integration_Type: 1,2,3 or 4.
     ''' 
     def __init__(self, N, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
-                 Comp_String = False, Integration_Type = 1):
+                 Comp_String = False, Integration_Type = 1, Test_Action=False):
         self.N = N
         self.Integration_bound = Integration_bound
         self.T = T
         self.K_Liste = System_Parameters[0]
-        self.w_Liste = System_Parameters[1]
-        self.Rho_Liste = System_Parameters[2]
+        self.Rho_Liste = System_Parameters[1]
+        self.w_Liste = System_Parameters[2]
         self.kappa = System_Parameters[3]
         self.Schwartzfunktion = Schwartzfunktion
         self.Comp_String = Comp_String
         self.Integration_Type = Integration_Type
-
+        self.Test_Action = Test_Action        
 
     def TensorProduct(self, mat11, mat22):
         """I needed a Tensorproduct for two matrices with symbolic elements.
@@ -233,7 +233,7 @@ class C_F_S:
 
         if self.Schwartzfunktion:
             integrand = lambda t1, r1: (max(lagr(t1, r1).real,0) +
-                    bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1)**2/T)
+                    bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1)**2/self.T)
         else:
             integrand = lambda t1, r1 : (max(lagr([t1, r1]).real,0) +
                     bound([t1,r1]).real)*np.sin(r1)**2
@@ -282,7 +282,7 @@ class C_F_S:
 
         if self.Schwartzfunktion:
             Func22 = '))*sin(1.0L*r)*sin(1.0L*r)'
-            Func2_End = '*cexp(-(cpow(t,2)/'+"cpow(%2.0f,2)))"%(T)+';'+'}\n'
+            Func2_End = '*cexp(-(cpow(t,2)/'+"cpow(%2.0f,2)))"%(self.T)+';'+'}\n'
             Whole_String += Func2_Anf + Func2 + Func22+ Func2_End + g1
         else:
             Func22 = '))*sin(1.0L*r)*sin(1.0L*r);}\n'
@@ -326,7 +326,6 @@ class C_F_S:
         else:
             Func22 = '))*sin(1.0L*args[0])*sin(1.0L*args[0]);}\n'
             Whole_String += Func2_Anf + Func2 + Func22 + g1
-
         if self.Comp_String:
             os.system('gcc -x c -shared -o testlib2.so -fPIC'+' << EOF '+Whole_String+ 'EOF')
         else:
@@ -376,6 +375,30 @@ class C_F_S:
         os.system('gcc -x c -shared -o testlib2.so -fPIC testlib2.c')
 
         g.close()
+    def control_Action(self):
+
+        '''
+        This function serves to test the minimizer.
+        This is a higher dimensional
+        parabola. In first order the action is also a
+        parabola so if the minimizer won't work here
+        it will definitely fail for the action.
+        '''
+        s = 0
+        w_Min = [o for o in range(N)]
+        R_Min = [o for o in range(N)]
+        K_Min = [o for o in range(N)]
+
+        Min = [w_Min, R_Min, K_Min]
+        for ii in range(N):
+            if var_K:
+                s += (self.K_Liste[ii] - Min[0][ii])**2
+            if var_Rho:
+                s += (self.Rho_Liste[ii] - Min[1][ii])**2
+            if var_w:
+                s+= (self.w_Liste[ii] - Min[2][ii])**2
+        return s
+
 
 
     def get_Action(self):
@@ -397,82 +420,84 @@ class C_F_S:
         delta peaks than my simple quad integration method in C.) cython and maybe julia.
 
         '''
+        if self.Test_Action:
+            return self.control_Action()
+        else:
+            if self.Integration_Type == 1:
+                '''Integration with Cytpes'''
+                self.get_Integrand_with_ctypes()
+                aa = time.time()
 
-        if self.Integration_Type == 1:
-            '''Integration with Cytpes'''
-            self.get_Integrand_with_ctypes()
-            aa = time.time()
+                lib=ctypes.CDLL('./testlib2.so')
+                lib.f.restype = ctypes.c_double
+                lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
+                zup = integrate.nquad(lib.f,[self.Integration_bound[0],self.Integration_bound[1]],
+                        opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },
+                            {'epsabs': 10e-8, 'epsrel' : 10e-8} ] )
+                print('(Action, abserr)=',zup)
+                handle = lib._handle # obtain the SO handle
 
-            lib=ctypes.CDLL('./testlib2.so')
-            lib.f.restype = ctypes.c_double
-            lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
-            zup = integrate.nquad(lib.f,[self.Integration_bound[0],self.Integration_bound[1]],
-                    opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },
-                        {'epsabs': 10e-8, 'epsrel' : 10e-8} ] )
-            print('(Action, abserr)=',zup)
-            handle = lib._handle # obtain the SO handle
+                ctypes.cdll.LoadLibrary('libdl.so').dlclose(handle)
 
-            ctypes.cdll.LoadLibrary('libdl.so').dlclose(handle)
+                tt = time.time()
+                print('Passed time during integration in sec:',tt-aa)
+                return zup[0]
+            elif self.Integration_Type ==2:
+                '''Integration with C. Up until here i basically construct the
+                integrand  and then C takes over.'''#Stimmt was nicht.Also irgendwas
+                self.get_Integrand_with_c()
+                tt = time.time()
 
-            tt = time.time()
-            print('Passed time during integration in sec:',tt-aa)
-            return zup[0]
-        elif self.Integration_Type ==2:
-            '''Integration with C. Up until here i basically construct the
-            integrand  and then C takes over.'''#Stimmt was nicht.Also irgendwas
-            self.get_Integrand_with_c()
-            tt = time.time()
+                result = subprocess.run(['./testlib2'], stdout=subprocess.PIPE)
+                integr_val = result.stdout.decode('utf-8')
+                print('result', result.stdout.decode('utf-8'))
+                aa = time.time()
+                print('time', aa-tt)
+                return float(integr_val)
+            elif  self.Integration_Type ==3:
+                '''Test_Typ'''
+                self.get_Test_Integrandt(self.T)
+                aa = time.time()
+                lib=ctypes.CDLL('./testlib2.so')
+                lib.f.restype = ctypes.c_double
+                lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
+                result = integrate.nquad(lib.f, [self.Integration_bound[0]])
+                tt = time.time()
+                print(aa-tt)
+                return result
+            elif self.Integration_Type == 4:
+                '''Scipy quadpack'''
 
-            result = subprocess.run(['./testlib2'], stdout=subprocess.PIPE)
-            integr_val = result.stdout.decode('utf-8')
-            print('result', result.stdout.decode('utf-8'))
-            aa = time.time()
-            print('time', aa-tt)
-            return float(integr_val)
-        elif  self.Integration_Type ==3:
-            '''Test_Typ'''
-            self.get_Test_Integrandt(self.T)
-            aa = time.time()
-            lib=ctypes.CDLL('./testlib2.so')
-            lib.f.restype = ctypes.c_double
-            lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
-            result = integrate.nquad(lib.f, [self.Integration_bound[0]])
-            tt = time.time()
-            print(aa-tt)
-            return result
-        elif self.Integration_Type == 4:
-            '''Scipy quadpack'''
+                integrand = self.Integrand()
+                tt = time.time()
+                Action = integrate.nquad(lambda t1, r1 : integrand(t1,r1),
+                        self.Integration_bound, opts=[{'epsabs' :10e-10, 'epsrel': 10e-10 },{
+                            'epsabs': 10e-10, 'epsrel' : 10e-10} ])
 
-            integrand = self.Integrand()
-            tt = time.time()
-            Action = integrate.nquad(lambda t1, r1 : integrand(t1,r1),
-                    self.Integration_bound, opts=[{'epsabs' :10e-10, 'epsrel': 10e-10 },{
-                        'epsabs': 10e-10, 'epsrel' : 10e-10} ])
+                aa = time.time()
+                print('Time it took to integrate in sec:',aa - tt)
+                print(Action)
+                return Action[0]
+            print('done')
 
-            aa = time.time()
-            print('Time it took to integrate in sec:',aa - tt)
-            print(Action)
-            return Action[0]
-        print('done')
-
-    def get_integrand_values(self):
-        '''
-        This method is here for plotting the integrand.
-        '''
-        if self.Integration_Type == 1:
-            self.get_Integrand_with_ctypes()
-            os.system('gcc -o yolo testlib2.c -lm')
-            os.system('./yolo')
+        def get_integrand_values(self):
+            '''
+            This method is here for plotting the integrand.
+            '''
+            if self.Integration_Type == 1:
+                self.get_Integrand_with_ctypes()
+                os.system('gcc -o yolo testlib2.c -lm')
+                os.system('./yolo')
 
 
-        elif self.Integration_Type ==2:
-            self.get_Integrand_with_c()
+            elif self.Integration_Type ==2:
+                self.get_Integrand_with_c()
 
-            os.system('gcc -o yolo testlib2.c -lm')
-            os.system('./yolo')
+                os.system('gcc -o yolo testlib2.c -lm')
+                os.system('./yolo')
 
-        else: 
-            raise ValueError("Integration_Type must be 1 or 2 for this to work.")
+            else: 
+                raise ValueError("Integration_Type must be 1 or 2 for this to work.")
 
 
 def Two_Dim_Pic():
@@ -528,28 +553,24 @@ def MainProg():
     Constant, kappa, Rho_List = configfunktion('Constraints')
     Anzahl_N, first = configfunktion('System_sizes')
 
-
-
-    T = 1 #Liftime of the universe, it's needed for the Schwartzfunction
-    N = 2
-
+    T = 2*np.pi #Liftime of the universe, it's needed for the Schwartzfunction
+    N = 1
 
     kappa_Anzahl = 1
-
 
     x_Anf = 0.
     x_End = np.pi
 
     Kurve_Names=[]
 
-    Integration_bound = [[x_Anf, x_End], [0, 2*np.pi]]
+    Integration_bound = [[x_Anf, x_End], [0, 1]]
     Wirk = []
-    w_Liste = [1,2,3,4]#eval(w_List)
-    K_Liste = [9.7903003749135973, 1.0428185324876262, 0,0.1]
-    Rho_Liste = np.array([ 0.23596702, (1- 0.23596702)/3])#,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
+    w_Liste = [0]#eval(w_List)
+    K_Liste = [0]
+    Rho_Liste = [1] #np.array([ 0.23596702, (1- 0.23596702)/3])#,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
     Sys_Params = [K_Liste, Rho_Liste, w_Liste, kappa] 
-    CFS_Action = C_F_S(N, Integration_bound, T, Sys_Params, Schwartzfunktion = True, 
-                Comp_String = False, Integration_Type = 1)
+    CFS_Action = C_F_S(N, Integration_bound, T, Sys_Params, Schwartzfunktion = False,  
+               Comp_String = False, Integration_Type = 1)
     
     Wirkun = CFS_Action.get_Action()
     print(Wirkun)

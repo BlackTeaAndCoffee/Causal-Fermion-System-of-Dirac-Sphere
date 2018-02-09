@@ -2,7 +2,7 @@ from sympy.printing import ccode
 from scipy import integrate
 from symengine import I
 from sympy import *
-from .configfunktion import configfunktion
+from Numerical_CFS.configfunktion import configfunktion
 import configparser
 import sympy as sy
 import symengine as si
@@ -13,8 +13,8 @@ import os
 import sys
 import scipy.misc
 import ctypes
-from .SymEngineFast import *
-from .LibForSimulAnnealing import *
+from Numerical_CFS.SymEngineFast import *
+#from .LibForSimulAnnealing import *
 
 '''
 This Programm contains the code for minimizing the Action.
@@ -137,62 +137,19 @@ get_rho_values and in this function, i do exactly what i explained before.  But
 be aware that the input list is not completely random and gets changed
 according to the variationprocess.
 '''
-
-def Fitness(x_fitn2, Test = False):
-    '''
-    :param N: Current Shell-Number.
-    :param x_fitn2: List of List of Variables. List of Rho_List, K_List and w_List.
-    :param Test: In case the minimzer needs to get tested.
-    :type N: integer.
-    :type x_fitn2: list.
-    :type Test: boolean.
-    :return: The Action for the given set of paramters.
-    :rtype: Float.
-    '''
-    if Test:
-        return control_Action(*x_fitn2)
-    else:
-        C_F_S.K_Liste = x_fitn2[0]
-        C_F_S.Rho_Liste = x_fitn2[1]
-        C_F_S.w_Liste = x_fitn2[2]
-        C_F_S.kappa = kappa 
-        return Action.get_Action()
-
-def control_Action(self, N, K_Lte, Rho_Lte, w_Lte):
-
-    '''
-    This function serves to test the minimizer.
-    This is a higher dimensional
-    parabola. In first order the action is also a
-    parabola so if the minimizer won't work here
-    it will definitely fail for the action.
-    '''
-    s = 0
-    w_Min = [o for o in range(N)]
-    R_Min = [o for o in range(N)]
-    K_Min = [o for o in range(N)]
-
-    Min = [w_Min, R_Min, K_Min]
-    for ii in range(N):
-        if var_K:
-            s += (K_Lte[ii] - Min[0][ii])**2
-        if var_Rho:
-            s += (Rho_Lte[ii] - Min[1][ii])**2
-        if var_w:
-            s+= (w_Lte[ii] - Min[2][ii])**2
-    return s
-
 class Initial_System_Params():
-    def __init__(random_K, random_Rho, random_w, K_List, w_List, Rho_List, Constant):
+    def __init__(self, random_K, random_Rho, random_w, K_List, Rho_List, w_List, kappa):
         self.random_K = random_K 
         self.random_Rho = random_Rho
         self.random_w = random_w
         self.K_List = K_List
         self.w_List = w_List
         self.Rho_List = Rho_List
-        self.Constant = Constant
-        N = len(w_List) #w_List, K_List and Rho_List have all the same length.
- 
+        print(w_List)
+        self.N = len(w_List) #w_List, K_List and Rho_List have all the same length.
+        print('N =',N)
+        self.variant = self.which_variant() 
+        self.kappa = kappa
     def which_variant(self):
         '''
         :param random_K: This paramter gets its default value from settings.cfg.
@@ -280,76 +237,75 @@ class Initial_System_Params():
 
 
         '''
-        print('erstes N', N)
+        print('erstes N', self.N)
 
 
         Lists_length = len(self.K_List)
-        print(type(Lists_length), Lists_length, type(N))
-        if N < Lists_length:
+        print(type(Lists_length), Lists_length, type(self.N))
+        if self.N < Lists_length:
             raise ValueError("Shell-Number %i < List_length %i. Size-Error. Fix the size of K_List and so on, N can only be equally big or bigger!" %(N, Lists_length))
             sys.exit()
 
-        half_filled_list = np.zeros((3,N))
+        half_filled_list = np.zeros((3,self.N))
 
-        if variant ==1:
+        if self.variant ==1:
             half_filled_list[0, :Lists_length] = self.K_List
             half_filled_list[1, :Lists_length] = self.Rho_List
             half_filled_list[2, :Lists_length] = self.w_List
 
             parameters = self.Gap_Filler(half_filled_list)
 
-        elif variant ==2:
+        elif self.variant ==2:
             half_filled_list[0, :Lists_length] = self.K_List
             half_filled_list[1, :Lists_length] = self.Rho_List
 
             parameters = self.Gap_Filler(half_filled_list)
-        elif variant ==3:
+        elif self.variant ==3:
             half_filled_list[1, :Lists_length] = self.Rho_List
             half_filled_list[2, :Lists_length] = self.w_List
 
             parameters = self.Gap_Filler(half_filled_list)
-        elif variant ==4:
+        elif self.variant ==4:
             half_filled_list[0, :Lists_length] = self.K_List
             half_filled_list[2, :Lists_length] = self.w_List
 
             parameters = self.Gap_Filler( half_filled_list)
-        elif variant ==5:
+        elif self.variant ==5:
             half_filled_list[0, :Lists_length] = self.K_List
 
             parameters = self.Gap_Filler(half_filled_list)
-        elif variant ==6:
+        elif self.variant ==6:
             half_filled_list[1, :Lists_length] = self.Rho_List
 
             parameters = self.Gap_Filler(half_filled_list)
-        elif variant ==7:
+        elif self.variant ==7:
             half_filled_list[2, :Lists_length] = self.w_List
 
             parameters = self.Gap_Filler(half_filled_list)
-        elif variant ==8:
+        elif self.variant ==8:
             parameters = self.Gap_Filler(half_filled_list)
 
-        return parameters
+        return [*parameters , self.kappa]
 
     def Gap_Filler(self, half_filled_list):
-        if random_K:
-            half_filled_list[0]= np.random.random_sample(N)*(K_End - K_Anf)
-        if random_Rho:
-            rho_randomi = np.random.random_sample(N)
-            half_filled_list[1]= Rho_values(rho_randomi, self.Constant)()
-        if random_w:
-            half_filled_list[2] = np.random.random_sample(N)*(w_End - w_Anf)
+        if self.random_K:
+            half_filled_list[0]= np.random.random_sample(self.N)*(K_End - K_Anf)
+        if self.random_Rho:
+            rho_randomi = np.random.random_sample(self.N)
+            half_filled_list[1]= Rho_values(rho_randomi)
+        if self.random_w:
+            half_filled_list[2] = np.random.random_sample(self.N)*(w_End - w_Anf)
         return half_filled_list
 
 class Variation_of_Parameters():
-    def __init__(self, var_K, var_w, var_Rho, delta_K, delta_w, delta_Rho):
+    def __init__(self, var_K, var_Rho, var_w,  delta_K, delta_Rho, delta_w, Rho_Values):
         self.var_K = var_K 
         self.var_Rho = var_Rho
         self.var_w = var_w
         self.delta_K = delta_K
         self.delta_w = delta_w
         self.delta_Rho = delta_Rho
-        N = len(Input_List)
- 
+        self.Rho_Values = Rho_Values 
     def __call__(self, Input_List):
         '''
         :param N: Integer.
@@ -381,33 +337,35 @@ class Variation_of_Parameters():
         to for exapmple only vary one element of the weights.\
         This i do not need right now. But in the future maybe.\
         '''
-        if var_K:
-            randomi2 = (2*np.random.random_sample(N) - 1)*delta_K
+        N = len(Input_List[0])
+        if self.var_K:
+            randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_K
             K_randomi5 = np.absolute(Input_List[0] + randomi2)
             Input_List[0]= list(K_randomi5)
 
-        if var_Rho:
-            randomi2 = (2*np.random.random_sample(N) - 1)*delta_Rho
+        if self.var_Rho:
+            randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_Rho
             rho_randomi6 = np.absolute(Input_List[1] + randomi2)
-            Input_List[1] = Rho_values(rho_randomi6, Constant)
+            Input_List[1] = self.Rho_Values(rho_randomi6)
 
-        if var_w:
-            randomi2 = (2*np.random.random_sample(N) -1)*delta_w
+        if self.var_w:
+            randomi2 = (2*np.random.random_sample(N) -1)*self.delta_w
             w_randomi5 = np.absolute(Input_List[2] + randomi2)
             Input_List[2] = list(w_randomi5)
-
+ 
         return Input_List
 
 class Rho_Class:
-    def __init__(N):
-        N = self.N
-        Rho_List = Rho_Koeffs_List(self)
-    def __call__(self, Incoming_List, Constant):
+    def __init__(self, N, Constant):
+        self.N = N
+        self.Constant = Constant
+        self.Rho_List = self.Rho_Koeffs_List()
+    def __call__(self, Incoming_List):
         Sum = 0
-        for i,rho_koeff in  enumerate(self.Rho_List()):
+        for i,rho_koeff in  enumerate(self.Rho_List):
             Sum += rho_koeff*Incoming_List[i]
         rho_values = Incoming_List/Sum
-        return rho_values*Constant
+        return rho_values*self.Constant
     
     def Rho_Koeffs_List(self):
         listim = []
@@ -426,14 +384,16 @@ class Rho_Class:
 
 
 class Simulated_Annealing():
-    def __init__(self, BaseArrayForTemp, Boltzmann_Constant, decay_constant, freq, Amplitude):
+    def __init__(self, BaseArrayForTemp, Boltzmann_Constant, 
+                     decay_constant, freq, Amplitude, vary, CFS_Action):
         self.Boltzmann_Constant = Boltzmann_Constant
         self.BaseArrayForTemp = BaseArrayForTemp
         self.decay_constant = decay_constant
         self.freq = freq
         self.Amplitude = Amplitude
-
-    def boltzmann(f_x, f_y, temp):
+        self.vary = vary
+        self.CFS_Action = CFS_Action
+    def boltzmann(self, f_x, f_y, temp):
         '''
         This function will return for an Energydifferenz = f_x - f_y, the boltzmann\
         probability.
@@ -442,27 +402,28 @@ class Simulated_Annealing():
         print('f_x,f_y', f_x, f_y)
         diff = abs(f_y - f_x)
         print('diff', diff)
-        return np.exp(- diff/(tt*self.Boltzmann_Constant))
+        return np.exp(- diff/(temp*self.Boltzmann_Constant))
 
-    def Temperatur_Function(temp_iter):
+    def temperatur_Function(self, temp_iter):
         '''
         This function i need for nonlinear Temperatur-curves.
-        :return: Temperatur with, witt Temperatur that is nonlinear..
+        :return: Temperatur that is nonlinear.. . this feeds into temperatur, which\ 
+        produces the list of temperatures.
         '''
-        return np.exp(- self.decay_const*temp_iter**2)*(self.Amplitude*np.cos(self.freq*temp_iter*0.5) + 1)
+        return np.exp(- self.decay_constant*temp_iter**2)*(self.Amplitude*np.cos(self.freq*temp_iter*0.5) + 1)
 
-    def temperatur():
+    def temperatur(self):
         '''
         The Temperatur which shall be put in the boltzmann-function
         gets put together here.
         '''
         temperatur_list =[]
         for heat_value in self.BaseArrayForTemp:
-            temperatur_list.append(Temperatur_Function(heat_value))
+            temperatur_list.append(self.temperatur_Function(heat_value))
         return temperatur_list
 
     def Minimierer(self, Candidate_Minimum):
-        N = len(Candidtate_Minimum[0,1])
+        N = len(Candidate_Minimum[0][1])
         kol = open('iterk.txt', 'a')
         #Candidate_Minimum = Initial_State
         print('id(Candidate)',id(Candidate_Minimum[0]))
@@ -470,14 +431,15 @@ class Simulated_Annealing():
         fitn_wert_x = Candidate_Minimum[1]#Initial_State[1]
         x_fitn_i = [*Candidate_Minimum[0]]# Initial_State[0]
         iterat = 0
+        temp = self.temperatur()
         for m,tt in enumerate(temp):
             for _ in range(4):
                 iterat +=1
-                new_param_values = vary(x_fitn_i)
-                energy_new_param = Fitness(new_param_values, Test = Test_Action )
+                new_param_values = self.vary(x_fitn_i)
+                energy_new_param = Fitness(new_param_values, self.CFS_Action)
                 kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
                         +str(energy_new_param)+'\n')
-                boltzi = boltzmann(fitn_wert_x, energy_new_param, tt)
+                boltzi = self.boltzmann(fitn_wert_x, energy_new_param, tt)
 
                 if fitn_wert_x > energy_new_param:
                     fitn_wert_x = energy_new_param
@@ -490,10 +452,17 @@ class Simulated_Annealing():
                     fitn_wert_x = energy_new_param
                     x_fitn_i =  new_param_values
         kol.close()
+        print('Candidate_Minimum', Candidate_Minimum)
         return Candidate_Minimum
 
-
-if __name__ == "__main__":
+def Fitness(Sys_Parameters, CFS_Action):
+    CFS_Action.K_Liste =Sys_Parameters[0] 
+    CFS_Action.Rho_Liste = Sys_Parameters[1]
+    CFS_Action.w_Liste = Sys_Parameters[2]
+    CFS_Action.kappa = Sys_Parameters[3]
+    return CFS_Action.get_Action()
+    
+def MainProg():
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters') #boolean
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
     w_Anf, w_End, pre_w_List= configfunktion('Frequenz') # flaots and List
@@ -502,11 +471,8 @@ if __name__ == "__main__":
     StartWithGivenMinima, Test_Action = configfunktion('Test') #boolean, boolean
     random_K, random_Rho, random_w =  configfunktion('Set_Initialstate_randomly')# boolean
 
-    variant = which_variant(random_K, random_Rho, random_w)
 
-    print(StartWithGivenMinima, "variant = ", variant)
-
-    
+   
     delta_K = 1/10
     delta_w = 1/10
     delta_Rho = 1/10
@@ -539,31 +505,39 @@ if __name__ == "__main__":
                                             #on the exponentially decreasing
                                             #temperatur
         freq = np.pi                        #Frequenz for oscillation
-        halb = 0.001                        #exponential decay constant
-        
-        Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, decay_constant, freq, Amplitude)
-
+        decay_constant = 0.001                        #exponential decay constant
+ 
+        Rho_Values = Rho_Class(SN, Constant)
+        vary = Variation_of_Parameters(var_K, var_Rho, var_w, delta_K, delta_Rho, delta_w, Rho_Values)
         pre2_w_List = eval(pre_w_List) # I put this list assignment here,
                                        #I set the list in settings.cfs, and it's like 
                                        #[i for i in range(SN)]. So i need SN.
-        Rho_Values = Rho_Class(SN)
-        Sys_Params= Initial_System_params(variant,
-           pre2_K_List, pre2_Rho_List, pre2_w_List,  SN)
+        print('w_List', pre2_w_List)
+        Sys_Params= Initial_System_Params(random_K, random_Rho, random_w, 
+            pre2_K_List, pre2_Rho_List, pre2_w_List, kappa)
+    
+        variant = Sys_Params.variant
+
+        print(StartWithGivenMinima, "variant = ", variant)
+
  
-        x_fitn11 = Sys_Params.Initial_Params_Constructor()
-       
-        System_Parameters = [x_fitn11, kappa]
-        Action = C_F_S(N, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
-                 Comp_String = False, Integration_Type = 1)
 
-        fitn_wert_y11 = Fitness(System_Parameters, Test = Test_Action)
+        System_Parameters= Sys_Params.Initial_Params_Constructor()
+        
+        print('System_Parameters =', System_Parameters)
+        CFS_Action = C_F_S(SN, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
+        Comp_String = False, Integration_Type = 1, Test_Action = False)
+        Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
+                            decay_constant, freq, Amplitude, vary, CFS_Action)
 
-        print('Heyhooo', x_fitn11)
-        Initial_State = [x_fitn11, fitn_wert_y11]
+
+        fitn_wert_y11 = Fitness(System_Parameters, CFS_Action)
+
+    
+        Initial_State = [System_Parameters, fitn_wert_y11]
         print('Initial_State', Initial_State)
-        vary = Variation_of_Parameters(var_K, var_w, var_Rho, delta_K, delta_w, delta_Rho)
- 
-        Minimum = Minimum_Finder.Minimierer(SN, first, Initial_State)
+  
+        Minimum = Minimum_Finder.Minimierer(Initial_State)
 
         #pre2_w_List = [*Minimum[0][2],0]
         print('pre2_w_list', pre2_w_List)
@@ -573,3 +547,7 @@ if __name__ == "__main__":
         gg = open('Minimum7.txt', 'a')
         gg.write('Minimum fuer N = %d'%(SN) + str(Minimum)+'\n')
         gg.close()
+
+
+if __name__ == "__main__":
+    MainProg()
