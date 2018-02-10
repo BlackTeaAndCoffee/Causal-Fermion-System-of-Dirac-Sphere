@@ -92,7 +92,7 @@ get_Minimum
       energy is higher.  For more details, please look "Simulated
       annealing" up.  
       
-    *You can find this function in Action_Minimum.py*	
+    *You can find this function in Lib_Action_Minimum.py*	
 	
 FYI
 ===

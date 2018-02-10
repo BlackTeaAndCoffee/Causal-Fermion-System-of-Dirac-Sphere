@@ -4,4 +4,4 @@ Callgraphs
 Wirkungs_Minimum
 ================
 
-.. image:: PyCallGraphMinimizer.png
+.. image:: Get_Action.png

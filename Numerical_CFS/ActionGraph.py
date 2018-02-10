@@ -1,7 +1,8 @@
-from .SymEngineFast import get_Action
+from .SymEngineFast import *
 from . import Diag_Schar
 import symengine as si
 from . import PyxSchar
+from pyx import *
 import numpy as np
 import os
 '''
@@ -13,15 +14,22 @@ so i can plot the action also against the weigts or frequenz.
 Also i did this only for N = 1 and 2.
 
 '''
-def func(N, Integration_bound, T, Rho_List,w_List,kappa,k1):
+def func(K_List, Rho_List, w_List, kappa,k1):
     K_List[ind]= k1
     print('K_List=', K_List, 'WertListe=',WertListe, 'yaaaaaaay1')
-    Wert = get_Action(N, Integration_bound, T, K_List, Rho_List,w_List,kappa,
-            False, False, 1)
+    #Wert = get_Action(N, Integration_bound, T, K_List, Rho_List,w_List,kappa,
+    #        False, False, 1)
+    CFS_Action.K_Liste = K_List
+    CFS_Action.Rho_Liste = Rho_List
+    CFS_Action.w_Liste = w_List
+    CFS_Action.kappa = kappa 
+ 
+    Wert = CFS_Action.get_Action()
     print(Wert)
     WertListe.append(Wert)
     KK.append(k1)
     return WertListe, KK
+    ###return WertListe, KK
 
 if __name__ == "__main__":
     T = 2*np.pi             #float, Lifetime of the universe, which is needed for the
@@ -34,7 +42,7 @@ if __name__ == "__main__":
 
     x_Anf = 0
     x_End = np.pi
-    Integration_bound = [[x_Anf, x_End],[0,2*np.pi]]
+    Integration_bound = [[x_Anf, x_End], [0,2*np.pi]]
 
     ind = 0                 #Which Impuls should be varied, 0 for K1 and 1 for K2
 
@@ -45,12 +53,15 @@ if __name__ == "__main__":
     Kurve_Names = []
     PDFTitle = 'Rout_Wechs_N_%d_GewichteScharAnz%dVarK_%1dKappa_%1.5f'%(N,Number_of_Weights,
             ind+1, kappa)
-
+    Rho_List = [1,0] # i have to set this here for the initialing of the class C_FS
     c = PyxSchar.initialXY(0,20,0,4, r'$K_%1d$'%(ind+1),'Action',10,10 , 'tr')
-
+    System_Parameters = [K_List, Rho_List, w_List, kappa]
+    CFS_Action = C_F_S(N, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
+                 Comp_String = False, Integration_Type = 1)
+    
     dd=[]
 
-    for k in range(5,Number_of_Weights):
+    for k in range(Number_of_Weights):
         rho1 = 0.1*k
         Rho_List =[rho1, (1- rho1)/3]
         dk = 0.1
@@ -58,8 +69,7 @@ if __name__ == "__main__":
         WertListe = []
         KK =[]
         while 1:
-            WertListe, KK = func(N, Integration_bound, T, Rho_List,
-                w_List,kappa, k1)
+            WertListe, KK =func(K_List, Rho_List, w_List, kappa, k1)
             print('WertListe', WertListe)
             l1 = len(WertListe) - 1
             if  l1>=2 :
@@ -72,8 +82,7 @@ if __name__ == "__main__":
                     k1 -= dk
                     dk = 0.02
                     k1 += dk
-                    WertListe, KK = func(t, r, N, Integration_bound, T, Rho_List,
-                w_List,kappa, k1)
+                    WertListe, KK = func(K_List, Rho_List, w_List, kappa, k1)
                     print(1,dk)
                 elif a != 0 and (b/a < 0.5 or b/a > 2):
                     WertListe.pop(l1)
@@ -81,8 +90,7 @@ if __name__ == "__main__":
                     k1 -= dk
                     dk = 0.02
                     k1 += dk
-                    WertListe, KK = func(t, r, N, Integration_bound, T, Rho_List,
-                w_List,kappa,  k1)
+                    WertListe, KK = func(K_List, Rho_List, w_List, kappa, k1)
                     print(2,dk)
                 else:
                     dk = dk*2
@@ -98,10 +106,9 @@ if __name__ == "__main__":
         dd.append(PyxSchar.set_values(KK, LL2,
             r"$\rho_1=%2.4f, \rho_2=%2.4f$"%(Rho_List[0], Rho_List[1])))
 
-
+    
     if ind ==0:
-        PyxSchar.plot_diag(dd, '$kappa=%2.5f, K_{%1d}=%2.2f$'%(kappa, 2, 0),
-            (5,10), PDFTitle, c)
+        PyxSchar.plot_diag(dd, '$kappa=%2.5f, K_{%1d}=%2.2f$'%(kappa, 2, 0),(5,10), PDFTitle, c)
     else:
         PyxSchar.plot_diag(dd, '$kappa=%2.5f, K_{%1d}=%2.2f$'%(kappa, 1, 0),
             (5,10), PDFTitle, c)
