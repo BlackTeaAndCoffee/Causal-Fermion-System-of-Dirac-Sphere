@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
 
    
-    delta_K = 1/10
+    delta_K = 5/10
     delta_w = 1/10
     delta_Rho = 1/10
     
@@ -70,7 +70,7 @@ if __name__ == "__main__":
                                        #[i for i in range(SN)]. So i need SN.
         print('w_List', pre2_w_List)
         Sys_Params= Initial_System_Params(random_K, random_Rho, random_w, 
-            pre2_K_List, pre2_Rho_List, pre2_w_List)
+            pre2_K_List, pre2_Rho_List, pre2_w_List, kappa)
     
         variant = Sys_Params.variant
 
@@ -78,20 +78,19 @@ if __name__ == "__main__":
 
  
 
-        x_fitn11 = Sys_Params.Initial_Params_Constructor()
+        System_Parameters= Sys_Params.Initial_Params_Constructor()
         
-        print('x_fitn11 =', x_fitn11)
-        System_Parameters = [*x_fitn11, kappa]
+        print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
-                 Comp_String = False, Integration_Type = 1)
+        Comp_String = False, Integration_Type = 1, Test_Action = False)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
 
-        fitn_wert_y11 = Fitness(System_Parameters, CFS_Action, Test = Test_Action)
+        fitn_wert_y11 = CFS_Action.get_Action()
 
-        print('Heyhooo', x_fitn11)
-        Initial_State = [x_fitn11, fitn_wert_y11]
+    
+        Initial_State = [System_Parameters, fitn_wert_y11]
         print('Initial_State', Initial_State)
   
         Minimum = Minimum_Finder.Minimierer(Initial_State)

@@ -100,8 +100,8 @@ class C_F_S:
     :param kappa: It's needed for the boundednes constraint.
     :type kappa: float.
     :param Schwartzfunktion: For integer frequencies the schwartzfunktion can\
-                be omitted. If so the time integration will not be\
-                necessary. ????????????? Check This. ?????????????
+                be omitted. If so the time integration only needs to be done\
+                over one period.
     :type Schartzfunktion: boolean.
     :param Comp_String:  If true opening, writing, closing of a file gets\
                 skipped and the whole procedure of compiling and running gets\
@@ -232,10 +232,10 @@ class C_F_S:
         bound = si.Lambdify(args,exprs2, real = False)
 
         if self.Schwartzfunktion:
-            integrand = lambda t1, r1: (max(lagr(t1, r1).real,0) +
+            integrand = lambda t1, r1: 1/(2*np.pi**2) + (max(lagr(t1, r1).real,0) +
                     bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1)**2/self.T)
         else:
-            integrand = lambda t1, r1 : (max(lagr([t1, r1]).real,0) +
+            integrand = lambda t1, r1 : 1/(2*np.pi**2) + (max(lagr([t1, r1]).real,0) +
                     bound([t1,r1]).real)*np.sin(r1)**2
 
         return integrand
@@ -271,7 +271,7 @@ class C_F_S:
         Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
         Prototypen = 'static float xsav;\n'+ 'static float(*nrfunc)(float,float);\n'
         Integranddef = "float f(float r, float t)"+ "{return"
-        Begin_von_Func = "(fmax(creall("
+        Begin_von_Func = " 1/(2*cpow(M_PI,2)) + (fmax(creall("
         Func1 = a.replace("exp","cexp").replace("pow","cpow").replace("r_0","r").replace("t_0","t")
         Func1_End = "),0)"
 
@@ -307,7 +307,14 @@ class C_F_S:
 
         Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
         Integranddef = "double f(int n, double args[n])"+ "{return"
-        Begin_von_Func = "(fmax(creall("
+        Begin_von_Func = " 1/(2*cpow(M_PI,2)) + (fmax(creall(" #I added, 1/2*pi^2 because 
+                                                               #the Integral can be zero,
+                                                               #and then the integration takes 
+                                                               #very long due to error control.
+                                                               #By adding the factor above we make 
+                                                               #the integral one bigger, and then 
+                                                               #at the and we just need to substract it
+                                                               #again.
         Func1 = a.replace("exp","cexp").replace("r_0","args[0]").replace("pow",
                 "cpow").replace("t_0","args[1]")
         Func1_End = "),0)"
@@ -441,7 +448,8 @@ class C_F_S:
 
                 tt = time.time()
                 print('Passed time during integration in sec:',tt-aa)
-                return zup[0]
+                return zup[0] -1 #the 1 is due to the term i added in the integrand. 
+                                 #It just cancels it out. 
             elif self.Integration_Type ==2:
                 '''Integration with C. Up until here i basically construct the
                 integrand  and then C takes over.'''#Stimmt was nicht.Also irgendwas
@@ -449,7 +457,9 @@ class C_F_S:
                 tt = time.time()
 
                 result = subprocess.run(['./testlib2'], stdout=subprocess.PIPE)
-                integr_val = result.stdout.decode('utf-8')
+                integr_val = result.stdout.decode('utf-8') - 1 #the 1 is due to the term i added in the integrand. 
+                                 #It just cancels it out. 
+ 
                 print('result', result.stdout.decode('utf-8'))
                 aa = time.time()
                 print('time', aa-tt)
@@ -477,7 +487,9 @@ class C_F_S:
                 aa = time.time()
                 print('Time it took to integrate in sec:',aa - tt)
                 print(Action)
-                return Action[0]
+                return Action[0]#the 1 is due to the term i added in the integrand. 
+                                 #It just cancels it out. 
+ 
             print('done')
 
         def get_integrand_values(self):

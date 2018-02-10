@@ -342,7 +342,7 @@ class Variation_of_Parameters():
             randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_K
             K_randomi5 = np.absolute(Input_List[0] + randomi2)
             Input_List[0]= list(K_randomi5)
-
+            print('InpoutLiust', Input_List)
         if self.var_Rho:
             randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_Rho
             rho_randomi6 = np.absolute(Input_List[1] + randomi2)
@@ -385,14 +385,14 @@ class Rho_Class:
 
 class Simulated_Annealing():
     def __init__(self, BaseArrayForTemp, Boltzmann_Constant, 
-                     decay_constant, freq, Amplitude, vary, CFS_Action):
+                     decay_constant, freq, Amplitude, vary, Fitness):
         self.Boltzmann_Constant = Boltzmann_Constant
         self.BaseArrayForTemp = BaseArrayForTemp
         self.decay_constant = decay_constant
         self.freq = freq
         self.Amplitude = Amplitude
         self.vary = vary
-        self.CFS_Action = CFS_Action
+        self.Fitness = Fitness
     def boltzmann(self, f_x, f_y, temp):
         '''
         This function will return for an Energydifferenz = f_x - f_y, the boltzmann\
@@ -436,7 +436,13 @@ class Simulated_Annealing():
             for _ in range(4):
                 iterat +=1
                 new_param_values = self.vary(x_fitn_i)
-                energy_new_param = Fitness(new_param_values, self.CFS_Action)
+                
+                self.Fitness.K_Liste = new_param_values[0] 
+                self.Fitness.Rho_Liste = new_param_values[1]
+                self.Fitness.w_Liste = new_param_values[2]
+                self.Fitness.kappa = new_param_values[3]
+                        
+                energy_new_param = self.Fitness.get_Action()
                 kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
                         +str(energy_new_param)+'\n')
                 boltzi = self.boltzmann(fitn_wert_x, energy_new_param, tt)
@@ -445,23 +451,17 @@ class Simulated_Annealing():
                     fitn_wert_x = energy_new_param
                     x_fitn_i =  new_param_values
                     if Candidate_Minimum[1] > energy_new_param:
-                        Candidate_Minimum[0]= new_param_values
+                        Candidate_Minimum[0]= [*new_param_values]
                         Candidate_Minimum[1]= energy_new_param
                         print('Cand1', Candidate_Minimum)
                 elif (fitn_wert_x < energy_new_param) and (random.random() <= boltzi) :
                     fitn_wert_x = energy_new_param
                     x_fitn_i =  new_param_values
         kol.close()
-        print('Candidate_Minimum', Candidate_Minimum)
+        print('Candidate_Minimum_adsfadfa', Candidate_Minimum)
         return Candidate_Minimum
 
-def Fitness(Sys_Parameters, CFS_Action):
-    CFS_Action.K_Liste =Sys_Parameters[0] 
-    CFS_Action.Rho_Liste = Sys_Parameters[1]
-    CFS_Action.w_Liste = Sys_Parameters[2]
-    CFS_Action.kappa = Sys_Parameters[3]
-    return CFS_Action.get_Action()
-    
+   
 def MainProg():
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters') #boolean
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
@@ -473,7 +473,7 @@ def MainProg():
 
 
    
-    delta_K = 1/10
+    delta_K = 5/10
     delta_w = 1/10
     delta_Rho = 1/10
     
@@ -499,7 +499,7 @@ def MainProg():
 
     
     for SN in range(first, Anzahl_N+1):
-        Iter = SN**2                        #Number of temperatur iterations
+        Iter = 10 + SN**2                        #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.01,5,Iter)
         Amplitude = 0.1                     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
@@ -531,7 +531,7 @@ def MainProg():
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
 
-        fitn_wert_y11 = Fitness(System_Parameters, CFS_Action)
+        fitn_wert_y11 = CFS_Action.get_Action()
 
     
         Initial_State = [System_Parameters, fitn_wert_y11]
