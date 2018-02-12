@@ -441,7 +441,7 @@ class C_F_S:
                 zup = integrate.nquad(lib.f,[self.Integration_bound[0],self.Integration_bound[1]],
                         opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },
                             {'epsabs': 10e-8, 'epsrel' : 10e-8} ] )
-                print('(Action, abserr)=',zup)
+                print('(Action, abserr)=',zup[0] -1, zup[1])
                 handle = lib._handle # obtain the SO handle
 
                 ctypes.cdll.LoadLibrary('libdl.so').dlclose(handle)
@@ -460,7 +460,7 @@ class C_F_S:
                 integr_val = result.stdout.decode('utf-8') - 1 #the 1 is due to the term i added in the integrand. 
                                  #It just cancels it out. 
  
-                print('result', result.stdout.decode('utf-8'))
+                print('result', result.stdout.decode('utf-8')-1)
                 aa = time.time()
                 print('time', aa-tt)
                 return float(integr_val)
@@ -486,8 +486,8 @@ class C_F_S:
 
                 aa = time.time()
                 print('Time it took to integrate in sec:',aa - tt)
-                print(Action)
-                return Action[0]#the 1 is due to the term i added in the integrand. 
+                print(Action -1)
+                return Action[0] -1#the 1 is due to the term i added in the integrand. 
                                  #It just cancels it out. 
  
             print('done')

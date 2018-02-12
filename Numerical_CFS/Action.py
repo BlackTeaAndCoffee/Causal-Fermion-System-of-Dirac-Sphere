@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     
     for SN in range(first, Anzahl_N+1):
-        Iter = SN**2                        #Number of temperatur iterations
+        Iter = 10 +SN**2                        #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.01,5,Iter)
         Amplitude = 0.1                     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing

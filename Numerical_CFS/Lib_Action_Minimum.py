@@ -147,7 +147,7 @@ class Initial_System_Params():
         self.Rho_List = Rho_List
         print(w_List)
         self.N = len(w_List) #w_List, K_List and Rho_List have all the same length.
-        print('N =',N)
+        print('N =',self.N)
         self.variant = self.which_variant() 
         self.kappa = kappa
     def which_variant(self):
@@ -240,7 +240,7 @@ class Initial_System_Params():
         print('erstes N', self.N)
 
 
-        Lists_length = len(self.K_List)
+        Lists_length = self.N
         print(type(Lists_length), Lists_length, type(self.N))
         if self.N < Lists_length:
             raise ValueError("Shell-Number %i < List_length %i. Size-Error. Fix the size of K_List and so on, N can only be equally big or bigger!" %(N, Lists_length))
@@ -374,7 +374,14 @@ class Rho_Class:
 
         return listim
 
- 
+    def SameRhoValues(self):
+        IdenticalRhos = np.ones(self.N)*self.Constant
+        summe = 0
+        for i in range(1, self.N + 1):
+            summe += ((self.diracEigenvalues(i))**2 - 0.25)/2
+        
+        return list(IdenticalRhos*(1/summe))
+
     def diracEigenvalues(self, n):
         '''
         :param n: Number of current Shell
