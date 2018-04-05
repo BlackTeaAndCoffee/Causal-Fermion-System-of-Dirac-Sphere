@@ -15,7 +15,9 @@ import sys
 import scipy.misc
 import ctypes
 from Numerical_CFS.SymEngineFast import *
-
+from . import PyxSchar
+from pyx import *
+from . import DiagSchar
 if __name__ == "__main__":
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters') #boolean
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
@@ -42,19 +44,22 @@ if __name__ == "__main__":
     Mittelgr = 4
     for_rho = 1
 
-    SN = 3
+    SN = 5
     #Minimum =[[[0.61402128722400451, 5.4919577589099093], [0.96197069,  0.01267644], [0, 1]], 0.007515003816659801]
     Constant = 1
 #    pre2_w_List = eval(pre_w_List)
 
     K_List = eval(pre_K_List)
-
+    K_List[4]=1
     Rho_Values = Rho_Class(SN, Constant)
     w_List = eval(pre_w_List) # I put this list assignment here,
                                     #I set the list in settings.cfs, and it's like 
                                     #[i for i in range(SN)]. So i need SN.
-    Rho_List = Rho_Values(np.array([0.28848333, 0.22734017, 0.0491603]))
-
+    #Rho_List = Rho_Values(np.array([0.31848333, 0.21734017, 0.00491603, 0.00001, 0.000002, 0.0000001]))
+    
+    
+    Rho_List = Rho_Values(np.array([0.29522226, 0.22771744, 0.00360424, 0.0001, 0.000000005]))
+    #Rho_List = Rho_Values.SameRhoValues()
     System_Parameters = [K_List, Rho_List, w_List, kappa]
     print(System_Parameters)
 

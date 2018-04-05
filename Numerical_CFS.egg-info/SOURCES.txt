@@ -9,6 +9,8 @@ Numerical_CFS/Lib_Action_Minimum.py
 Numerical_CFS/PyxPlot3d.py
 Numerical_CFS/PyxSchar.py
 Numerical_CFS/SymEngineFast.py
+Numerical_CFS/Test.py
+Numerical_CFS/Test2.py
 Numerical_CFS/__init__.py
 Numerical_CFS/configfunktion.py
 Numerical_CFS/foo.py

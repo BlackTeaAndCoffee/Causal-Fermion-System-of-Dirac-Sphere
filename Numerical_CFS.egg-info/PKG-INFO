@@ -1,11 +1,10 @@
 Metadata-Version: 1.0
 Name: Numerical-CFS
-Version: 0.1.6
+Version: 0.1.7
 Summary: Basically for a set of parameters i use Symengine to produce a function, which is the integrand of the Action-Integral. The integration is done numerically. I am searching for the set of parameters, which minimizes the Integral.
 Home-page: UNKNOWN
 Author: Mustafa Akman
 Author-email: UNKNOWN
 License: GPL v3
-Description-Content-Type: UNKNOWN
 Description: UNKNOWN
 Platform: UNKNOWN

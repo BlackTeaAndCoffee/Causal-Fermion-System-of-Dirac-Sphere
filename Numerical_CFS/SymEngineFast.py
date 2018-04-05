@@ -113,7 +113,7 @@ class C_F_S:
                 constructed.
     :type Integration_Type: 1,2,3 or 4.
     ''' 
-    def __init__(self, N, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
+    def __init__(self, N,  T, System_Parameters,Integration_bound = [[0, np.pi],[0, 2*np.pi]], Schwartzfunktion = True, 
                  Comp_String = False, Integration_Type = 1, Test_Action=False):
         self.N = N
         self.Integration_bound = Integration_bound
@@ -148,7 +148,7 @@ class C_F_S:
 
     def prefactor(self, n):
         return int(scipy.misc.factorial(n + 2))/(8 *
-                si.pi**(3/2)*sy.gamma('%d/%d'%(3+2*n,2)))
+                si.pi**(3/2)*si.gamma('%d/%d'%(6+2*n,2)))
 
     def diracEigenvalues(self, n):
         return (2*n + 1)/2
@@ -191,7 +191,7 @@ class C_F_S:
     def projector(self):
         mat = np.zeros((4,4), dtype = object)
         for n in range(1, self.N + 1):
-            Koef =self.Rho_Liste[n-1]*sy.exp(-I*self.w_Liste[n-1]*t[0])
+            Koef =self.Rho_Liste[n-1]*si.exp(-I*self.w_Liste[n-1]*t[0])
             Term11 = self.TensorProduct(self.preMatrixPlus(self.K_Liste[n-1]),self.integralKernelPlus(n))
             Term21 = self.TensorProduct(self.preMatrixMinus(self.K_Liste[n-1]),self.integralKernelMinus(n))
             mat += Koef*(Term11 + Term21)
@@ -201,7 +201,7 @@ class C_F_S:
         mat1 = np.zeros((4,4),  dtype = object)
 
         for n in range(1, self.N + 1):
-            Koeff = self.Rho_Liste[n-1]*sy.exp(I*self.w_Liste[n-1]*t[0])
+            Koeff = self.Rho_Liste[n-1]*si.exp(I*self.w_Liste[n-1]*t[0])
             Term12 = self.TensorProduct(self.preMatrixPlus(self.K_Liste[n-1]),self.integralKernelMinus(n))
             Term22 = self.TensorProduct(self.preMatrixMinus(self.K_Liste[n-1]),self.integralKernelPlus(n))
             mat1 += Koeff*(Term12 +Term22)
@@ -226,16 +226,17 @@ class C_F_S:
     Integrand and Action
     '''
     def Integrand(self):
+        args = r[0] , t[0] 
         exprs = [self.lagrangian_without_bound_constr()]
-        lagr = si.Lambdify(args, exprs, real = False)
+        lagr = si.LambdifyCSE(args, exprs, real = False)#, as_scipy = True)
         exprs2 = [self.boundadness_constraint()]
-        bound = si.Lambdify(args,exprs2, real = False)
+        bound = si.Lambdify(args,exprs2, real = False)#, as_scipy = True)
 
         if self.Schwartzfunktion:
-            integrand = lambda t1, r1: 1/(2*np.pi**2) + (max(lagr(t1, r1).real,0) +
+            integrand = 1/(2*np.pi**2) + (max(lagr(t1, r1).real,0) +
                     bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1)**2/self.T)
         else:
-            integrand = lambda t1, r1 : 1/(2*np.pi**2) + (max(lagr([t1, r1]).real,0) +
+            integrand = 1/(2*np.pi**2) + (max(lagr([t1, r1]).real,0) +
                     bound([t1,r1]).real)*np.sin(r1)**2
 
         return integrand
@@ -563,9 +564,9 @@ def MainProg():
     K_Anf, K_End, K_List = configfunktion('Impuls')
     w_Anf, w_End, w_List = configfunktion('Frequenz')
     Constant, kappa, Rho_List = configfunktion('Constraints')
-    Anzahl_N, first = configfunktion('System_sizes')
+    Anzahl_N, first, LifeTime = configfunktion('System_sizes')
 
-    T = 2*np.pi #Liftime of the universe, it's needed for the Schwartzfunction
+    LifeTime = 2*np.pi #Liftime of the universe, it's needed for the Schwartzfunction
     N = 1
 
     kappa_Anzahl = 1
@@ -581,7 +582,7 @@ def MainProg():
     K_Liste = [0]
     Rho_Liste = [1] #np.array([ 0.23596702, (1- 0.23596702)/3])#,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
     Sys_Params = [K_Liste, Rho_Liste, w_Liste, kappa] 
-    CFS_Action = C_F_S(N, Integration_bound, T, Sys_Params, Schwartzfunktion = False,  
+    CFS_Action = C_F_S(N, Integration_bound, LifeTime, Sys_Params, Schwartzfunktion = False,  
                Comp_String = False, Integration_Type = 1)
     
     Wirkun = CFS_Action.get_Action()
