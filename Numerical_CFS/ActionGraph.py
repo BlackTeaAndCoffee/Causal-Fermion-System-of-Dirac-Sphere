@@ -56,7 +56,7 @@ if __name__ == "__main__":
     Rho_List = [1,0] # i have to set this here for the initialing of the class C_FS
     c = PyxSchar.initialXY(0,20,0,4, r'$K_%1d$'%(ind+1),'Action',10,10 , 'tr')
     System_Parameters = [K_List, Rho_List, w_List, kappa]
-    CFS_Action = C_F_S(N, Integration_bound, LifeTime, System_Parameters, Schwartzfunktion = True, 
+    CFS_Action = C_F_S(N,  LifeTime, System_Parameters, Integration_bound,Schwartzfunktion = True, 
                  Comp_String = False, Integration_Type = 1)
     
     dd=[]
