@@ -5,7 +5,7 @@ import sympy as sy
 import numpy as np
 import scipy.misc as sm
 tt = si.symarray('t', 8)
-r = si.symbols('r')
+r = si.symarray('r', 1)
 T = 1                   #float, Lifetime of the universe, which is needed for the
                         #       Schwartzfunktion
 N = 2                   #integer, Shell-Number
@@ -25,16 +25,16 @@ w_List = [0.,1.]
 K_List = [0.,0.]
 Rho_List = [1,0] # i have to set this here for the initialing of the class C_FS
 System_Parameters = [K_List, Rho_List, w_List, kappa]
-CFS_Action = C_F_S(N, Integration_bound, T, System_Parameters, Schwartzfunktion = False, 
+CFS_Action = C_F_S(N, T, System_Parameters, Integration_bound, Schwartzfunktion = False, 
             Comp_String = False, Integration_Type = 1)
 
 
 def zweitens(alpha, beta, n):
-    func = ((1 - r)**(alpha +n))*((1 + r)**(beta+n))
-    return si.diff(func, *[r]*n)
+    func = ((1 - r[0])**(alpha +n))*((1 + r[0])**(beta+n))
+    return si.diff(func, *[r[0]]*n)
 
 def JacPol(alpha, beta, n):
-    first = ((-1)**n/((2**n)*sm.factorial(n)))*((1 - r)**(-alpha))*((1 + r)**(-beta))*zweitens(alpha, beta, n)
+    first = ((-1)**n/((2**n)*sm.factorial(n)))*((1 - r[0])**(-alpha))*((1 + r[0])**(-beta))*zweitens(alpha, beta, n)
     return first
 
 
@@ -70,8 +70,10 @@ class TestClass():
     
     def test_integralKernelPlus(self):
         n = 10
-        listn = np.zeros(n)
+        listn = np.zeros(n, dtype = object)
         for i in range(n):
-            listn[i] =-2*CFS_Action.prefactor(i)*JacPol(1/2,2/3, i) + CFS_Action.integralKernelPlus(i +1)[0,0] + CFS_Action.integralKernelPlus(i +1)[1,1]
-        np.testing.assert_almost_equal(listn, np.zeros(n))
+            Plus0 = np.array(CFS_Action.integralKernelPlus(i +1), dtype = object).reshape(2,2)    
+            Plus1 = np.array(CFS_Action.integralKernelPlus(i +1), dtype = object).reshape(2,2)
+            listn[i] =-2*CFS_Action.prefactor(i)*JacPol(1/2,2/3, i) + sy.simplify(Plus0[0,0]) + sy.simplify(Plus1[1,1])
+        np.testing.assert_almost_equal(listn, np.zeros(n, dtype = object), 10)
             

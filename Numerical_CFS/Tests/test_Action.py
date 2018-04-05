@@ -33,7 +33,7 @@ def main():
     K_List = [0.,0.]
     Rho_List = [1,0] # i have to set this here for the initialing of the class C_FS
     System_Parameters = [K_List, Rho_List, w_List, kappa]
-    CFS_Action = C_F_S(N, Integration_bound, T, System_Parameters, Schwartzfunktion = False, 
+    CFS_Action = C_F_S(N, T, System_Parameters,Integration_bound,  Schwartzfunktion = False, 
                  Comp_String = False, Integration_Type = 1)
     
     dd=[]
