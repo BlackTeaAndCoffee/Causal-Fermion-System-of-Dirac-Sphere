@@ -413,7 +413,7 @@ class Simulated_Annealing():
 
     def temperatur_Function(self, temp_iter):
         '''
-        I need this function for non-monotonous Temperatur-curves.\
+        This function i need for nonlinear Temperatur-curves.
         :return: Temperatur that is nonlinear.. . this feeds into temperatur, which\ 
         produces the list of temperatures.
         '''
@@ -474,7 +474,7 @@ def MainProg():
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
     w_Anf, w_End, pre_w_List= configfunktion('Frequenz') # flaots and List
     Constant, kappa, pre_Rho_List = configfunktion('Constraints') #floats and List
-    Anzahl_N, first, LifeTime = configfunktion('System_sizes') # integer and integer
+    Anzahl_N, first = configfunktion('System_sizes') # integer and integer
     StartWithGivenMinima, Test_Action = configfunktion('Test') #boolean, boolean
     random_K, random_Rho, random_w =  configfunktion('Set_Initialstate_randomly')# boolean
 
@@ -484,7 +484,7 @@ def MainProg():
     delta_w = 1/10
     delta_Rho = 1/10
     
-    LifeTime = 2*np.pi
+    T = 2*np.pi
 
     x_Anf = 0
     x_End = np.pi
@@ -532,7 +532,7 @@ def MainProg():
         System_Parameters= Sys_Params.Initial_Params_Constructor()
         
         print('System_Parameters =', System_Parameters)
-        CFS_Action = C_F_S(SN, Integration_bound, LifeTime, System_Parameters, Schwartzfunktion = True, 
+        CFS_Action = C_F_S(SN, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
         Comp_String = False, Integration_Type = 1, Test_Action = False)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
                             decay_constant, freq, Amplitude, vary, CFS_Action)

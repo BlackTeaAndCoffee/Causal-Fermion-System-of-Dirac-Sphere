@@ -113,7 +113,7 @@ class C_F_S:
                 constructed.
     :type Integration_Type: 1,2,3 or 4.
     ''' 
-    def __init__(self, N,  T, System_Parameters,Integration_bound = [[0, np.pi],[0, 2*np.pi]], Schwartzfunktion = True, 
+    def __init__(self, N, T,  System_Parameters, Integration_bound = [[0,np.pi],[0,2*np.pi]], Schwartzfunktion = True, 
                  Comp_String = False, Integration_Type = 1, Test_Action=False):
         self.N = N
         self.Integration_bound = Integration_bound
@@ -140,30 +140,29 @@ class C_F_S:
         :rtype: 4 by 4 numpy.array.
 
         """
-        mat1 = np.array(mat11, dtype= object).reshape(2,2)
-        mat2 = np.array(mat22, dtype = object).reshape(2,2)
+        mat1 = np.array(mat11).reshape(2,2)
+        mat2 = np.array(mat22).reshape(2,2)
         return np.bmat([[mat1[0,0]*mat2, mat1[0,1]*mat2] ,[mat1[1,0]*mat2,
             mat1[1,1]*mat2]]).reshape(4,4)
 
 
     def prefactor(self, n):
-        return int(scipy.misc.factorial(n + 2))/(8 *
-                si.pi**(3/2)*si.gamma('%d/%d'%(6+2*n,2)))
+        return sy.factorial(n + 2)/(8*si.pi**(sy.Rational(3,2))*si.gamma('%d/%d'%(3+2*n,2)))
 
     def diracEigenvalues(self, n):
-        return (2*n + 1)/2
+        return sy.Rational((2*n + 1),2)
 
     def integralKernelPlus(self, n):
         n=n-1
-        lala11 = sy.jacobi(n, 1/2, 3/2, r[0])
-        lala21 = sy.jacobi(n, 3/2, 1/2, r[0])
+        lala11 = sy.jacobi(n, si.Rational(1,2), si.Rational(3,2), r[0])
+        lala21 = sy.jacobi(n, si.Rational(3,2), si.Rational(1,2), r[0])
         return self.prefactor(n)*(si.cos(r[0]/2)*lala11*ident -
                             I*si.sin(r[0]/2)*lala21*sigma3)
 
     def integralKernelMinus(self, n):
         n=n-1
-        lala1 = sy.jacobi(n, 1/2, 3/2, r[0])
-        lala2 = sy.jacobi(n, 3/2, 1/2, r[0])
+        lala1 = sy.jacobi(n, si.Rational(1,2), si.Rational(3,2), r[0])
+        lala2 = sy.jacobi(n, si.Rational(3,2), si.Rational(1,2), r[0])
 
         return self.prefactor(n)*(si.cos(r[0]/2)*lala1*ident +
                             I*si.sin(r[0]/2)*lala2*sigma3)
@@ -191,7 +190,7 @@ class C_F_S:
     def projector(self):
         mat = np.zeros((4,4), dtype = object)
         for n in range(1, self.N + 1):
-            Koef =self.Rho_Liste[n-1]*si.exp(-I*self.w_Liste[n-1]*t[0])
+            Koef = self.Rho_Liste[n-1]*si.exp(-I*self.w_Liste[n-1]*t[0])
             Term11 = self.TensorProduct(self.preMatrixPlus(self.K_Liste[n-1]),self.integralKernelPlus(n))
             Term21 = self.TensorProduct(self.preMatrixMinus(self.K_Liste[n-1]),self.integralKernelMinus(n))
             mat += Koef*(Term11 + Term21)
@@ -212,7 +211,7 @@ class C_F_S:
 
     def lagrangian_without_bound_constr(self):
         sub1 = self.closedChain()
-        return np.trace(np.dot(sub1,sub1)) - 0.25 * np.trace(sub1)*np.trace(sub1)
+        return np.trace(np.dot(sub1,sub1)) - si.Rational(1,4) * np.trace(sub1)*np.trace(sub1)
 
     '''
     Constraints
@@ -226,17 +225,17 @@ class C_F_S:
     Integrand and Action
     '''
     def Integrand(self):
-        args = r[0] , t[0] 
+        args = r[0], t[0]
         exprs = [self.lagrangian_without_bound_constr()]
-        lagr = si.LambdifyCSE(args, exprs, real = False)#, as_scipy = True)
+        lagr = si.Lambdify(args, exprs, real = False)
         exprs2 = [self.boundadness_constraint()]
-        bound = si.Lambdify(args,exprs2, real = False)#, as_scipy = True)
+        bound = si.Lambdify(args,exprs2, real = False)
 
         if self.Schwartzfunktion:
-            integrand = 1/(2*np.pi**2) + (max(lagr(t1, r1).real,0) +
+            integrand = lambda t1, r1: 1/(2*np.pi**2) + (max(lagr(t1, r1).real,0) +
                     bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1)**2/self.T)
         else:
-            integrand = 1/(2*np.pi**2) + (max(lagr([t1, r1]).real,0) +
+            integrand = lambda t1, r1 : 1/(2*np.pi**2) + (max(lagr([t1, r1]).real,0) +
                     bound([t1,r1]).real)*np.sin(r1)**2
 
         return integrand
@@ -433,8 +432,8 @@ class C_F_S:
         else:
             if self.Integration_Type == 1:
                 '''Integration with Cytpes'''
-                self.get_Integrand_with_ctypes()
                 aa = time.time()
+                self.get_Integrand_with_ctypes()
 
                 lib=ctypes.CDLL('./testlib2.so')
                 lib.f.restype = ctypes.c_double
@@ -478,16 +477,15 @@ class C_F_S:
                 return result
             elif self.Integration_Type == 4:
                 '''Scipy quadpack'''
-
+                aa = time.time()
                 integrand = self.Integrand()
                 tt = time.time()
                 Action = integrate.nquad(lambda t1, r1 : integrand(t1,r1),
-                        self.Integration_bound, opts=[{'epsabs' :10e-10, 'epsrel': 10e-10 },{
-                            'epsabs': 10e-10, 'epsrel' : 10e-10} ])
+                        self.Integration_bound, opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },{
+                            'epsabs': 10e-8, 'epsrel' : 10e-8} ])
 
-                aa = time.time()
                 print('Time it took to integrate in sec:',aa - tt)
-                print(Action -1)
+                print('Action = ',(Action[0] -1))
                 return Action[0] -1#the 1 is due to the term i added in the integrand. 
                                  #It just cancels it out. 
  
@@ -564,9 +562,9 @@ def MainProg():
     K_Anf, K_End, K_List = configfunktion('Impuls')
     w_Anf, w_End, w_List = configfunktion('Frequenz')
     Constant, kappa, Rho_List = configfunktion('Constraints')
-    Anzahl_N, first, LifeTime = configfunktion('System_sizes')
+    Anzahl_N, first = configfunktion('System_sizes')
 
-    LifeTime = 2*np.pi #Liftime of the universe, it's needed for the Schwartzfunction
+    T = 2*np.pi #Liftime of the universe, it's needed for the Schwartzfunction
     N = 1
 
     kappa_Anzahl = 1
@@ -576,13 +574,13 @@ def MainProg():
 
     Kurve_Names=[]
 
-    Integration_bound = [[x_Anf, x_End], [0, 1]]
+    Integration_bound = [[x_Anf, x_End], [0, 2*np.pi]]
     Wirk = []
     w_Liste = [0]#eval(w_List)
     K_Liste = [0]
     Rho_Liste = [1] #np.array([ 0.23596702, (1- 0.23596702)/3])#,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
     Sys_Params = [K_Liste, Rho_Liste, w_Liste, kappa] 
-    CFS_Action = C_F_S(N, Integration_bound, LifeTime, Sys_Params, Schwartzfunktion = False,  
+    CFS_Action = C_F_S(N, Integration_bound, T, Sys_Params, Schwartzfunktion = False,  
                Comp_String = False, Integration_Type = 1)
     
     Wirkun = CFS_Action.get_Action()

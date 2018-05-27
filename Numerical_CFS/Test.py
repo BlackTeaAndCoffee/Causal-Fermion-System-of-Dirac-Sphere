@@ -15,9 +15,7 @@ import sys
 import scipy.misc
 import ctypes
 from Numerical_CFS.SymEngineFast import *
-from . import PyxSchar
-from pyx import *
-from . import DiagSchar
+
 if __name__ == "__main__":
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters') #boolean
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
@@ -56,8 +54,6 @@ if __name__ == "__main__":
                                     #I set the list in settings.cfs, and it's like 
                                     #[i for i in range(SN)]. So i need SN.
     #Rho_List = Rho_Values(np.array([0.31848333, 0.21734017, 0.00491603, 0.00001, 0.000002, 0.0000001]))
-    
-    
     Rho_List = Rho_Values(np.array([0.29522226, 0.22771744, 0.00360424, 0.0001, 0.000000005]))
     #Rho_List = Rho_Values.SameRhoValues()
     System_Parameters = [K_List, Rho_List, w_List, kappa]

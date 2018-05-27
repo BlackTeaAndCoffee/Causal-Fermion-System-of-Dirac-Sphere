@@ -48,9 +48,8 @@ def _configfunktion(section, parser = None):
 
         first = config.getint('System_sizes', 'Erste_Schale')
         Anzahl_N  = config.getint('System_sizes', 'Schalen_Anzahl')
-        LifeTime = config.getfloat('System_sizes', 'LifeTime')
-        return Anzahl_N, first, LifeTime
 
+        return Anzahl_N,first
     if section == 'Test':
         Test_Action = config.getboolean('Test', 'Test_Action')
         StartWithGivenMinima = config.getboolean('Test', 'StartWithGivenMinima')
@@ -64,7 +63,7 @@ class Config(object):
             'Impuls': ['Anf', 'End', 'List'],
             'Frequenz': ['Anf', 'End', 'List'],
             'Constraints': ['List', 'Spur_Konstante', 'Boundary_Konstante'],
-            'System_sizes': ['Erste_Schale', 'Schalen_Anzahl', 'LifeTime'],
+            'System_sizes': ['Erste_Schale', 'Schalen_Anzahl'],
             'Test': ['Test_Action', 'StartWithGivenMinima']
         }
     def __init__(self):

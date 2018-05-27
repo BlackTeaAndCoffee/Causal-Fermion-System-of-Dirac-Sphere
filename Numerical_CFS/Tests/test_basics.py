@@ -29,12 +29,12 @@ CFS_Action = C_F_S(N, T, System_Parameters, Integration_bound, Schwartzfunktion 
             Comp_String = False, Integration_Type = 1)
 
 
-def zweitens(alpha, beta, n):
-    func = ((1 - r[0])**(alpha +n))*((1 + r[0])**(beta+n))
-    return si.diff(func, *[r[0]]*n)
+def zweitens(alpha, beta, n1):
+    func = ((1 - r[0])**(alpha + n1))*((1 + r[0])**(beta+n1))
+    return si.diff(func, *[r[0]]*n1)
 
-def JacPol(alpha, beta, n):
-    first = ((-1)**n/((2**n)*sm.factorial(n)))*((1 - r[0])**(-alpha))*((1 + r[0])**(-beta))*zweitens(alpha, beta, n)
+def JacPol(alpha, beta, n1):
+    first = ((-1)**n1/((2**n1)*sy.factorial(n1)))*((1 - r[0])**(-alpha))*((1 + r[0])**(-beta))*zweitens(alpha, beta, n1)
     return first
 
 
@@ -67,13 +67,97 @@ class TestClass():
             listn[i] = CFS_Action.diracEigenvalues(i)
         np.testing.assert_array_equal( np.array([1/2, 3/2, 5/2, 7/2, 9/2, 11/2, 13/2, 15/2, 17/2, 19/2]), listn)
     
-    
+    def test_JacobiPolys(self):
+        n = 10
+        m = 10
+        listn = np.zeros(n, dtype = object)
+        vals = np.zeros((n,m), dtype = object)
+        for i in range(n):
+            print( sy.simplify(JacPol(1/2,3/2, i)),'=?=', sy.jacobi(i, 1/2,3/2, r[0]))
+            listn[i] = si.lambdify(r[0], sy.simplify(JacPol(1/2,3/2, i)) - sy.jacobi(i, 1/2,3/2, r[0]))   
+            
+        for i in range(n):
+            for j in range(m):
+                vals[i, j] = abs(listn[i](j))
+
+        print(vals) 
+        np.testing.assert_almost_equal(vals, np.zeros((n,m)), 5)
+ 
     def test_integralKernelPlus(self):
         n = 10
+        m = 10
         listn = np.zeros(n, dtype = object)
+        vals = np.zeros((n,m), dtype = object)
         for i in range(n):
             Plus0 = np.array(CFS_Action.integralKernelPlus(i +1), dtype = object).reshape(2,2)    
-            Plus1 = np.array(CFS_Action.integralKernelPlus(i +1), dtype = object).reshape(2,2)
-            listn[i] =-2*CFS_Action.prefactor(i)*JacPol(1/2,2/3, i) + sy.simplify(Plus0[0,0]) + sy.simplify(Plus1[1,1])
-        np.testing.assert_almost_equal(listn, np.zeros(n, dtype = object), 10)
+            print(Plus0)
+            #Plus1 = np.array(CFS_Action.integralKernelMinus(i +1), dtype = object).reshape(2,2)
+            listn[i] =si.lambdify(r[0], [sy.simplify(-2*si.cos(r[0]/2)*CFS_Action.prefactor(i)*JacPol(1/2,3/2, i)) 
+                       + sy.simplify(Plus0[0,0]) + sy.simplify(Plus0[1,1])], real = False)
+            #print( sy.simplify(JacPol(1/2,3/2, i)),'=?=', sy.jacobi(i, 1/2,3/2, r[0]))
+            #listn[i] =si.lambdify(r[0], [sy.simplify(JacPol(1/2,3/2, i)) - sy.jacobi(i, 1/2,3/2, r[0])])   
             
+        for i in range(n):
+            for j in range(m):
+                #vals[i, j] = abs(listn[i](j))
+                vals[i, j] = abs(listn[i](j))
+        
+
+        print(vals) 
+        np.testing.assert_almost_equal(vals, np.zeros((n,m)), 5)
+    
+    def test_integralKernelPlus2(self):
+        n = 10
+        m = 10
+        listn = np.zeros(n, dtype = object)
+        vals = np.zeros((n,m), dtype = object)
+        for i in range(n):
+            Plus0 = np.array(CFS_Action.integralKernelPlus(i +1), dtype = object).reshape(2,2)    
+            listn[i] =si.lambdify(r[0], [sy.simplify(Plus0[0,1]) + sy.simplify(Plus0[1,0])], real = False)
+            
+        for i in range(n):
+            for j in range(m):
+                vals[i, j] = abs(listn[i](j))
+        
+        print(vals) 
+        np.testing.assert_almost_equal(vals, np.zeros((n,m)), 5)
+    
+    def test_integralKernelMinus(self):
+        n = 10
+        m = 10
+        listn = np.zeros(n, dtype = object)
+        vals = np.zeros((n,m), dtype = object)
+        for i in range(n):
+            Plus0 = np.array(CFS_Action.integralKernelMinus(i +1), dtype = object).reshape(2,2)    
+            print(Plus0)
+            #Plus1 = np.array(CFS_Action.integralKernelMinus(i +1), dtype = object).reshape(2,2)
+            listn[i] =si.lambdify(r[0], [sy.simplify(-2*si.cos(r[0]/2)*CFS_Action.prefactor(i)*JacPol(0.5,1.5, i)) 
+                       + sy.simplify(Plus0[0,0]) + sy.simplify(Plus0[1,1])], real = False)
+            #print( sy.simplify(JacPol(1/2,3/2, i)),'=?=', sy.jacobi(i, 1/2,3/2, r[0]))
+            #listn[i] =si.lambdify(r[0], [sy.simplify(JacPol(1/2,3/2, i)) - sy.jacobi(i, 1/2,3/2, r[0])])   
+            
+        for i in range(n):
+            for j in range(m):
+                #vals[i, j] = abs(listn[i](j))
+                vals[i, j] = abs(listn[i](j))
+        
+
+        print(vals) 
+        np.testing.assert_almost_equal(vals, np.zeros((n,m)), 5)
+    
+    def test_integralKernelMinus2(self):
+        n = 10
+        m = 10
+        listn = np.zeros(n, dtype = object)
+        vals = np.zeros((n,m), dtype = object)
+        for i in range(n):
+            Plus0 = np.array(CFS_Action.integralKernelMinus(i +1), dtype = object).reshape(2,2)    
+            listn[i] =si.lambdify(r[0], [sy.simplify(Plus0[0,1]) + sy.simplify(Plus0[1,0])], real = False)
+            
+        for i in range(n):
+            for j in range(m):
+                vals[i, j] = abs(listn[i](j))
+        
+        print(vals) 
+        np.testing.assert_almost_equal(vals, np.zeros((n,m)), 5)
+      
