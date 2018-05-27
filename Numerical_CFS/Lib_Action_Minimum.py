@@ -532,7 +532,7 @@ def MainProg():
         System_Parameters= Sys_Params.Initial_Params_Constructor()
         
         print('System_Parameters =', System_Parameters)
-        CFS_Action = C_F_S(SN, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
+        CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True, 
         Comp_String = False, Integration_Type = 1, Test_Action = False)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
                             decay_constant, freq, Amplitude, vary, CFS_Action)
