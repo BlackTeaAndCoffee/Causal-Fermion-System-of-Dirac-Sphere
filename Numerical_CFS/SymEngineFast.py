@@ -580,7 +580,7 @@ def MainProg():
     K_Liste = [0]
     Rho_Liste = [1] #np.array([ 0.23596702, (1- 0.23596702)/3])#,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
     Sys_Params = [K_Liste, Rho_Liste, w_Liste, kappa] 
-    CFS_Action = C_F_S(N, Integration_bound, T, Sys_Params, Schwartzfunktion = False,  
+    CFS_Action = C_F_S(N,  T, Sys_Params, Integration_bound, Schwartzfunktion = False,  
                Comp_String = False, Integration_Type = 1)
     
     Wirkun = CFS_Action.get_Action()
