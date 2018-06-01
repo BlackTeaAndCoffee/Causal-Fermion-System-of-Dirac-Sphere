@@ -562,7 +562,7 @@ def MainProg():
     K_Anf, K_End, K_List = configfunktion('Impuls')
     w_Anf, w_End, w_List = configfunktion('Frequenz')
     Constant, kappa, Rho_List = configfunktion('Constraints')
-    Anzahl_N, first = configfunktion('System_sizes')
+    Anzahl_N, first, LifeTime = configfunktion('System_sizes')
 
     T = 2*np.pi #Liftime of the universe, it's needed for the Schwartzfunction
     N = 1

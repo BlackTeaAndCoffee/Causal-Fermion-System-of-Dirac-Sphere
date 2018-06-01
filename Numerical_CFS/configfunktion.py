@@ -48,8 +48,8 @@ def _configfunktion(section, parser = None):
 
         first = config.getint('System_sizes', 'Erste_Schale')
         Anzahl_N  = config.getint('System_sizes', 'Schalen_Anzahl')
-
-        return Anzahl_N,first
+        LifeTime = config.getfloat('System_sizes', 'LifeTime')
+        return Anzahl_N,first,LifeTime
     if section == 'Test':
         Test_Action = config.getboolean('Test', 'Test_Action')
         StartWithGivenMinima = config.getboolean('Test', 'StartWithGivenMinima')

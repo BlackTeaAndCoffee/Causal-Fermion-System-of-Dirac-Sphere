@@ -474,7 +474,7 @@ def MainProg():
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
     w_Anf, w_End, pre_w_List= configfunktion('Frequenz') # flaots and List
     Constant, kappa, pre_Rho_List = configfunktion('Constraints') #floats and List
-    Anzahl_N, first = configfunktion('System_sizes') # integer and integer
+    Anzahl_N, first, LifeTime = configfunktion('System_sizes') # integer and integer
     StartWithGivenMinima, Test_Action = configfunktion('Test') #boolean, boolean
     random_K, random_Rho, random_w =  configfunktion('Set_Initialstate_randomly')# boolean
 
@@ -506,7 +506,7 @@ def MainProg():
 
     
     for SN in range(first, Anzahl_N+1):
-        Iter = 10 + SN**2                        #Number of temperatur iterations
+        Iter = SN**2                        #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.01,5,Iter)
         Amplitude = 0.1                     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
@@ -551,7 +551,7 @@ def MainProg():
         pre2_K_List = [*Minimum[0][0],0]
         pre2_Rho_List = [*Minimum[0][1],0]
 
-        gg = open('Minimum7.txt', 'a')
+        gg = open('/output/Minimum7.txt', 'a')
         gg.write('Minimum fuer N = %d'%(SN) + str(Minimum)+'\n')
         gg.close()
 
