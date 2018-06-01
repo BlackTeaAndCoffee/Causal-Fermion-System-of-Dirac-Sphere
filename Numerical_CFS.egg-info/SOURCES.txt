@@ -1,5 +1,6 @@
 README.md
 setup.py
+setup_for_docker.py
 Numerical_CFS/Action.py
 Numerical_CFS/ActionGraph.py
 Numerical_CFS/Diag_Schar.py
