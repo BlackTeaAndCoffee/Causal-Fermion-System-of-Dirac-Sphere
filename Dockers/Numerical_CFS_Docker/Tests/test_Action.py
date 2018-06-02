@@ -1,5 +1,5 @@
-from Numerical_CFS.configfunktion import writeconfig
-from Numerical_CFS.SymEngineFast import *
+from Numerical_CFS_Docker.configfunktion import writeconfig
+from Numerical_CFS_Docker.SymEngineFast import *
 import numpy as np
 
 def func(K_List, Rho_List, w_List, kappa, k1, ind, CFS_Action):

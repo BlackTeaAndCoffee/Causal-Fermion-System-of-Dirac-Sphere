@@ -1,25 +1,14 @@
-# Pull base image.
-FROM ubuntu:16.04
-RUN apt-get update
-RUN apt-get dist-upgrade -y
+FROM cfsprebase
 
-RUN apt-get -y dist-upgrade
-RUN apt-get -y install python-software-properties
-RUN apt-get -y install software-properties-common
-RUN apt-get update
+ADD ./dist /dist
+ADD ./build /build
+RUN ls /dist
+RUN pip3 install /dist/Numerical_CFS_Docker-0.1.9.8.1.tar.gz 
+#RUN pip3 install --upgrade Numerical-CFS
 
-RUN apt-get -y install python3-dev
+VOLUME /output
+VOLUME /usr/local/lib/python3.5/dist-packages/Numerical_CFS_Docker/config
 
-
-
-RUN add-apt-repository ppa:symengine/ppa
-RUN apt-get update
-RUN apt-get -y install libsymengine-dev
-
-
-RUN apt-get -y install python3-pip
-COPY ./requirements_for_docker.txt / 
-COPY . /
-
-RUN pip3 install -r ./requirements_for_docker.txt 
-
+#CMD python3 foo.py
+#CMD cat  /usr/local/lib/python3.5/dist-packages/Numerical_CFS/config/Settings.cfg
+CMD python3 -m Numerical_CFS_Docker.Lib_Action_Minimum

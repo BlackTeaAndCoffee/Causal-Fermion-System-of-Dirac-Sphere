@@ -2,8 +2,8 @@ from sympy.printing import ccode
 from scipy import integrate
 from symengine import I
 from sympy import *
-from Numerical_CFS.configfunktion import configfunktion
-from Numerical_CFS.Lib_Action_Minimum import *
+from Numerical_CFS_Docker.configfunktion import configfunktion
+from Numerical_CFS_Docker.Lib_Action_Minimum import *
 import configparser
 import sympy as sy
 import symengine as si
@@ -14,7 +14,7 @@ import os
 import sys
 import scipy.misc
 import ctypes
-from Numerical_CFS.SymEngineFast import *
+from Numerical_CFS_Docker.SymEngineFast import *
 #from .LibForSimulAnnealing import *
 
 

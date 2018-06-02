@@ -1,0 +1,12 @@
+setup_for_docker.py
+Numerical_CFS_Docker/Action.py
+Numerical_CFS_Docker/LibForSimulAnnealing.py
+Numerical_CFS_Docker/Lib_Action_Minimum.py
+Numerical_CFS_Docker/SymEngineFast.py
+Numerical_CFS_Docker/__init__.py
+Numerical_CFS_Docker/configfunktion.py
+Numerical_CFS_Docker.egg-info/PKG-INFO
+Numerical_CFS_Docker.egg-info/SOURCES.txt
+Numerical_CFS_Docker.egg-info/dependency_links.txt
+Numerical_CFS_Docker.egg-info/requires.txt
+Numerical_CFS_Docker.egg-info/top_level.txt

@@ -9,5 +9,5 @@ VOLUME /output
 VOLUME /usr/local/lib/python3.5/dist-packages/Numerical_CFS/config
 
 #CMD python3 foo.py
-#CMD cat  /usr/local/lib/python3.5/dist-packages/Numerical_CFS/config/Settings.cfg
+#CMD cat  /usr/local/lib/python3.5/dist-packages/Numerical_CFS/config/Settings.cfg > /output/file.txt
 CMD python3 -m Numerical_CFS.Lib_Action_Minimum
