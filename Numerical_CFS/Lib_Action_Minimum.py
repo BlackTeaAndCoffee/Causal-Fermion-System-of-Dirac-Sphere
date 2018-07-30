@@ -469,7 +469,7 @@ class Simulated_Annealing():
         return Candidate_Minimum
 
    
-def MainProg():
+def MainProg(configfunktion=configfunktion, output_file = None):
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters') #boolean
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
     w_Anf, w_End, pre_w_List= configfunktion('Frequenz') # flaots and List
@@ -551,9 +551,13 @@ def MainProg():
         pre2_K_List = [*Minimum[0][0],0]
         pre2_Rho_List = [*Minimum[0][1],0]
 
-        gg = open('/output/Minimum7.txt', 'w')
-        gg.write('Minimum fuer N = %d'%(SN) + str(Minimum)+'\n')
-        gg.close()
+        if(output_file == None):
+             gg = open('/output/Minimum7.txt', 'w')
+             gg.write('Minimum fuer N = %d'%(SN) + str(Minimum)+'\n')
+             gg.close()
+        else:
+             output_file.write('Minimum fuer N = %d'%(SN) + str(Minimum)+'\n')
+
 
 
 if __name__ == "__main__":
