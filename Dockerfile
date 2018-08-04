@@ -2,7 +2,7 @@ FROM cfsprebase
 
 ADD ./dist /dist
 RUN ls /dist
-RUN pip3 install /dist/Numerical_CFS-0.1.9.8.tar.gz 
+RUN pip3 install /dist/Numerical_CFS-0.1.9.9.tar.gz 
 #RUN pip3 install --upgrade Numerical-CFS
 
 VOLUME /output
