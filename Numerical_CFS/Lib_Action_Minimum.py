@@ -503,10 +503,7 @@ def MainProg():
     pre2_K_List = eval(pre_K_List)
 
     pre2_Rho_List = eval(pre_Rho_List)
-    pre2_w_List = eval(pre_w_List) # I put this list assignment here,
-                                       #I set the list in settings.cfs, and it's like 
-                                       #[i for i in range(SN)]. So i need SN.
-        
+       
 
     
     for SN in range(first, Anzahl_N+1):
@@ -521,6 +518,10 @@ def MainProg():
         Rho_Values = Rho_Class(SN, Constant)
         vary = Variation_of_Parameters(var_K, var_Rho, var_w, delta_K, delta_Rho, delta_w, Rho_Values)
         
+        pre2_w_List = eval(pre_w_List) # I put this list assignment here,
+                                       #I set the list in settings.cfs, and it's like 
+                                       #[i for i in range(SN)]. So i need SN.
+            
         Sys_Params= Initial_System_Params(random_K, random_Rho, random_w, 
                 pre2_K_List, pre2_Rho_List, pre2_w_List, kappa)
     
@@ -547,7 +548,6 @@ def MainProg():
   
         Minimum = Minimum_Finder.Minimierer(Initial_State)
 
-        pre2_w_List = [*Minimum[0][2],0]
         pre2_K_List = [*Minimum[0][0],0]
         pre2_Rho_List = [*Minimum[0][1],0]
 
