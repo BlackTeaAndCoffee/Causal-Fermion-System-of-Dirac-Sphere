@@ -3,6 +3,7 @@ from scipy import integrate
 from symengine import I
 from sympy import *
 from Numerical_CFS.configfunktion import configfunktion
+from multiprocessing import Pool
 import configparser
 import sympy as sy
 import symengine as si
@@ -535,7 +536,7 @@ def MainProg():
         
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True, 
-        Comp_String = False, Integration_Type = 1, Test_Action = False)
+        Comp_String = True, Integration_Type = 1, Test_Action = False)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
@@ -551,10 +552,23 @@ def MainProg():
         pre2_K_List = [*Minimum[0][0],0]
         pre2_Rho_List = [*Minimum[0][1],0]
 
-        gg = open('/output/Minimum7.txt', 'w')
+        gg = open('Minimum8.txt', 'w')
         gg.write('Minimum fuer N = %d'%(SN) + str(Minimum)+'\n')
         gg.close()
+        print('yay')
+        return Minimum
 
 
 if __name__ == "__main__":
-    MainProg()
+    NN = 4
+    List_Minimas = []
+    pool = Pool(4)
+    tasks = [i for i in range(10)]
+    
+    results = [pool.apply_async(MainProg) for t in tasks] 
+    print(results)
+
+    for result in results:
+        List_Minimas.append(result.get())
+    print(List_Minimas)
+
