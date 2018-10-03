@@ -14,7 +14,7 @@ import os
 import sys
 import scipy.misc
 import ctypes
-from Numerical_CFS.SymEngineFast import *
+from SymEngineFast import *
 #from .LibForSimulAnnealing import *
 
 '''
@@ -470,7 +470,7 @@ class Simulated_Annealing():
         return Candidate_Minimum
 
    
-def MainProg():
+def MainProg(number):
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters') #boolean
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
     w_Anf, w_End, pre_w_List= configfunktion('Frequenz') # flaots and List
@@ -536,7 +536,7 @@ def MainProg():
         
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True, 
-        Comp_String = True, Integration_Type = 1, Test_Action = False)
+        Comp_String = number, Integration_Type = 1, Test_Action = False)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
@@ -562,13 +562,16 @@ def MainProg():
 if __name__ == "__main__":
     NN = 4
     List_Minimas = []
-    pool = Pool(4)
-    tasks = [i for i in range(10)]
-    
-    results = [pool.apply_async(MainProg) for t in tasks] 
-    print(results)
+#   pool = Pool(4)
+#   tasks = [i for i in range(10)]
+#   
+#   results = [pool.apply_async(MainProg(t)) for t in tasks] 
+#   print(results)
 
-    for result in results:
-        List_Minimas.append(result.get())
-    print(List_Minimas)
+#   for result in results:
+#       List_Minimas.append(result.get())
+#   print(List_Minimas)
+#   
+    with Pool(4) as p:
+        p.map(MainProg, [1, 2, 3, 4])
 

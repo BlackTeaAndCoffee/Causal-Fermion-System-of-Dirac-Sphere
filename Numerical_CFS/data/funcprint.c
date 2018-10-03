@@ -1,5 +1,5 @@
 int main () {
-
+   /*This function is for plotting*/
    /* local variable definition */
    int b = 2;
    double a[] ={ 0.1, 2};

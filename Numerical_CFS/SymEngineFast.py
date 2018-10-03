@@ -333,15 +333,15 @@ class C_F_S:
         else:
             Func22 = '))*sin(1.0L*args[0])*sin(1.0L*args[0]);}\n'
             Whole_String += Func2_Anf + Func2 + Func22 + g1
-        if self.Comp_String:
-            os.system('gcc -x c -shared -o testlib2.so -fPIC'+' << EOF '+Whole_String+ 'EOF')
-        else:
+#       if self.Comp_String:
+#           os.system('pwd')
+#           os.system('gcc -x c -shared -o testlib2.so -fPIC'+' << EOF '+Whole_String+ 'EOF')
+#       else:
 
-            f = open('testlib2.c', 'w')
-            f.write(Whole_String)
-            f.close()
-
-            os.system('gcc -x c -shared -o testlib2.so -fPIC testlib2.c')
+        f = open('testlib'+ str(self.Comp_String) + '.c', 'w')
+        f.write(Whole_String)
+        f.close()
+        os.system('gcc -x c -shared -o testlib' + str(self.Comp_String) + '.so -fPIC testlib2.c')
 
         g.close()
 
@@ -435,7 +435,7 @@ class C_F_S:
                 aa = time.time()
                 self.get_Integrand_with_ctypes()
 
-                lib=ctypes.CDLL('./testlib2.so')
+                lib=ctypes.CDLL('./testlib'+str(self.Comp_String) +'.so')
                 lib.f.restype = ctypes.c_double
                 lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
                 zup = integrate.nquad(lib.f,[self.Integration_bound[0],self.Integration_bound[1]],
