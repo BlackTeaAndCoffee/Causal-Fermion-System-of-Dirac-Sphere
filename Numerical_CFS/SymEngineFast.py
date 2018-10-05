@@ -298,7 +298,6 @@ class C_F_S:
             os.system('gcc -o testlib2 testlib2.c -lm')
 
     def get_Integrand_with_ctypes(self):
-
         a = ccode(self.lagrangian_without_bound_constr())
         b = ccode(self.boundadness_constraint())
 
@@ -341,7 +340,7 @@ class C_F_S:
         f = open('testlib'+ str(self.Comp_String) + '.c', 'w')
         f.write(Whole_String)
         f.close()
-        os.system('gcc -x c -shared -o testlib' + str(self.Comp_String) + '.so -fPIC testlib2.c')
+        os.system('gcc -x c -shared -o testlib' + str(self.Comp_String) + '.so -fPIC testlib'+ str(self.Comp_String)+ '.c')
 
         g.close()
 
@@ -434,14 +433,14 @@ class C_F_S:
                 '''Integration with Cytpes'''
                 aa = time.time()
                 self.get_Integrand_with_ctypes()
-
+ 
                 lib=ctypes.CDLL('./testlib'+str(self.Comp_String) +'.so')
                 lib.f.restype = ctypes.c_double
                 lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
                 zup = integrate.nquad(lib.f,[self.Integration_bound[0],self.Integration_bound[1]],
                         opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },
                             {'epsabs': 10e-8, 'epsrel' : 10e-8} ] )
-                print('(Action, abserr)=',zup[0] -1, zup[1])
+                print('(Action1, abserr)=',zup[0] -1, zup[1])
                 handle = lib._handle # obtain the SO handle
 
                 ctypes.cdll.LoadLibrary('libdl.so').dlclose(handle)

@@ -449,7 +449,6 @@ class Simulated_Annealing():
                 self.Fitness.Rho_Liste = new_param_values[1]
                 self.Fitness.w_Liste = new_param_values[2]
                 self.Fitness.kappa = new_param_values[3]
-                        
                 energy_new_param = self.Fitness.get_Action()
                 kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
                         +str(energy_new_param)+'\n')
@@ -508,7 +507,7 @@ def MainProg(number):
 
     
     for SN in range(first, Anzahl_N+1):
-        Iter = SN**2                        #Number of temperatur iterations
+        Iter = 5 +SN**2                        #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.01,5,Iter)
         Amplitude = 0.1                     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
@@ -556,7 +555,6 @@ def MainProg(number):
         gg.write('Minimum fuer N = %d'%(SN) + str(Minimum)+'\n')
         gg.close()
         print('yay')
-        return Minimum
 
 
 if __name__ == "__main__":
@@ -573,5 +571,5 @@ if __name__ == "__main__":
 #   print(List_Minimas)
 #   
     with Pool(4) as p:
-        p.map(MainProg, [1, 2, 3, 4])
+        p.map(MainProg, [1])
 
