@@ -441,7 +441,7 @@ class Simulated_Annealing():
         iterat = 0
         temp = self.temperatur()
         for m,tt in enumerate(temp):
-            for _ in range(4):
+            for _ in range(1):
                 iterat +=1
                 new_param_values = self.vary(x_fitn_i)
                 
@@ -450,6 +450,7 @@ class Simulated_Annealing():
                 self.Fitness.w_Liste = new_param_values[2]
                 self.Fitness.kappa = new_param_values[3]
                 energy_new_param = self.Fitness.get_Action()
+                print('here i am')
                 kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
                         +str(energy_new_param)+'\n')
                 boltzi = self.boltzmann(fitn_wert_x, energy_new_param, tt)
@@ -470,6 +471,17 @@ class Simulated_Annealing():
 
    
 def MainProg(number):
+    '''
+    :param number: Needed for parallelisation. It's basically the number of each individual\ 
+    Parallel run of this programm.
+    :type number: integer.
+
+    Here in the first part the initial state gets set up. At first only the Parameters! Then\ 
+    the Value of the Action gets calculated. After that we have a Starting point. Then the Minimizer\ 
+    gets called and produces a result (Must not be a Minimizer). And then this Minimizer is used as\ 
+    a new starting point for the higher dimensional parameter space! 
+
+    '''
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters') #boolean
     K_Anf, K_End, pre_K_List= configfunktion('Impuls') # floats and List
     w_Anf, w_End, pre_w_List= configfunktion('Frequenz') # flaots and List
@@ -507,7 +519,7 @@ def MainProg(number):
 
     
     for SN in range(first, Anzahl_N+1):
-        Iter = 5 +SN**2                        #Number of temperatur iterations
+        Iter =SN                        #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.01,5,Iter)
         Amplitude = 0.1                     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
@@ -551,14 +563,11 @@ def MainProg(number):
         pre2_K_List = [*Minimum[0][0],0]
         pre2_Rho_List = [*Minimum[0][1],0]
 
-        gg = open('Minimum8.txt', 'w')
-        gg.write('Minimum fuer N = %d'%(SN) + str(Minimum)+'\n')
-        gg.close()
-        print('yay')
-
+    return np.array([np.array(Minimum[0][0]),np.array(Minimum[0][1]),
+                     np.array(Minimum[0][2]),np.array(Minimum[1])])
 
 if __name__ == "__main__":
-    NN = 4
+    NN = 3
     List_Minimas = []
 #   pool = Pool(4)
 #   tasks = [i for i in range(10)]
@@ -571,5 +580,13 @@ if __name__ == "__main__":
 #   print(List_Minimas)
 #   
     with Pool(4) as p:
-        p.map(MainProg, [1])
+        Liste_M = p.map(MainProg, [i for i in range(1,NN +1)])
+    Minima_Candidate = np.array(Liste_M)
+    print(Minima_Candidate[:,3])
+    index = np.argmin(Minima_Candidate[:,3])
+    
+    gg = open('Minimum8.txt', 'w')
+    gg.write('Minimum fuer N = %d'%(len(Minima_Candidate[0,0])) + str(Minima_Candidate[index,:])+'\n')
+    gg.close()
+    print('yay')
 
