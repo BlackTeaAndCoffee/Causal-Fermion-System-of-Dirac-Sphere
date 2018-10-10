@@ -267,30 +267,41 @@ class C_F_S:
         g = open(get_data('funcprint2.txt'), 'r')
         g1 = g.read()
         g.close()
-        Whole_String = ''
-        Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
-        Prototypen = 'static float xsav;\n'+ 'static float(*nrfunc)(float,float);\n'
-        Integranddef = "float f(float r, float t)"+ "{return"
-        Begin_von_Func = " 1/(2*cpow(M_PI,2)) + (fmax(creall("
-        Func1 = a.replace("exp","cexp").replace("pow","cpow").replace("r_0","r").replace("t_0","t")
-        Func1_End = "),0)"
 
-        Whole_String += Bibliotheken + Prototypen + Integranddef + Begin_von_Func +Func1+ Func1_End
+        Func1 = a.replace("exp","cexp").replace("pow","cpow").replace("r_0","r").replace("t_0","t") + "),0)"
+    
 
-        Func2_Anf = "+ creall("
+        Whole_String = '''
+        #include <math.h>
+        #include <complex.h>
+        #include <stdio.h>
+        static float xsav;
+        static float(*nrfunc)(float,float);
+        
+        float f(float r, float t)
+        {
+            return 1/(2*cpow(M_PI,2)) 
+                + (
+                    fmax(creall(%s), 0) // Insert Func1 here
+                    + creall(%s)) %s;   // Insert Func2 and Func22 here
+        }
+        
+        %s // This is g1
+        '''
+
+            
+
         Func2 =  b.replace("exp", "cexp").replace("pow","cpow" ).replace("r_0","r").replace("t_0","t")
 
         if self.Schwartzfunktion:
-            Func22 = '))*sin(1.0L*r)*sin(1.0L*r)'
-            Func2_End = '*cexp(-(cpow(t,2)/'+"cpow(%2.0f,2)))"%(self.T)+';'+'}\n'
-            Whole_String += Func2_Anf + Func2 + Func22+ Func2_End + g1
+            Func22 = '*sin(1.0L*r)*sin(1.0L*r)*cexp(-(cpow(t,2)/cpow(%2.0f,2)))'%(self.T)
         else:
-            Func22 = '))*sin(1.0L*r)*sin(1.0L*r);}\n'
-            Whole_String += Func2_Anf + Func2 + Func22+g1
+            Func22 = '*sin(1.0L*r)*sin(1.0L*r)'
 
+        Whole_String = Whole_String % (Func1, Func2, Func22, g1)
 
         if self.Comp_String:
-            os.system('gcc -o testlib2'+' << EOF '+Whole_String+ 'EOF -lm')
+            os.system('gcc -o testlib2 << EOF ' + Whole_String + 'EOF -lm')
         else:
             f = open('testlib2.c', 'w')
             f.write(Whole_String)
