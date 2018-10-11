@@ -27,7 +27,7 @@ K_List = [1]
 Rho_List = [1] # i have to set this here for the initialing of the class C_FS
 System_Parameters = [K_List, Rho_List, w_List, kappa]
 CFS_Action = C_F_S(N, T, System_Parameters, Integration_bound, Schwartzfunktion = False, 
-            Comp_String = False, Integration_Type = 1)
+            Comp_String = 1, Integration_Type = 1)
 
 
 def zweitens(alpha, beta, n1):

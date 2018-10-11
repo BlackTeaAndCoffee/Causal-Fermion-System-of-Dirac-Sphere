@@ -82,7 +82,7 @@ if __name__ == "__main__":
         
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
-        Comp_String = False, Integration_Type = 1, Test_Action = False)
+        Comp_String = 1, Integration_Type = 1, Test_Action = False)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 

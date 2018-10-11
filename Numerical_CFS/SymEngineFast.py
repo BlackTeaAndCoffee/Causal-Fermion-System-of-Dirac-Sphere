@@ -103,14 +103,18 @@ class C_F_S:
                 be omitted. If so the time integration only needs to be done\
                 over one period.
     :type Schartzfunktion: boolean.
-    :param Comp_String:  If true opening, writing, closing of a file gets\
-                skipped and the whole procedure of compiling and running gets\
-                done in on line of code.
-    :type Comp_String: boolean.
+    :param Comp_String: Default is 1, but in case of parallel computing this needs to be set\
+                to the number of cores you want to use. The reason for that is, that in ctypes\
+                integrating (see below), which is fastest and best up till now, a file\
+                testlib + number +.so gets created. If there was not number, every core\ 
+                would try to use the same file, which would not work.
+    :type Comp_String: Integer.
     :param Integration_Type: Integration_Type of integration. 1 for C-types, 2 for C, 3 for\
                 testing , 4  Scipy-quadpack . It's not only the integration\
                 method. According to this decision also the integrand gets\
-                constructed.
+                constructed. For now i am using the first method, because it's the\
+                fasted and best. The others are either slow or produce wrong results.\
+                There is a lot of work for me on other areas, so i just use 1.
     :type Integration_Type: 1,2,3 or 4.
     ''' 
     def __init__(self, N, T,  System_Parameters, Integration_bound = [[0,np.pi],[0,2*np.pi]], Schwartzfunktion = True, 
@@ -250,16 +254,6 @@ class C_F_S:
         The generated C-code has not the form i need it to be, so some symbols
         need to be modified. Like exp to cexp and so on.
 
-        I have an option self.Comp_String, which when True causes the C-File to
-        get compiled in one OS-Command instead of seperate commands. I tried
-        this out, because i thought that the first option could be faster.
-        But it was not, if i remember correctly. Also that's not the Bottleneck
-        of my programm, so i didn't focus on that any longer.
-
-        Since the integration algorithm is in another file and is except for
-        the integration boundaries fixed, i decided just to do it by hand every
-        time. Those boundaries are for now also fixed, so it's ok.
-
         '''
 
         a = ccode(self.lagrangian_without_bound_constr())
@@ -332,10 +326,6 @@ class C_F_S:
         else:
             Func22 = '))*sin(1.0L*args[0])*sin(1.0L*args[0]);}\n'
             Whole_String += Func2_Anf + Func2 + Func22 + g1
-#       if self.Comp_String:
-#           os.system('pwd')
-#           os.system('gcc -x c -shared -o testlib2.so -fPIC'+' << EOF '+Whole_String+ 'EOF')
-#       else:
 
         f = open('testlib'+ str(self.Comp_String) + '.c', 'w')
         f.write(Whole_String)

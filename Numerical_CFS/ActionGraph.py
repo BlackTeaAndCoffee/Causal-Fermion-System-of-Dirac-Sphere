@@ -57,7 +57,7 @@ if __name__ == "__main__":
     c = PyxSchar.initialXY(0,20,0,4, r'$K_%1d$'%(ind+1),'Action',10,10 , 'tr')
     System_Parameters = [K_List, Rho_List, w_List, kappa]
     CFS_Action = C_F_S(N, Integration_bound, T, System_Parameters, Schwartzfunktion = True, 
-                 Comp_String = False, Integration_Type = 1)
+                 Comp_String = 1, Integration_Type = 1)
     
     dd=[]
 
