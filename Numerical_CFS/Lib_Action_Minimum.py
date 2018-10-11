@@ -579,7 +579,7 @@ if __name__ == "__main__":
 #       List_Minimas.append(result.get())
 #   print(List_Minimas)
 #   
-    with Pool(4) as p:
+    with Pool(1) as p:
         Liste_M = p.map(MainProg, [i for i in range(1,NN +1)])
     Minima_Candidate = np.array(Liste_M)
     print(Minima_Candidate[:,3])
