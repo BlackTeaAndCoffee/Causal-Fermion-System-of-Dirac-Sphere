@@ -3,13 +3,13 @@ from scipy import integrate
 from symengine import I
 from sympy import *
 from Numerical_CFS.configfunktion import configfunktion
-from multiprocessing import Pool
+import multiprocessing as mup
 import configparser
 import sympy as sy
 import symengine as si
 import numpy as np
 import random
-import time
+import datetime as dt
 import os
 import sys
 import scipy.misc
@@ -289,6 +289,9 @@ class Initial_System_Params():
         return [*parameters , self.kappa]
 
     def Gap_Filler(self, half_filled_list):
+        zeit = dt.datetime.now().strftime("%f")
+        np.random.seed(int(zeit))
+ 
         if self.random_K:
             half_filled_list[0]= np.random.random_sample(self.N)*(K_End - K_Anf)
         if self.random_Rho:
@@ -336,8 +339,10 @@ class Variation_of_Parameters():
         The way i programmed the whole programm,\
         i only have to change this variation function\
         to for exapmple only vary one element of the weights.\
-        This i do not need right now. But in the future maybe.\
+        This i do not need right now, but in the future i might.\
         '''
+        zeit = dt.datetime.now().strftime("%f")
+        np.random.seed(int(zeit))
         N = len(Input_List[0])
         if self.var_K:
             randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_K
@@ -516,10 +521,13 @@ def MainProg(number):
 
     pre2_Rho_List = eval(pre_Rho_List)
        
-
+    pre2_w_List = eval(pre_w_List) # I put this list assignment here,
+                                   #I set the list in settings.cfs, and it's like 
+                                   #[i for i in range(SN)]. So i need SN.
     
+
     for SN in range(first, Anzahl_N+1):
-        Iter =SN                        #Number of temperatur iterations
+        Iter =SN+5                        #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.01,5,Iter)
         Amplitude = 0.1                     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
@@ -530,10 +538,7 @@ def MainProg(number):
         Rho_Values = Rho_Class(SN, Constant)
         vary = Variation_of_Parameters(var_K, var_Rho, var_w, delta_K, delta_Rho, delta_w, Rho_Values)
         
-        pre2_w_List = eval(pre_w_List) # I put this list assignment here,
-                                       #I set the list in settings.cfs, and it's like 
-                                       #[i for i in range(SN)]. So i need SN.
-            
+           
         Sys_Params= Initial_System_Params(random_K, random_Rho, random_w, 
                 pre2_K_List, pre2_Rho_List, pre2_w_List, kappa)
     
@@ -562,12 +567,13 @@ def MainProg(number):
 
         pre2_K_List = [*Minimum[0][0],0]
         pre2_Rho_List = [*Minimum[0][1],0]
+        pre2_w_List = [*Minimum[0][2], SN ]
 
     return np.array([np.array(Minimum[0][0]),np.array(Minimum[0][1]),
                      np.array(Minimum[0][2]),np.array(Minimum[1])])
 
 if __name__ == "__main__":
-    NN = 3
+    NN = mup.cpu_count()
     List_Minimas = []
 #   pool = Pool(4)
 #   tasks = [i for i in range(10)]
@@ -579,14 +585,14 @@ if __name__ == "__main__":
 #       List_Minimas.append(result.get())
 #   print(List_Minimas)
 #   
-    with Pool(1) as p:
+    with mup.Pool(NN) as p:
         Liste_M = p.map(MainProg, [i for i in range(1,NN +1)])
     Minima_Candidate = np.array(Liste_M)
-    print(Minima_Candidate[:,3])
+    #print(Minima_Candidate[:,3])
     index = np.argmin(Minima_Candidate[:,3])
     
     gg = open('Minimum8.txt', 'w')
     gg.write('Minimum fuer N = %d'%(len(Minima_Candidate[0,0])) + str(Minima_Candidate[index,:])+'\n')
     gg.close()
-    print('yay')
+    print("This is the Minima:", Minima_Candidate[index, :])
 
