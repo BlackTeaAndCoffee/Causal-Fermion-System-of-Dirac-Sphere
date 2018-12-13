@@ -3,7 +3,7 @@ from scipy import integrate
 from symengine import I
 from sympy import *
 from Numerical_CFS.configfunktion import configfunktion
-from multiprocessing import Pool
+import multiprocessing as mup
 import configparser
 import sympy as sy
 import symengine as si
@@ -567,7 +567,7 @@ def MainProg(number):
                      np.array(Minimum[0][2]),np.array(Minimum[1])])
 
 if __name__ == "__main__":
-    NN = 3
+    NN = mup.cpu_count()
     List_Minimas = []
 #   pool = Pool(4)
 #   tasks = [i for i in range(10)]
@@ -579,7 +579,7 @@ if __name__ == "__main__":
 #       List_Minimas.append(result.get())
 #   print(List_Minimas)
 #   
-    with Pool(1) as p:
+    with mup.Pool(NN) as p:
         Liste_M = p.map(MainProg, [i for i in range(1,NN +1)])
     Minima_Candidate = np.array(Liste_M)
     print(Minima_Candidate[:,3])
