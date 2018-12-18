@@ -381,18 +381,16 @@ class C_F_S:
         it will definitely fail for the action.
         '''
         s = 0
-        w_Min = [o for o in range(N)]
-        R_Min = [o for o in range(N)]
-        K_Min = [o for o in range(N)]
+        w_Min = [o for o in range(self.N)]
+        R_Min = [1/self.N for o in range(self.N)]
+        K_Min = [o for o in range(1, self.N+1)]
 
-        Min = [w_Min, R_Min, K_Min]
-        for ii in range(N):
-            if var_K:
-                s += (self.K_Liste[ii] - Min[0][ii])**2
-            if var_Rho:
-                s += (self.Rho_Liste[ii] - Min[1][ii])**2
-            if var_w:
-                s+= (self.w_Liste[ii] - Min[2][ii])**2
+        Min = [K_Min, R_Min, w_Min]
+        
+        for ii in range(self.N):
+            s += (self.K_Liste[ii] - Min[0][ii])**2
+            s += (self.Rho_Liste[ii] - Min[1][ii])**2
+            s += (self.w_Liste[ii] - Min[2][ii])**2
         return s
 
 

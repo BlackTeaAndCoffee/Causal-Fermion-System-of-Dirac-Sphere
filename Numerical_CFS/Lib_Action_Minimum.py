@@ -527,15 +527,20 @@ def MainProg(number):
     
 
     for SN in range(first, Anzahl_N+1):
-        Iter =SN+5                        #Number of temperatur iterations
-        BaseArrayForTemp = np.linspace(0.01,5,Iter)
+        Iter =(SN + 5) **SN                        #Number of temperatur iterations
+        BaseArrayForTemp = np.linspace(0.01,10,Iter)
         Amplitude = 0.1                     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
                                             #temperatur
-        freq = np.pi                        #Frequenz for oscillation
-        decay_constant = 0.001                        #exponential decay constant
+        freq = 1*np.pi                        #Frequenz for oscillation
+        decay_constant = 0.000001                        #exponential decay constant
  
         Rho_Values = Rho_Class(SN, Constant)
+        delta_K = 1/SN
+        delta_w = 1/10
+        delta_Rho = 1/10
+    
+
         vary = Variation_of_Parameters(var_K, var_Rho, var_w, delta_K, delta_Rho, delta_w, Rho_Values)
         
            
@@ -552,7 +557,7 @@ def MainProg(number):
         
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True, 
-        Comp_String = number, Integration_Type = 1, Test_Action = False)
+        Comp_String = number, Integration_Type = 1, Test_Action = True)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
