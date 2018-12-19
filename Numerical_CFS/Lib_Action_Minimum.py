@@ -475,7 +475,7 @@ class Simulated_Annealing():
         return Candidate_Minimum
 
    
-def MainProg(number):
+def MainProg(CPU_number):
     '''
     :param number: Needed for parallelisation. It's basically the number of each individual\ 
     Parallel run of this programm.
@@ -557,7 +557,7 @@ def MainProg(number):
         
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True, 
-        Comp_String = number, Integration_Type = 1, Test_Action = True)
+        Comp_String = CPU_number, Integration_Type = 1, Test_Action = True)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
