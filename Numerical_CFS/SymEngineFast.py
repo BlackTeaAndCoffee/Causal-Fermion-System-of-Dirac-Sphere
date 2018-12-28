@@ -384,13 +384,14 @@ class C_F_S:
         w_Min = [o for o in range(self.N)]
         R_Min = [1/self.N for o in range(self.N)]
         K_Min = [o for o in range(1, self.N+1)]
-
-        Min = [K_Min, R_Min, w_Min]
         
+        Min = np.array([K_Min, R_Min, w_Min])
+        print('MinInControlAction', str(Min[0,0]))
+        print('RhoListeControlAction', str(self.Rho_Liste))
         for ii in range(self.N):
-            s += (self.K_Liste[ii] - Min[0][ii])**2
-            s += (self.Rho_Liste[ii] - Min[1][ii])**2
-            s += (self.w_Liste[ii] - Min[2][ii])**2
+            s += (self.K_Liste[ii] - Min[0,ii])**2
+            s += 0.1*(self.Rho_Liste[ii] - Min[1,ii])**2 
+            s += (self.w_Liste[ii] - Min[2, ii])**2
         return s
 
 
