@@ -450,9 +450,13 @@ class Simulated_Annealing():
         x_fitn_i = Candidate_Minimum[0:3,:]# Initial_State[0]
         iterat = 0
         temp = self.temperatur()
+        temp_max= np.max(temp)
+        
         for m,tt in enumerate(temp):
-            for _ in range(1):
+            for _ in range(4):
                 iterat +=1
+                self.vary.delta_K = tt/temp_max
+                self.vary.delta_Rho = tt/temp_max
                 print('x_fitn_i', str(iterat), x_fitn_i)
                 new_param_values = self.vary(x_fitn_i)
                 
@@ -538,13 +542,13 @@ def MainProg(CPU_number):
     
 
     for SN in range(first, Anzahl_N+1):
-        Iter = 2*(SN +7) **SN + 5                       #Number of temperatur iterations
+        Iter = 2*(SN +3) **SN + 5                       #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.1,5,Iter)
         Amplitude = 0.2     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
                                             #temperatur
         freq = 2*np.pi                        #Frequenz for oscillation
-        decay_constant = 0.0001                        #exponential decay constant
+        decay_constant = 1                        #exponential decay constant
  
         Rho_Values = Rho_Class(SN, Constant)
         delta_K = np.array([1 for i in range(1, SN + 1) ])
