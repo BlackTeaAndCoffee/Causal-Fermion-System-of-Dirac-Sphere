@@ -14,6 +14,7 @@ import os
 import sys
 import scipy.misc
 import ctypes
+from scipy  import optimize 
 from SymEngineFast import *
 #from .LibForSimulAnnealing import *
 
@@ -247,8 +248,8 @@ class Initial_System_Params():
             raise ValueError("Shell-Number %i < List_length %i. Size-Error. Fix the size of K_List and so on, N can only be equally big or bigger!" %(N, Lists_length))
             sys.exit()
 
-        half_filled_list = np.zeros((3,self.N))
-
+        half_filled_list = np.zeros((5,self.N))
+        half_filled_list[3,0] = self.kappa
         if self.variant ==1:
             half_filled_list[0, :Lists_length] = self.K_List
             half_filled_list[1, :Lists_length] = self.Rho_List
@@ -286,7 +287,7 @@ class Initial_System_Params():
         elif self.variant ==8:
             parameters = self.Gap_Filler(half_filled_list)
 
-        return [*parameters , self.kappa]
+        return parameters
 
     def Gap_Filler(self, half_filled_list):
         zeit = dt.datetime.now().strftime("%f")
@@ -343,23 +344,28 @@ class Variation_of_Parameters():
         '''
         zeit = dt.datetime.now().strftime("%f")
         np.random.seed(int(zeit))
-        N = len(Input_List[0])
+        N = np.shape(Input_List)[1]
+        Output = np.zeros(np.shape(Input_List))
+        Output = Output + Input_List
         if self.var_K:
+            #print('delta_K', self.delta_K)
             randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_K
-            K_randomi5 = np.absolute(Input_List[0] + randomi2)
-            Input_List[0]= list(K_randomi5)
-            print('InpoutLiust', Input_List)
+            
+            print('randomi2', randomi2)
+            K_randomi5 = np.absolute(Output[0] + randomi2)
+            Output[0]= np.array([K_randomi5])
+            print('InpoutLiust', Output)
         if self.var_Rho:
             randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_Rho
-            rho_randomi6 = np.absolute(Input_List[1] + randomi2)
-            Input_List[1] = self.Rho_Values(rho_randomi6)
+            rho_randomi6 = np.absolute(Output[1] + randomi2)
+            Output[1] = np.array([self.Rho_Values(rho_randomi6)])
 
         if self.var_w:
             randomi2 = (2*np.random.random_sample(N) -1)*self.delta_w
-            w_randomi5 = np.absolute(Input_List[2] + randomi2)
-            Input_List[2] = list(w_randomi5)
+            w_randomi5 = np.absolute(Output[2] + randomi2)
+            Output[2] = np.array([w_randomi5])
  
-        return Input_List
+        return Output
 
 class Rho_Class:
     def __init__(self, N, Constant):
@@ -423,7 +429,7 @@ class Simulated_Annealing():
         :return: Temperatur that is nonlinear.. . this feeds into temperatur, which\ 
         produces the list of temperatures.
         '''
-        return np.exp(- self.decay_constant*temp_iter**2)*(self.Amplitude*np.cos(self.freq*temp_iter*0.5) + 1)
+        return np.exp(- (temp_iter/self.decay_constant)**2)*(self.Amplitude*np.cos(self.freq*temp_iter*0.5) + 10)
 
     def temperatur(self):
         '''
@@ -436,46 +442,55 @@ class Simulated_Annealing():
         return temperatur_list
 
     def Minimierer(self, Candidate_Minimum):
-        N = len(Candidate_Minimum[0][1])
         kol = open('iterk.txt', 'a')
         #Candidate_Minimum = Initial_State
-        print('id(Candidate)',id(Candidate_Minimum[0]))
-
-        fitn_wert_x = Candidate_Minimum[1]#Initial_State[1]
-        x_fitn_i = [*Candidate_Minimum[0]]# Initial_State[0]
+        #print('id(Candidate)',id(Candidate_Minimum[0]))
+        kol.write('CPU' + str(self.Fitness.Comp_String)+ ' ' + str(Candidate_Minimum) + '\n')
+        fitn_wert_x = Candidate_Minimum[4,0]#Initial_State[1]
+        x_fitn_i = Candidate_Minimum[0:3,:]# Initial_State[0]
         iterat = 0
         temp = self.temperatur()
+        temp_max= np.max(temp)
+        
         for m,tt in enumerate(temp):
-            for _ in range(1):
+            for _ in range(4):
                 iterat +=1
+                self.vary.delta_K = tt/temp_max
+                self.vary.delta_Rho = tt/temp_max
+                print('x_fitn_i', str(iterat), x_fitn_i)
                 new_param_values = self.vary(x_fitn_i)
+                
+                print('new_params', str(new_param_values[1]))
                 
                 self.Fitness.K_Liste = new_param_values[0] 
                 self.Fitness.Rho_Liste = new_param_values[1]
                 self.Fitness.w_Liste = new_param_values[2]
-                self.Fitness.kappa = new_param_values[3]
                 energy_new_param = self.Fitness.get_Action()
-                print('here i am')
-                kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
-                        +str(energy_new_param)+'\n')
+                print('fitnwert for x_fitn', energy_new_param)
+                #kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
+                #        +str(energy_new_param)+'\n')
                 boltzi = self.boltzmann(fitn_wert_x, energy_new_param, tt)
-
+                print('boltzi = ', boltzi)
+                #print('curry_x1', fitn_wert_x)
                 if fitn_wert_x > energy_new_param:
                     fitn_wert_x = energy_new_param
                     x_fitn_i =  new_param_values
-                    if Candidate_Minimum[1] > energy_new_param:
-                        Candidate_Minimum[0]= [*new_param_values]
-                        Candidate_Minimum[1]= energy_new_param
-                        print('Cand1', Candidate_Minimum)
+                    if Candidate_Minimum[4,0] > energy_new_param:
+                        Candidate_Minimum[0:3,:]= new_param_values
+                        Candidate_Minimum[4,0]= energy_new_param
+                #        print('Cand1', Candidate_Minimum)
+                        kol.write('iterat, Ges ' +str(iterat)+','+str(len(temp)*1) + 'boltzi' + str(boltzi)+',CPU' + str(self.Fitness.Comp_String)+ ' ' + str(Candidate_Minimum) + '\n')
+
                 elif (fitn_wert_x < energy_new_param) and (random.random() <= boltzi) :
                     fitn_wert_x = energy_new_param
                     x_fitn_i =  new_param_values
+                #    print('curry_x2', fitn_wert_x)
         kol.close()
         print('Candidate_Minimum_adsfadfa', Candidate_Minimum)
         return Candidate_Minimum
 
    
-def MainProg(number):
+def MainProg(CPU_number):
     '''
     :param number: Needed for parallelisation. It's basically the number of each individual\ 
     Parallel run of this programm.
@@ -501,14 +516,14 @@ def MainProg(number):
     delta_w = 1/10
     delta_Rho = 1/10
     
-    T = 2*np.pi
+    T = np.pi
 
     x_Anf = 0
     x_End = np.pi
 
     Integration_bound = [[x_Anf, x_End], [0,2*np.pi]]
     Wirk = []
-    Boltzmann_Constant =0.00005
+    Boltzmann_Constant = 0.0005
     Mittelgr = 4
     for_rho = 1
 
@@ -527,15 +542,20 @@ def MainProg(number):
     
 
     for SN in range(first, Anzahl_N+1):
-        Iter =SN+5                        #Number of temperatur iterations
-        BaseArrayForTemp = np.linspace(0.01,5,Iter)
-        Amplitude = 0.1                     #Amplitude of tempearatur oszillation
+        Iter = 2*(SN +3) **SN + 5                       #Number of temperatur iterations
+        BaseArrayForTemp = np.linspace(0.1,5,Iter)
+        Amplitude = 0.2     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
                                             #temperatur
-        freq = np.pi                        #Frequenz for oscillation
-        decay_constant = 0.001                        #exponential decay constant
+        freq = 2*np.pi                        #Frequenz for oscillation
+        decay_constant = 1                        #exponential decay constant
  
         Rho_Values = Rho_Class(SN, Constant)
+        delta_K = np.array([1 for i in range(1, SN + 1) ])
+        delta_w = 1/10
+        delta_Rho = 1/SN
+    
+
         vary = Variation_of_Parameters(var_K, var_Rho, var_w, delta_K, delta_Rho, delta_w, Rho_Values)
         
            
@@ -552,25 +572,26 @@ def MainProg(number):
         
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True, 
-        Comp_String = number, Integration_Type = 1, Test_Action = False)
+        Comp_String = CPU_number, Integration_Type = 1, Test_Action = True)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
 
         fitn_wert_y11 = CFS_Action.get_Action()
 
-    
-        Initial_State = [System_Parameters, fitn_wert_y11]
-        print('Initial_State', Initial_State)
+        System_Parameters[4,0] = fitn_wert_y11 
+        print('Initial_State', System_Parameters)
   
-        Minimum = Minimum_Finder.Minimierer(Initial_State)
+        Minimum = Minimum_Finder.Minimierer(System_Parameters)
 
-        pre2_K_List = [*Minimum[0][0],0]
-        pre2_Rho_List = [*Minimum[0][1],0]
-        pre2_w_List = [*Minimum[0][2], SN ]
-
-    return np.array([np.array(Minimum[0][0]),np.array(Minimum[0][1]),
-                     np.array(Minimum[0][2]),np.array(Minimum[1])])
+        pre2_K_List = np.zeros(SN +1) 
+        pre2_K_List[0:SN] =  Minimum[0]
+        print('pre2KList', pre2_K_List)
+        pre2_Rho_List = np.zeros(SN + 1) 
+        pre2_Rho_List[0:SN] =  Minimum[1]
+        pre2_w_List = np.linspace(0,SN , SN+1 )
+        pre2_w_List[0:SN] = Minimum[2] 
+    return Minimum
 
 if __name__ == "__main__":
     NN = mup.cpu_count()
@@ -585,6 +606,7 @@ if __name__ == "__main__":
 #       List_Minimas.append(result.get())
 #   print(List_Minimas)
 #   
+    NN = 1
     with mup.Pool(NN) as p:
         Liste_M = p.map(MainProg, [i for i in range(1,NN +1)])
     Minima_Candidate = np.array(Liste_M)
