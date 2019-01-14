@@ -3,6 +3,7 @@ from scipy import integrate
 from symengine import I
 from sympy import *
 from Numerical_CFS.configfunktion import configfunktion
+import matplotlib.pyplot as plt
 import multiprocessing as mup
 import configparser
 import sympy as sy
@@ -14,7 +15,6 @@ import os
 import sys
 import scipy.misc
 import ctypes
-from scipy  import optimize 
 from SymEngineFast import *
 #from .LibForSimulAnnealing import *
 
@@ -347,6 +347,8 @@ class Variation_of_Parameters():
         N = np.shape(Input_List)[1]
         Output = np.zeros(np.shape(Input_List))
         Output = Output + Input_List
+        prop_Keeper1 = np.array([1,3,6,10,15])/15
+        prop_Keeper = 1#prop_Keeper1[0:N]
         if self.var_K:
             #print('delta_K', self.delta_K)
             randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_K
@@ -356,7 +358,7 @@ class Variation_of_Parameters():
             Output[0]= np.array([K_randomi5])
             print('InpoutLiust', Output)
         if self.var_Rho:
-            randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_Rho
+            randomi2 = (2*np.random.random_sample(N) - 1)*prop_Keeper*self.delta_Rho
             rho_randomi6 = np.absolute(Output[1] + randomi2)
             Output[1] = np.array([self.Rho_Values(rho_randomi6)])
 
@@ -451,12 +453,21 @@ class Simulated_Annealing():
         iterat = 0
         temp = self.temperatur()
         temp_max= np.max(temp)
-        
+        plt.plot(self.BaseArrayForTemp, temp)
+        plt.xlabel('time')
+        plt.ylabel('temperature')
+        plt.show()
         for m,tt in enumerate(temp):
             for _ in range(4):
                 iterat +=1
                 self.vary.delta_K = tt/temp_max
-                self.vary.delta_Rho = tt/temp_max
+                self.vary.delta_Rho = 0.1*tt/temp_max
+                #
+                #
+                #
+                #ich will delta_Rho gegen die iteration plotten!
+
+                #
                 print('x_fitn_i', str(iterat), x_fitn_i)
                 new_param_values = self.vary(x_fitn_i)
                 
@@ -529,7 +540,7 @@ def MainProg(CPU_number):
 
 
     #Minimum =[[[0.61402128722400451, 5.4919577589099093], [0.96197069,  0.01267644], [0, 1]], 0.007515003816659801]
-    Constant = 1
+    Constant = 100
 #    pre2_w_List = eval(pre_w_List)
 
     pre2_K_List = eval(pre_K_List)
@@ -542,18 +553,18 @@ def MainProg(CPU_number):
     
 
     for SN in range(first, Anzahl_N+1):
-        Iter = 2*(SN +3) **SN + 5                       #Number of temperatur iterations
+        Iter = (SN +3) **SN + 5                       #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.1,5,Iter)
         Amplitude = 0.2     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
                                             #temperatur
         freq = 2*np.pi                        #Frequenz for oscillation
-        decay_constant = 1                        #exponential decay constant
+        decay_constant = 2                        #exponential decay constant
  
         Rho_Values = Rho_Class(SN, Constant)
         delta_K = np.array([1 for i in range(1, SN + 1) ])
         delta_w = 1/10
-        delta_Rho = 1/SN
+        delta_Rho = 1/10
     
 
         vary = Variation_of_Parameters(var_K, var_Rho, var_w, delta_K, delta_Rho, delta_w, Rho_Values)
