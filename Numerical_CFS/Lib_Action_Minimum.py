@@ -477,6 +477,7 @@ class Simulated_Annealing():
                 self.Fitness.Rho_Liste = new_param_values[1]
                 self.Fitness.w_Liste = new_param_values[2]
                 energy_new_param = self.Fitness.get_Action()
+                print('Rho_Lsite', self.Fitness.Rho_Liste)
                 print('fitnwert for x_fitn', energy_new_param)
                 #kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
                 #        +str(energy_new_param)+'\n')
@@ -534,13 +535,12 @@ def MainProg(CPU_number):
 
     Integration_bound = [[x_Anf, x_End], [0,2*np.pi]]
     Wirk = []
-    Boltzmann_Constant = 0.0005
+    Boltzmann_Constant = 0.5
     Mittelgr = 4
     for_rho = 1
 
 
     #Minimum =[[[0.61402128722400451, 5.4919577589099093], [0.96197069,  0.01267644], [0, 1]], 0.007515003816659801]
-    Constant = 100
 #    pre2_w_List = eval(pre_w_List)
 
     pre2_K_List = eval(pre_K_List)
@@ -583,7 +583,7 @@ def MainProg(CPU_number):
         
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True, 
-        Comp_String = CPU_number, Integration_Type = 1, Test_Action = True)
+        Comp_String = CPU_number, Integration_Type = 1, Test_Action = False)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 

@@ -125,7 +125,7 @@ class C_F_S:
         self.K_Liste = System_Parameters[0]
         self.Rho_Liste = System_Parameters[1]
         self.w_Liste = System_Parameters[2]
-        self.kappa = System_Parameters[3]
+        self.kappa = System_Parameters[3,0]
         self.Schwartzfunktion = Schwartzfunktion
         self.Comp_String = Comp_String
         self.Integration_Type = Integration_Type
@@ -223,7 +223,7 @@ class C_F_S:
 
     def boundadness_constraint(self):
         sub = self.closedChain()
-        return self.kappa* np.trace(sub)**2
+        return self.kappa*np.trace(sub)**2
 
     '''
     Integrand and Action
@@ -239,8 +239,8 @@ class C_F_S:
             integrand = lambda t1, r1: 1/(2*np.pi**2) + (max(lagr(t1, r1).real,0) +
                     bound(t1,r1).real)*np.sin(r1)**2*np.exp(-(t1)**2/self.T)
         else:
-            integrand = lambda t1, r1 : 1/(2*np.pi**2) + (max(lagr([t1, r1]).real,0) +
-                    bound([t1,r1]).real)*np.sin(r1)**2
+            integrand = lambda t1, r1 : 1/(2*np.pi**2) + (max(lagr(t1, r1).real,0) +
+                    bound(t1,r1).real)*np.sin(r1)**2
 
         return integrand
 
@@ -322,7 +322,7 @@ class C_F_S:
         if self.Schwartzfunktion:
             Func22 = '))*sin(1.0L*args[0])*sin(1.0L*args[0])'
             Func2_End = '*cexp(-(cpow(args[1],2)/'+"cpow(%2.0f,2)))"%(self.T)+';'+'}\n'
-            Whole_String += Func2_Anf + Func2 + Func22+ Func2_End + g1
+            Whole_String += Func2_Anf + Func2+ Func22+ Func2_End + g1
         else:
             Func22 = '))*sin(1.0L*args[0])*sin(1.0L*args[0]);}\n'
             Whole_String += Func2_Anf + Func2 + Func22 + g1
