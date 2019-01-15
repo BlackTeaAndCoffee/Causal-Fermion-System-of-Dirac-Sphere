@@ -14,7 +14,7 @@ import os
 import sys
 import scipy.misc
 import ctypes
-from scipy  import optimize 
+from scipy  import optimize
 from SymEngineFast import *
 #from .LibForSimulAnnealing import *
 
@@ -141,7 +141,7 @@ according to the variationprocess.
 '''
 class Initial_System_Params():
     def __init__(self, random_K, random_Rho, random_w, K_List, Rho_List, w_List, kappa):
-        self.random_K = random_K 
+        self.random_K = random_K
         self.random_Rho = random_Rho
         self.random_w = random_w
         self.K_List = K_List
@@ -150,7 +150,7 @@ class Initial_System_Params():
         print(w_List)
         self.N = len(w_List) #w_List, K_List and Rho_List have all the same length.
         print('N =',self.N)
-        self.variant = self.which_variant() 
+        self.variant = self.which_variant()
         self.kappa = kappa
     def which_variant(self):
         '''
@@ -292,7 +292,7 @@ class Initial_System_Params():
     def Gap_Filler(self, half_filled_list):
         zeit = dt.datetime.now().strftime("%f")
         np.random.seed(int(zeit))
- 
+
         if self.random_K:
             half_filled_list[0]= np.random.random_sample(self.N)*(K_End - K_Anf)
         if self.random_Rho:
@@ -304,18 +304,18 @@ class Initial_System_Params():
 
 class Variation_of_Parameters():
     def __init__(self, var_K, var_Rho, var_w,  delta_K, delta_Rho, delta_w, Rho_Values):
-        self.var_K = var_K 
+        self.var_K = var_K
         self.var_Rho = var_Rho
         self.var_w = var_w
         self.delta_K = delta_K
         self.delta_w = delta_w
         self.delta_Rho = delta_Rho
-        self.Rho_Values = Rho_Values 
+        self.Rho_Values = Rho_Values
     def __call__(self, Input_List):
         '''
         :param N: Integer.
         :type N: Shell-Number.
-        :param self.Input_List: Is the array, that contains the parameters of Rho_List,\ 
+        :param self.Input_List: Is the array, that contains the parameters of Rho_List,\
                          pre_w_Listand K_List.
         :type  self.Input_List: List of 3 Lists.
         :param var_K: This is a global variable. We need them in this\
@@ -327,7 +327,7 @@ class Variation_of_Parameters():
         :param var_w: This is a global variable. We need them in this\
         function. You need to decide whether the frequence-variables should be varied or not.
         :type var_w: boolean.
-        :param variant: It's a number, which is given for every kombinatin of var_Rho, 
+        :param variant: It's a number, which is given for every kombinatin of var_Rho,
                         var_w, var_w(see function which_variant).\
 
         The variation of the state, should not end in a new random state, it\
@@ -350,7 +350,7 @@ class Variation_of_Parameters():
         if self.var_K:
             #print('delta_K', self.delta_K)
             randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_K
-            
+
             print('randomi2', randomi2)
             K_randomi5 = np.absolute(Output[0] + randomi2)
             Output[0]= np.array([K_randomi5])
@@ -364,7 +364,7 @@ class Variation_of_Parameters():
             randomi2 = (2*np.random.random_sample(N) -1)*self.delta_w
             w_randomi5 = np.absolute(Output[2] + randomi2)
             Output[2] = np.array([w_randomi5])
- 
+
         return Output
 
 class Rho_Class:
@@ -378,7 +378,7 @@ class Rho_Class:
             Sum += rho_koeff*Incoming_List[i]
         rho_values = Incoming_List/Sum
         return rho_values*self.Constant
-    
+
     def Rho_Koeffs_List(self):
         listim = []
         for n in range(1, self.N + 1):
@@ -391,7 +391,7 @@ class Rho_Class:
         summe = 0
         for i in range(1, self.N + 1):
             summe += ((self.diracEigenvalues(i))**2 - 0.25)/2
-        
+
         return list(IdenticalRhos*(1/summe))
 
     def diracEigenvalues(self, n):
@@ -403,7 +403,7 @@ class Rho_Class:
 
 
 class Simulated_Annealing():
-    def __init__(self, BaseArrayForTemp, Boltzmann_Constant, 
+    def __init__(self, BaseArrayForTemp, Boltzmann_Constant,
                      decay_constant, freq, Amplitude, vary, Fitness):
         self.Boltzmann_Constant = Boltzmann_Constant
         self.BaseArrayForTemp = BaseArrayForTemp
@@ -417,7 +417,7 @@ class Simulated_Annealing():
         This function will return for an Energydifferenz = f_x - f_y, the boltzmann\
         probability.
         '''
-        
+
         print('f_x,f_y', f_x, f_y)
         diff = abs(f_y - f_x)
         print('diff', diff)
@@ -426,7 +426,7 @@ class Simulated_Annealing():
     def temperatur_Function(self, temp_iter):
         '''
         This function i need for nonlinear Temperatur-curves.
-        :return: Temperatur that is nonlinear.. . this feeds into temperatur, which\ 
+        :return: Temperatur that is nonlinear.. . this feeds into temperatur, which\
         produces the list of temperatures.
         '''
         return np.exp(- (temp_iter/self.decay_constant)**2)*(self.Amplitude*np.cos(self.freq*temp_iter*0.5) + 10)
@@ -451,7 +451,7 @@ class Simulated_Annealing():
         iterat = 0
         temp = self.temperatur()
         temp_max= np.max(temp)
-        
+
         for m,tt in enumerate(temp):
             for _ in range(4):
                 iterat +=1
@@ -459,10 +459,10 @@ class Simulated_Annealing():
                 self.vary.delta_Rho = tt/temp_max
                 print('x_fitn_i', str(iterat), x_fitn_i)
                 new_param_values = self.vary(x_fitn_i)
-                
+
                 print('new_params', str(new_param_values[1]))
-                
-                self.Fitness.K_Liste = new_param_values[0] 
+
+                self.Fitness.K_Liste = new_param_values[0]
                 self.Fitness.Rho_Liste = new_param_values[1]
                 self.Fitness.w_Liste = new_param_values[2]
                 energy_new_param = self.Fitness.get_Action()
@@ -489,17 +489,17 @@ class Simulated_Annealing():
         print('Candidate_Minimum_adsfadfa', Candidate_Minimum)
         return Candidate_Minimum
 
-   
+
 def MainProg(CPU_number):
     '''
-    :param number: Needed for parallelisation. It's basically the number of each individual\ 
+    :param number: Needed for parallelisation. It's basically the number of each individual\
     Parallel run of this programm.
     :type number: integer.
 
-    Here in the first part the initial state gets set up. At first only the Parameters! Then\ 
-    the Value of the Action gets calculated. After that we have a Starting point. Then the Minimizer\ 
-    gets called and produces a result (Must not be a Minimizer). And then this Minimizer is used as\ 
-    a new starting point for the higher dimensional parameter space! 
+    Here in the first part the initial state gets set up. At first only the Parameters! Then\
+    the Value of the Action gets calculated. After that we have a Starting point. Then the Minimizer\
+    gets called and produces a result (Must not be a Minimizer). And then this Minimizer is used as\
+    a new starting point for the higher dimensional parameter space!
 
     '''
     var_K, var_Rho, var_w = configfunktion('Vary_Parameters') #boolean
@@ -511,11 +511,11 @@ def MainProg(CPU_number):
     random_K, random_Rho, random_w =  configfunktion('Set_Initialstate_randomly')# boolean
 
 
-   
+
     delta_K = 5/10
     delta_w = 1/10
     delta_Rho = 1/10
-    
+
     T = np.pi
 
     x_Anf = 0
@@ -535,11 +535,11 @@ def MainProg(CPU_number):
     pre2_K_List = eval(pre_K_List)
 
     pre2_Rho_List = eval(pre_Rho_List)
-       
+
     pre2_w_List = eval(pre_w_List) # I put this list assignment here,
-                                   #I set the list in settings.cfs, and it's like 
+                                   #I set the list in settings.cfs, and it's like
                                    #[i for i in range(SN)]. So i need SN.
-    
+
 
     for SN in range(first, Anzahl_N+1):
         Iter = 2*(SN +3) **SN + 5                       #Number of temperatur iterations
@@ -549,48 +549,48 @@ def MainProg(CPU_number):
                                             #temperatur
         freq = 2*np.pi                        #Frequenz for oscillation
         decay_constant = 1                        #exponential decay constant
- 
+
         Rho_Values = Rho_Class(SN, Constant)
         delta_K = np.array([1 for i in range(1, SN + 1) ])
         delta_w = 1/10
         delta_Rho = 1/SN
-    
+
 
         vary = Variation_of_Parameters(var_K, var_Rho, var_w, delta_K, delta_Rho, delta_w, Rho_Values)
-        
-           
-        Sys_Params= Initial_System_Params(random_K, random_Rho, random_w, 
+
+
+        Sys_Params= Initial_System_Params(random_K, random_Rho, random_w,
                 pre2_K_List, pre2_Rho_List, pre2_w_List, kappa)
-    
+
         variant = Sys_Params.variant
 
         print(StartWithGivenMinima, "variant = ", variant)
 
- 
+
 
         System_Parameters= Sys_Params.Initial_Params_Constructor()
-        
+
         print('System_Parameters =', System_Parameters)
-        CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True, 
-        Comp_String = CPU_number, Integration_Type = 1, Test_Action = True)
-        Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant, 
+        CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True,
+        Comp_String = CPU_number, Integration_Type = 1, Test_Action =False)
+        Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant,
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
 
         fitn_wert_y11 = CFS_Action.get_Action()
 
-        System_Parameters[4,0] = fitn_wert_y11 
+        System_Parameters[4,0] = fitn_wert_y11
         print('Initial_State', System_Parameters)
-  
+
         Minimum = Minimum_Finder.Minimierer(System_Parameters)
 
-        pre2_K_List = np.zeros(SN +1) 
+        pre2_K_List = np.zeros(SN +1)
         pre2_K_List[0:SN] =  Minimum[0]
         print('pre2KList', pre2_K_List)
-        pre2_Rho_List = np.zeros(SN + 1) 
+        pre2_Rho_List = np.zeros(SN + 1)
         pre2_Rho_List[0:SN] =  Minimum[1]
         pre2_w_List = np.linspace(0,SN , SN+1 )
-        pre2_w_List[0:SN] = Minimum[2] 
+        pre2_w_List[0:SN] = Minimum[2]
     return Minimum
 
 if __name__ == "__main__":
@@ -598,21 +598,21 @@ if __name__ == "__main__":
     List_Minimas = []
 #   pool = Pool(4)
 #   tasks = [i for i in range(10)]
-#   
-#   results = [pool.apply_async(MainProg(t)) for t in tasks] 
+#
+#   results = [pool.apply_async(MainProg(t)) for t in tasks]
 #   print(results)
 
 #   for result in results:
 #       List_Minimas.append(result.get())
 #   print(List_Minimas)
-#   
+#
     NN = 1
     with mup.Pool(NN) as p:
         Liste_M = p.map(MainProg, [i for i in range(1,NN +1)])
     Minima_Candidate = np.array(Liste_M)
     #print(Minima_Candidate[:,3])
     index = np.argmin(Minima_Candidate[:,3])
-    
+
     gg = open('Minimum8.txt', 'w')
     gg.write('Minimum fuer N = %d'%(len(Minima_Candidate[0,0])) + str(Minima_Candidate[index,:])+'\n')
     gg.close()
