@@ -86,7 +86,7 @@ class C_F_S:
                                 contain the space boundaries.
     :type Integration_bound:    List of two List, each containing two floats.
     :param T:    The life of the Universe, needed for the schwartzfunktion. It's\
-                also the upper boundary of the time integration. 
+                also the upper boundary of the time integration.
     :type T:    float.
     :param K_Liste: Impulse variables for which the action is\
                 calculated.
@@ -106,7 +106,7 @@ class C_F_S:
     :param Comp_String: Default is 1, but in case of parallel computing this needs to be set\
                 to the number of cores you want to use. The reason for that is, that in ctypes\
                 integrating (see below), which is fastest and best up till now, a file\
-                testlib + number +.so gets created. If there was not number, every core\ 
+                testlib + number +.so gets created. If there was not number, every core\
                 would try to use the same file, which would not work.
     :type Comp_String: Integer.
     :param Integration_Type: Integration_Type of integration. 1 for C-types, 2 for C, 3 for\
@@ -116,8 +116,8 @@ class C_F_S:
                 fasted and best. The others are either slow or produce wrong results.\
                 There is a lot of work for me on other areas, so i just use 1.
     :type Integration_Type: 1,2,3 or 4.
-    ''' 
-    def __init__(self, N, T,  System_Parameters, Integration_bound = [[0,np.pi],[0,2*np.pi]], Schwartzfunktion = True, 
+    '''
+    def __init__(self, N, T,  System_Parameters, Integration_bound = [[0,np.pi],[0,2*np.pi]], Schwartzfunktion = True,
                  Comp_String = False, Integration_Type = 1, Test_Action=False):
         self.N = N
         self.Integration_bound = Integration_bound
@@ -129,7 +129,7 @@ class C_F_S:
         self.Schwartzfunktion = Schwartzfunktion
         self.Comp_String = Comp_String
         self.Integration_Type = Integration_Type
-        self.Test_Action = Test_Action        
+        self.Test_Action = Test_Action
 
     def TensorProduct(self, mat11, mat22):
         """I needed a Tensorproduct for two matrices with symbolic elements.
@@ -300,12 +300,12 @@ class C_F_S:
 
         Bibliotheken =  '#include <math.h>\n'+'#include <complex.h>\n'+'#include <stdio.h>\n'
         Integranddef = "double f(int n, double args[n])"+ "{return"
-        Begin_von_Func = " 1/(2*cpow(M_PI,2)) + (fmax(creall(" #I added, 1/2*pi^2 because 
+        Begin_von_Func = " 1/(2*cpow(M_PI,2)) + (fmax(creall(" #I added, 1/2*pi^2 because
                                                                #the Integral can be zero,
-                                                               #and then the integration takes 
+                                                               #and then the integration takes
                                                                #very long due to error control.
-                                                               #By adding the factor above we make 
-                                                               #the integral one bigger, and then 
+                                                               #By adding the factor above we make
+                                                               #the integral one bigger, and then
                                                                #at the and we just need to substract it
                                                                #again.
         Func1 = a.replace("exp","cexp").replace("r_0","args[0]").replace("pow",
@@ -387,11 +387,11 @@ class C_F_S:
         w_Min = [o for o in range(self.N)]
         R_Min = [100/Norm[self.N-1] for o in range(self.N)]
         K_Min = [o for o in range(1, self.N+1)]
-        
+
         Min = np.array([K_Min, R_Min, w_Min])
         for ii in range(self.N):
-            s += (self.Rho_Liste[ii])**2*(self.K_Liste[ii] - Min[0,ii])**2
-            t += (self.Rho_Liste[ii] - Min[1,ii])**2 
+            s += self.Rho_Liste[ii]**2*(self.K_Liste[ii] - Min[0,ii])**2
+            t += (self.Rho_Liste[ii] - Min[1,ii])**2
             #r += (self.w_Liste[ii] - Min[2, ii])**2
         print('t', t)
         return s + r+ t
@@ -424,7 +424,7 @@ class C_F_S:
                 '''Integration with Cytpes'''
                 aa = time.time()
                 self.get_Integrand_with_ctypes()
- 
+
                 lib=ctypes.CDLL('./testlib'+str(self.Comp_String) +'.so')
                 lib.f.restype = ctypes.c_double
                 lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
@@ -438,8 +438,8 @@ class C_F_S:
 
                 tt = time.time()
                 print('Passed time during integration in sec:',tt-aa)
-                return zup[0] -1 #the 1 is due to the term i added in the integrand. 
-                                 #It just cancels it out. 
+                return zup[0] -1 #the 1 is due to the term i added in the integrand.
+                                 #It just cancels it out.
             elif self.Integration_Type ==2:
                 '''Integration with C. Up until here i basically construct the
                 integrand  and then C takes over.'''#Stimmt was nicht.Also irgendwas
@@ -447,9 +447,9 @@ class C_F_S:
                 tt = time.time()
 
                 result = subprocess.run(['./testlib2'], stdout=subprocess.PIPE)
-                integr_val = result.stdout.decode('utf-8') - 1 #the 1 is due to the term i added in the integrand. 
-                                 #It just cancels it out. 
- 
+                integr_val = result.stdout.decode('utf-8') - 1 #the 1 is due to the term i added in the integrand.
+                                 #It just cancels it out.
+
                 print('result', result.stdout.decode('utf-8')-1)
                 aa = time.time()
                 print('time', aa-tt)
@@ -476,9 +476,9 @@ class C_F_S:
 
                 print('Time it took to integrate in sec:',aa - tt)
                 print('Action = ',(Action[0] -1))
-                return Action[0] -1#the 1 is due to the term i added in the integrand. 
-                                 #It just cancels it out. 
- 
+                return Action[0] -1#the 1 is due to the term i added in the integrand.
+                                 #It just cancels it out.
+
             print('done')
 
         def get_integrand_values(self):
@@ -497,7 +497,7 @@ class C_F_S:
                 os.system('gcc -o yolo testlib2.c -lm')
                 os.system('./yolo')
 
-            else: 
+            else:
                 raise ValueError("Integration_Type must be 1 or 2 for this to work.")
 
 
@@ -569,10 +569,10 @@ def MainProg():
     w_Liste = [0]#eval(w_List)
     K_Liste = [0]
     Rho_Liste = [1] #np.array([ 0.23596702, (1- 0.23596702)/3])#,0.1/6,0.1/10 ])#(0.1 +0.03)/6 ])
-    Sys_Params = [K_Liste, Rho_Liste, w_Liste, kappa] 
-    CFS_Action = C_F_S(N,  T, Sys_Params, Integration_bound, Schwartzfunktion = False,  
+    Sys_Params = [K_Liste, Rho_Liste, w_Liste, kappa]
+    CFS_Action = C_F_S(N,  T, Sys_Params, Integration_bound, Schwartzfunktion = False,
                Comp_String = False, Integration_Type = 1)
-    
+
     Wirkun = CFS_Action.get_Action()
     print(Wirkun)
 

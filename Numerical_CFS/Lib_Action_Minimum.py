@@ -457,17 +457,14 @@ class Simulated_Annealing():
         plt.xlabel('time')
         plt.ylabel('temperature')
         plt.show()
+        list_boltz=np.zeros(np.shape(temp)[0]*4)
+        list_temp = np.zeros(np.shape(temp)[0]*4)
+        print('temp, bolti',temp, list_boltz)
         for m,tt in enumerate(temp):
             for _ in range(4):
                 iterat +=1
                 self.vary.delta_K = tt/temp_max
                 self.vary.delta_Rho = 0.1*tt/temp_max
-                #
-                #
-                #
-                #ich will delta_Rho gegen die iteration plotten!
-
-                #
                 print('x_fitn_i', str(iterat), x_fitn_i)
                 new_param_values = self.vary(x_fitn_i)
 
@@ -483,6 +480,8 @@ class Simulated_Annealing():
                 #        +str(energy_new_param)+'\n')
                 boltzi = self.boltzmann(fitn_wert_x, energy_new_param, tt)
                 print('boltzi = ', boltzi)
+                list_boltz[iterat-1] = boltzi
+                list_temp[iterat -1] = tt
                 #print('curry_x1', fitn_wert_x)
                 if fitn_wert_x > energy_new_param:
                     fitn_wert_x = energy_new_param
@@ -499,6 +498,10 @@ class Simulated_Annealing():
                 #    print('curry_x2', fitn_wert_x)
         kol.close()
         print('Candidate_Minimum_adsfadfa', Candidate_Minimum)
+        plt.plot(list_temp, list_boltz)
+        plt.xlabel('temp')
+        plt.ylabel('boltzmann')
+        plt.show()
         return Candidate_Minimum
 
 
@@ -535,7 +538,7 @@ def MainProg(CPU_number):
 
     Integration_bound = [[x_Anf, x_End], [0,2*np.pi]]
     Wirk = []
-    Boltzmann_Constant = 0.5
+    Boltzmann_Constant = 0.001
     Mittelgr = 4
     for_rho = 1
 
@@ -582,7 +585,7 @@ def MainProg(CPU_number):
 
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True,
-        Comp_String = CPU_number, Integration_Type = 1, Test_Action = False)
+        Comp_String = CPU_number, Integration_Type = 1, Test_Action =True)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant,
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
@@ -620,9 +623,10 @@ if __name__ == "__main__":
     with mup.Pool(NN) as p:
         Liste_M = p.map(MainProg, [i for i in range(1,NN +1)])
     Minima_Candidate = np.array(Liste_M)
-    #print(Minima_Candidate[:,3])
-    index = np.argmin(Minima_Candidate[:,3])
-
+    print('Minima_Minima', Minima_Candidate)
+    print('mima', Minima_Candidate[:,4,0])
+    index = np.argmin(Minima_Candidate[:,4,0])
+    print('index', Minima_Candidate[index,:])
     gg = open('Minimum8.txt', 'w')
     gg.write('Minimum fuer N = %d'%(len(Minima_Candidate[0,0])) + str(Minima_Candidate[index,:])+'\n')
     gg.close()
