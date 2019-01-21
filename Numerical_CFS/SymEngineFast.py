@@ -118,7 +118,7 @@ class C_F_S:
     :type Integration_Type: 1,2,3 or 4.
     '''
     def __init__(self, N, T,  System_Parameters, Integration_bound = [[0,np.pi],[0,2*np.pi]], Schwartzfunktion = True,
-                 Comp_String = False, Integration_Type = 1, Test_Action=False):
+                 Comp_String = False, Integration_Type = 1, Test_Action= False):
         self.N = N
         self.Integration_bound = Integration_bound
         self.T = T
@@ -126,11 +126,12 @@ class C_F_S:
         self.Rho_Liste = System_Parameters[1]
         self.w_Liste = System_Parameters[2]
         self.kappa = System_Parameters[3,0]
+        self.Rhos_Constant = System_Parameters[5,0]
         self.Schwartzfunktion = Schwartzfunktion
         self.Comp_String = Comp_String
         self.Integration_Type = Integration_Type
         self.Test_Action = Test_Action
-
+        self.Min = self.Test_Minimum()
     def TensorProduct(self, mat11, mat22):
         """I needed a Tensorproduct for two matrices with symbolic elements.
         Other "Tensorproducts or Direct-Products" do not what i need. So
@@ -380,23 +381,37 @@ class C_F_S:
         parabola so if the minimizer won't work here
         it will definitely fail for the action.
         '''
-        Norm =  [1,4,10,20,35]
-        s = 0
+        print('R_Min', self.Min[1]) 
+        s = 2
         t = 0
         r = 0
-        w_Min = [o for o in range(self.N)]
-        R_Min = [100/Norm[self.N-1] for o in range(self.N)]
-        K_Min = [o for o in range(1, self.N+1)]
-
-        Min = np.array([K_Min, R_Min, w_Min])
         for ii in range(self.N):
-            s += self.Rho_Liste[ii]**2*(self.K_Liste[ii] - Min[0,ii])**2
-            t += (self.Rho_Liste[ii] - Min[1,ii])**2
-            #r += (self.w_Liste[ii] - Min[2, ii])**2
+            s += (self.Rho_Liste[ii])**2*(self.K_Liste[ii] - self.Min[0,ii])**2
+            t += (self.Rho_Liste[ii] - self.Min[1,ii])**2
+            #r += (self.w_Liste[ii] - self.Min[2, ii])**2
         print('t', t)
         return s + r+ t
 
+    def Test_Minimum(self):
+        Norm = np.array([1,4,10,20,35]) 
+        Rho_Koeffs = np.array([1,3,6,10,15])        
+        random_vals = np.random.random(self.N)
+        mid = Rho_Koeffs[0:self.N]*random_vals
+        
+        mid_sum  = np.sum(mid)
+        #mid_sum = np.sum(Rho_Koeffs[0:self.N])
+        print('yaaay', mid_sum)        
 
+        #R_Min = np.ones(self.N)*self.Rhos_Constant/mid_sum 
+        R_Min = random_vals*self.Rhos_Constant/mid_sum
+        
+        w_Min = np.arange(0,self.N)
+        K_Min =np.ones(self.N)*10 #arange(0,self.N)
+
+        Min = np.array([K_Min, R_Min, w_Min])
+
+        print('R_Min', R_Min)
+        return Min
 
     def get_Action(self):
 

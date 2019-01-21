@@ -140,7 +140,7 @@ be aware that the input list is not completely random and gets changed
 according to the variationprocess.
 '''
 class Initial_System_Params():
-    def __init__(self, random_K, random_Rho, random_w, K_List, Rho_List, w_List, kappa):
+    def __init__(self, random_K, random_Rho, random_w, K_List, Rho_List, w_List, kappa, Rhos_Constant):
         self.random_K = random_K
         self.random_Rho = random_Rho
         self.random_w = random_w
@@ -152,6 +152,7 @@ class Initial_System_Params():
         print('N =',self.N)
         self.variant = self.which_variant()
         self.kappa = kappa
+        self.Rhos_Constant = Rhos_Constant
     def which_variant(self):
         '''
         :param random_K: This paramter gets its default value from settings.cfg.
@@ -248,8 +249,9 @@ class Initial_System_Params():
             raise ValueError("Shell-Number %i < List_length %i. Size-Error. Fix the size of K_List and so on, N can only be equally big or bigger!" %(N, Lists_length))
             sys.exit()
 
-        half_filled_list = np.zeros((5,self.N))
+        half_filled_list = np.zeros((6,self.N))
         half_filled_list[3,0] = self.kappa
+        half_filled_list[5,0] = self.Rhos_Constant
         if self.variant ==1:
             half_filled_list[0, :Lists_length] = self.K_List
             half_filled_list[1, :Lists_length] = self.Rho_List
@@ -370,16 +372,16 @@ class Variation_of_Parameters():
         return Output
 
 class Rho_Class:
-    def __init__(self, N, Constant):
+    def __init__(self, N, Rhos_Constant):
         self.N = N
-        self.Constant = Constant
+        self.Rhos_Constant = Rhos_Constant
         self.Rho_List = self.Rho_Koeffs_List()
     def __call__(self, Incoming_List):
         Sum = 0
         for i,rho_koeff in  enumerate(self.Rho_List):
             Sum += rho_koeff*Incoming_List[i]
         rho_values = Incoming_List/Sum
-        return rho_values*self.Constant
+        return rho_values*self.Rhos_Constant
 
     def Rho_Koeffs_List(self):
         listim = []
@@ -414,6 +416,7 @@ class Simulated_Annealing():
         self.Amplitude = Amplitude
         self.vary = vary
         self.Fitness = Fitness
+
     def boltzmann(self, f_x, f_y, temp):
         '''
         This function will return for an Energydifferenz = f_x - f_y, the boltzmann\
@@ -442,6 +445,7 @@ class Simulated_Annealing():
         for heat_value in self.BaseArrayForTemp:
             temperatur_list.append(self.temperatur_Function(heat_value))
         return temperatur_list
+    
 
     def Minimierer(self, Candidate_Minimum):
         kol = open('iterk.txt', 'a')
@@ -538,7 +542,7 @@ def MainProg(CPU_number):
 
     Integration_bound = [[x_Anf, x_End], [0,2*np.pi]]
     Wirk = []
-    Boltzmann_Constant = 0.001
+    Boltzmann_Constant = 0.00005
     Mittelgr = 4
     for_rho = 1
 
@@ -554,9 +558,9 @@ def MainProg(CPU_number):
                                    #I set the list in settings.cfs, and it's like
                                    #[i for i in range(SN)]. So i need SN.
 
-
+    
     for SN in range(first, Anzahl_N+1):
-        Iter = (SN +3) **SN + 5                       #Number of temperatur iterations
+        Iter = (SN + 3) **SN + 4                      #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.1,5,Iter)
         Amplitude = 0.2     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
@@ -573,7 +577,7 @@ def MainProg(CPU_number):
 
 
         Sys_Params= Initial_System_Params(random_K, random_Rho, random_w,
-                pre2_K_List, pre2_Rho_List, pre2_w_List, kappa)
+                pre2_K_List, pre2_Rho_List, pre2_w_List, kappa, Constant)
 
         variant = Sys_Params.variant
 
@@ -585,7 +589,7 @@ def MainProg(CPU_number):
 
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True,
-        Comp_String = CPU_number, Integration_Type = 1, Test_Action =True)
+        Comp_String = CPU_number, Integration_Type = 1, Test_Action =False)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant,
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
