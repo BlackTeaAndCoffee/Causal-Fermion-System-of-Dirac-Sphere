@@ -386,8 +386,8 @@ class C_F_S:
         t = 0
         r = 0
         for ii in range(self.N):
-            s += (self.Rho_Liste[ii])**2*(self.K_Liste[ii] - self.Min[0,ii])**2
-            t += (self.Rho_Liste[ii] - self.Min[1,ii])**2
+            s += (self.Rho_Liste[ii] - self.Min[1,ii])**4*(self.K_Liste[ii] - self.Min[0,ii])**2
+            #t += (self.Rho_Liste[ii] - self.Min[1,ii])**2
             #r += (self.w_Liste[ii] - self.Min[2, ii])**2
         print('t', t)
         return s + r+ t
