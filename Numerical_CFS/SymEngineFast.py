@@ -1,8 +1,7 @@
-from symengine import I
 from sympy.printing import ccode
-from Numerical_CFS.PyxPlot3d import *
 from Numerical_CFS.configfunktion import configfunktion
 from Numerical_CFS import get_data
+from sympy import I
 import sympy as sy
 import symengine as si
 import numpy as np
@@ -14,20 +13,20 @@ import scipy.misc
 import ctypes
 import subprocess
 
-sigma1 = si.zeros(2)
+sigma1 = sy.zeros(2)
 sigma1[1,0] = 1
 sigma1[0,1] = 1
-sigma2 = si.zeros(2)
+sigma2 = sy.zeros(2)
 sigma2[1,0] = I
 sigma2[0,1] = -I
-sigma3 = si.zeros(2)
+sigma3 = sy.zeros(2)
 sigma3[0,0] = 1
 sigma3[1,1] = -1
-ident = si.zeros(2)
+ident = sy.zeros(2)
 ident[0,0] = 1
 ident[1,1] = 1
-r = si.symarray('r', 1)
-t = si.symarray('t', 1)
+r = sy.symarray('r', 1)
+t = sy.symarray('t', 1)
 
 
 
@@ -152,29 +151,29 @@ class C_F_S:
 
 
     def prefactor(self, n):
-        return sy.factorial(n + 2)/(8*si.pi**(sy.Rational(3,2))*si.gamma('%d/%d'%(3+2*n,2)))
+        return sy.factorial(n + 2)/(8*sy.pi**(sy.Rational(3,2))*sy.gamma('%d/%d'%(3+2*n,2)))
 
     def diracEigenvalues(self, n):
         return sy.Rational((2*n + 1),2)
 
     def integralKernelPlus(self, n):
         n=n-1
-        lala11 = sy.jacobi(n, si.Rational(1,2), si.Rational(3,2), r[0])
-        lala21 = sy.jacobi(n, si.Rational(3,2), si.Rational(1,2), r[0])
-        return self.prefactor(n)*(si.cos(r[0]/2)*lala11*ident -
-                            I*si.sin(r[0]/2)*lala21*sigma3)
+        lala11 = sy.jacobi(n, sy.Rational(1,2), sy.Rational(3,2), r[0])
+        lala21 = sy.jacobi(n, sy.Rational(3,2), sy.Rational(1,2), r[0])
+        return self.prefactor(n)*(sy.cos(r[0]/2)*lala11*ident -
+                            I*sy.sin(r[0]/2)*lala21*sigma3)
 
     def integralKernelMinus(self, n):
         n=n-1
-        lala1 = sy.jacobi(n, si.Rational(1,2), si.Rational(3,2), r[0])
-        lala2 = sy.jacobi(n, si.Rational(3,2), si.Rational(1,2), r[0])
+        lala1 = sy.jacobi(n, sy.Rational(1,2), sy.Rational(3,2), r[0])
+        lala2 = sy.jacobi(n, sy.Rational(3,2), sy.Rational(1,2), r[0])
 
-        return self.prefactor(n)*(si.cos(r[0]/2)*lala1*ident +
-                            I*si.sin(r[0]/2)*lala2*sigma3)
+        return self.prefactor(n)*(sy.cos(r[0]/2)*lala1*ident +
+                            I*sy.sin(r[0]/2)*lala2*sigma3)
 
     def preMatrixPlus(self, a):
-        b = si.sqrt(1 + a**2)
-        matrix = si.zeros(2)
+        b = sy.sqrt(1 + a**2)
+        matrix = sy.zeros(2)
 
         matrix[0,0]= 1-b
         matrix[0,1]= a
@@ -183,8 +182,8 @@ class C_F_S:
         return matrix
 
     def preMatrixMinus(self, a):
-        b = si.sqrt(1 + a**2)
-        matrix = si.zeros(2)
+        b = sy.sqrt(1 + a**2)
+        matrix = sy.zeros(2)
 
         matrix[0,0]= 1-b
         matrix[0,1]= -a
@@ -195,7 +194,7 @@ class C_F_S:
     def projector(self):
         mat = np.zeros((4,4), dtype = object)
         for n in range(1, self.N + 1):
-            Koef = self.Rho_Liste[n-1]*si.exp(-I*self.w_Liste[n-1]*t[0])
+            Koef = self.Rho_Liste[n-1]*sy.exp(-I*self.w_Liste[n-1]*t[0])
             Term11 = self.TensorProduct(self.preMatrixPlus(self.K_Liste[n-1]),self.integralKernelPlus(n))
             Term21 = self.TensorProduct(self.preMatrixMinus(self.K_Liste[n-1]),self.integralKernelMinus(n))
             mat += Koef*(Term11 + Term21)
@@ -205,7 +204,7 @@ class C_F_S:
         mat1 = np.zeros((4,4),  dtype = object)
 
         for n in range(1, self.N + 1):
-            Koeff = self.Rho_Liste[n-1]*si.exp(I*self.w_Liste[n-1]*t[0])
+            Koeff = self.Rho_Liste[n-1]*sy.exp(I*self.w_Liste[n-1]*t[0])
             Term12 = self.TensorProduct(self.preMatrixPlus(self.K_Liste[n-1]),self.integralKernelMinus(n))
             Term22 = self.TensorProduct(self.preMatrixMinus(self.K_Liste[n-1]),self.integralKernelPlus(n))
             mat1 += Koeff*(Term12 +Term22)
@@ -216,7 +215,7 @@ class C_F_S:
 
     def lagrangian_without_bound_constr(self):
         sub1 = self.closedChain()
-        return np.trace(np.dot(sub1,sub1)) - si.Rational(1,4) * np.trace(sub1)*np.trace(sub1)
+        return np.trace(np.dot(sub1,sub1)) - sy.Rational(1,4) * np.trace(sub1)*np.trace(sub1)
 
     '''
     Constraints
@@ -232,9 +231,9 @@ class C_F_S:
     def Integrand(self):
         args = r[0], t[0]
         exprs = [self.lagrangian_without_bound_constr()]
-        lagr = si.Lambdify(args, exprs, real = False)
+        lagr = sy.Lambdify(args, exprs, real = False)
         exprs2 = [self.boundadness_constraint()]
-        bound = si.Lambdify(args,exprs2, real = False)
+        bound = sy.Lambdify(args,exprs2, real = False)
 
         if self.Schwartzfunktion:
             integrand = lambda t1, r1: 1/(2*np.pi**2) + (max(lagr(t1, r1).real,0) +

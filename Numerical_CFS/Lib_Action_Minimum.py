@@ -589,7 +589,7 @@ def MainProg(CPU_number):
 
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True,
-        Comp_String = CPU_number, Integration_Type = 1, Test_Action =True)
+        Comp_String = CPU_number, Integration_Type = 1, Test_Action =False)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant,
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
