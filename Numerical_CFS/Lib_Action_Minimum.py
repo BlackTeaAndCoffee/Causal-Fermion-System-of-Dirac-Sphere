@@ -349,8 +349,8 @@ class Variation_of_Parameters():
         N = np.shape(Input_List)[1]
         Output = np.zeros(np.shape(Input_List))
         Output = Output + Input_List
-        prop_Keeper1 = np.array([1,3,6,10,15])/15
-        prop_Keeper = 1#prop_Keeper1[0:N]
+        prop_Keeper1 = np.array([1,3,6,10,15])
+        prop_Keeper = 1/prop_Keeper1[0:N] 
         if self.var_K:
             #print('delta_K', self.delta_K)
             randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_K
@@ -468,7 +468,7 @@ class Simulated_Annealing():
             for _ in range(4):
                 iterat +=1
                 self.vary.delta_K = tt/temp_max
-                self.vary.delta_Rho = 0.1*tt/temp_max
+                self.vary.delta_Rho = tt/temp_max
                 print('x_fitn_i', str(iterat), x_fitn_i)
                 new_param_values = self.vary(x_fitn_i)
 
@@ -542,7 +542,7 @@ def MainProg(CPU_number):
 
     Integration_bound = [[x_Anf, x_End], [0,2*np.pi]]
     Wirk = []
-    Boltzmann_Constant = 0.00005
+    Boltzmann_Constant = 0.005
     Mittelgr = 4
     for_rho = 1
 
@@ -589,7 +589,7 @@ def MainProg(CPU_number):
 
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True,
-        Comp_String = CPU_number, Integration_Type = 1, Test_Action =False)
+        Comp_String = CPU_number, Integration_Type = 1, Test_Action =True)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant,
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
