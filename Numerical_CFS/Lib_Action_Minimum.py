@@ -1,15 +1,9 @@
-from sympy.printing import ccode
 from scipy import integrate
-from symengine import I
-from sympy import *
 from Numerical_CFS.configfunktion import configfunktion
 import matplotlib.pyplot as plt
 import multiprocessing as mup
 import configparser
-import sympy as sy
-import symengine as si
 import numpy as np
-import random
 import datetime as dt
 import os
 import sys

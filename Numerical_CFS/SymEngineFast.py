@@ -3,7 +3,6 @@ from Numerical_CFS.configfunktion import configfunktion
 from Numerical_CFS import get_data
 from sympy import I
 import sympy as sy
-import symengine as si
 import numpy as np
 from scipy import integrate
 import random
