@@ -1,6 +1,6 @@
 from scipy import integrate
 from Numerical_CFS.configfunktion import configfunktion
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import multiprocessing as mup
 import configparser
 import numpy as np
@@ -451,10 +451,10 @@ class Simulated_Annealing():
         iterat = 0
         temp = self.temperatur()
         temp_max= np.max(temp)
-        plt.plot(self.BaseArrayForTemp, temp)
-        plt.xlabel('time')
-        plt.ylabel('temperature')
-        plt.show()
+#       plt.plot(self.BaseArrayForTemp, temp)
+#       plt.xlabel('time')
+#       plt.ylabel('temperature')
+#       plt.show()
         list_boltz=np.zeros(np.shape(temp)[0]*4)
         list_temp = np.zeros(np.shape(temp)[0]*4)
         print('temp, bolti',temp, list_boltz)
@@ -496,10 +496,10 @@ class Simulated_Annealing():
                 #    print('curry_x2', fitn_wert_x)
         kol.close()
         print('Candidate_Minimum_adsfadfa', Candidate_Minimum)
-        plt.plot(list_temp, list_boltz)
-        plt.xlabel('temp')
-        plt.ylabel('boltzmann')
-        plt.show()
+#       plt.plot(list_temp, list_boltz)
+#       plt.xlabel('temp')
+#       plt.ylabel('boltzmann')
+#       plt.show()
         return Candidate_Minimum
 
 
