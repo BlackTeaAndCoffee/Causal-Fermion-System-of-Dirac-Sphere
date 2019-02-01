@@ -1,15 +1,9 @@
-from sympy.printing import ccode
 from scipy import integrate
-from symengine import I
-from sympy import *
 from Numerical_CFS.configfunktion import configfunktion
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import multiprocessing as mup
 import configparser
-import sympy as sy
-import symengine as si
 import numpy as np
-import random
 import datetime as dt
 import os
 import sys
@@ -457,10 +451,10 @@ class Simulated_Annealing():
         iterat = 0
         temp = self.temperatur()
         temp_max= np.max(temp)
-        plt.plot(self.BaseArrayForTemp, temp)
-        plt.xlabel('time')
-        plt.ylabel('temperature')
-        plt.show()
+#       plt.plot(self.BaseArrayForTemp, temp)
+#       plt.xlabel('time')
+#       plt.ylabel('temperature')
+#       plt.show()
         list_boltz=np.zeros(np.shape(temp)[0]*4)
         list_temp = np.zeros(np.shape(temp)[0]*4)
         print('temp, bolti',temp, list_boltz)
@@ -502,10 +496,10 @@ class Simulated_Annealing():
                 #    print('curry_x2', fitn_wert_x)
         kol.close()
         print('Candidate_Minimum_adsfadfa', Candidate_Minimum)
-        plt.plot(list_temp, list_boltz)
-        plt.xlabel('temp')
-        plt.ylabel('boltzmann')
-        plt.show()
+#       plt.plot(list_temp, list_boltz)
+#       plt.xlabel('temp')
+#       plt.ylabel('boltzmann')
+#       plt.show()
         return Candidate_Minimum
 
 
@@ -589,7 +583,7 @@ def MainProg(CPU_number):
 
         print('System_Parameters =', System_Parameters)
         CFS_Action = C_F_S(SN,T, System_Parameters, Integration_bound,  Schwartzfunktion = True,
-        Comp_String = CPU_number, Integration_Type = 1, Test_Action =True)
+        Comp_String = CPU_number, Integration_Type = 1, Test_Action =False)
         Minimum_Finder = Simulated_Annealing(BaseArrayForTemp, Boltzmann_Constant,
                             decay_constant, freq, Amplitude, vary, CFS_Action)
 
