@@ -344,7 +344,7 @@ class Variation_of_Parameters():
         Output = np.zeros(np.shape(Input_List))
         Output = Output + Input_List
         prop_Keeper1 = np.array([1,3,6,10,15])
-        prop_Keeper = 1/prop_Keeper1[0:N] 
+        prop_Keeper = 1/prop_Keeper1[0:N]
         if self.var_K:
             #print('delta_K', self.delta_K)
             randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_K
@@ -355,6 +355,7 @@ class Variation_of_Parameters():
             print('InpoutLiust', Output)
         if self.var_Rho:
             randomi2 = (2*np.random.random_sample(N) - 1)*prop_Keeper*self.delta_Rho
+            print('delta.Rho', self.delta_Rho)
             rho_randomi6 = np.absolute(Output[1] + randomi2)
             Output[1] = np.array([self.Rho_Values(rho_randomi6)])
 
@@ -439,7 +440,7 @@ class Simulated_Annealing():
         for heat_value in self.BaseArrayForTemp:
             temperatur_list.append(self.temperatur_Function(heat_value))
         return temperatur_list
-    
+
 
     def Minimierer(self, Candidate_Minimum):
         kol = open('iterk.txt', 'a')
@@ -457,7 +458,7 @@ class Simulated_Annealing():
 #       plt.show()
         list_boltz=np.zeros(np.shape(temp)[0]*4)
         list_temp = np.zeros(np.shape(temp)[0]*4)
-        print('temp, bolti',temp, list_boltz)
+        #print('temp, bolti',temp, list_boltz)
         for m,tt in enumerate(temp):
             for _ in range(4):
                 iterat +=1
@@ -552,7 +553,7 @@ def MainProg(CPU_number):
                                    #I set the list in settings.cfs, and it's like
                                    #[i for i in range(SN)]. So i need SN.
 
-    
+
     for SN in range(first, Anzahl_N+1):
         Iter = (SN + 3) **SN + 4                      #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.1,5,Iter)
@@ -563,9 +564,9 @@ def MainProg(CPU_number):
         decay_constant = 2                        #exponential decay constant
 
         Rho_Values = Rho_Class(SN, Constant)
-        delta_K = np.array([1 for i in range(1, SN + 1) ])
+        delta_K = 0.1#np.array([1 for i in range(1, SN + 1) ])
         delta_w = 1/10
-        delta_Rho = 1/10
+        delta_Rho = 5/10
 
         vary = Variation_of_Parameters(var_K, var_Rho, var_w, delta_K, delta_Rho, delta_w, Rho_Values)
 

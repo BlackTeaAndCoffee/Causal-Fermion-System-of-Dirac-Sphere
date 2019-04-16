@@ -379,7 +379,7 @@ class C_F_S:
         parabola so if the minimizer won't work here
         it will definitely fail for the action.
         '''
-        print('R_Min', self.Min[1]) 
+        print('R_Min', self.Min[1])
         s = 2
         t = 0
         r = 0
@@ -391,18 +391,18 @@ class C_F_S:
         return s + r+ t
 
     def Test_Minimum(self):
-        Norm = np.array([1,4,10,20,35]) 
-        Rho_Koeffs = np.array([1,3,6,10,15])        
+        Norm = np.array([1,4,10,20,35])
+        Rho_Koeffs = np.array([1,3,6,10,15])
         random_vals = np.random.random(self.N)
         mid = Rho_Koeffs[0:self.N]*random_vals
-        
+
         mid_sum  = np.sum(mid)
         #mid_sum = np.sum(Rho_Koeffs[0:self.N])
-        print('yaaay', mid_sum)        
+        print('yaaay', mid_sum)
 
-        #R_Min = np.ones(self.N)*self.Rhos_Constant/mid_sum 
+        #R_Min = np.ones(self.N)*self.Rhos_Constant/mid_sum
         R_Min = random_vals*self.Rhos_Constant/mid_sum
-        
+
         w_Min = np.arange(0,self.N)
         K_Min =np.ones(self.N)*10 #arange(0,self.N)
 
@@ -442,8 +442,10 @@ class C_F_S:
                 lib.f.restype = ctypes.c_double
                 lib.f.argtypes = (ctypes.c_int,ctypes.c_double)
                 zup = integrate.nquad(lib.f,[self.Integration_bound[0],self.Integration_bound[1]],
-                        opts=[{'epsabs' :10e-8, 'epsrel': 10e-8 },
-                            {'epsabs': 10e-8, 'epsrel' : 10e-8} ] )
+                        opts=[{'epsabs' :10e-8, 'epsrel': 10e-8,
+                            'limit': 75 },
+                            {'epsabs': 10e-8, 'epsrel' : 10e-8,
+                                'limit':75} ] )
                 print('(Action1, abserr)=',zup[0] -1, zup[1])
                 handle = lib._handle # obtain the SO handle
 
