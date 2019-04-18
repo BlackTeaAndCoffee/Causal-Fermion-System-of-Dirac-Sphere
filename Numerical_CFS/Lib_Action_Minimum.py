@@ -1,5 +1,6 @@
 from scipy import integrate
 from Numerical_CFS.configfunktion import configfunktion
+import pandas as pd
 #import matplotlib.pyplot as plt
 import multiprocessing as mup
 import configparser
@@ -9,7 +10,8 @@ import os
 import sys
 import scipy.misc
 import ctypes
-from SymEngineFast import *
+from mpi4py import MPI
+from Numerical_CFS.SymEngineFast import *
 #from .LibForSimulAnnealing import *
 
 '''
@@ -443,7 +445,7 @@ class Simulated_Annealing():
 
 
     def Minimierer(self, Candidate_Minimum):
-        kol = open('iterk.txt', 'a')
+        kol = open('CandidatesCPU_%d.txt'%(self.Fitness.Comp_String), 'a')
         #Candidate_Minimum = Initial_State
         #print('id(Candidate)',id(Candidate_Minimum[0]))
         kol.write('CPU' + str(self.Fitness.Comp_String)+ ' ' + str(Candidate_Minimum) + '\n')
@@ -460,7 +462,7 @@ class Simulated_Annealing():
         list_temp = np.zeros(np.shape(temp)[0]*4)
         #print('temp, bolti',temp, list_boltz)
         for m,tt in enumerate(temp):
-            for _ in range(4):
+            for _ in range(1):
                 iterat +=1
                 self.vary.delta_K = tt/temp_max
                 self.vary.delta_Rho = tt/temp_max
@@ -555,7 +557,7 @@ def MainProg(CPU_number):
 
 
     for SN in range(first, Anzahl_N+1):
-        Iter = (SN + 3) **SN + 4                      #Number of temperatur iterations
+        Iter = 2# (SN + 3) **SN + 4                      #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.1,5,Iter)
         Amplitude = 0.2     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
@@ -606,28 +608,17 @@ def MainProg(CPU_number):
     return Minimum
 
 if __name__ == "__main__":
-    NN = mup.cpu_count()
-    List_Minimas = []
-#   pool = Pool(4)
-#   tasks = [i for i in range(10)]
-#
-#   results = [pool.apply_async(MainProg(t)) for t in tasks]
-#   print(results)
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
 
-#   for result in results:
-#       List_Minimas.append(result.get())
-#   print(List_Minimas)
-#
-    NN = 1
-    with mup.Pool(NN) as p:
-        Liste_M = p.map(MainProg, [i for i in range(1,NN +1)])
-    Minima_Candidate = np.array(Liste_M)
+    Minima_Candidate = MainProg(rank)
+
     print('Minima_Minima', Minima_Candidate)
-    print('mima', Minima_Candidate[:,4,0])
-    index = np.argmin(Minima_Candidate[:,4,0])
-    print('index', Minima_Candidate[index,:])
-    gg = open('Minimum8.txt', 'w')
-    gg.write('Minimum fuer N = %d'%(len(Minima_Candidate[0,0])) + str(Minima_Candidate[index,:])+'\n')
+
+    pd.DataFrame(np_array).to_csv("path/to/file.csv")
+
+    gg = open('Minimum8%d.txt'%(rank), 'w')
+    gg.write('Minimum fuer N = %d'%(len(Minima_Candidate[0])) + str(Minima_Candidate)+'\n')
     gg.close()
-    print("This is the Minima:", Minima_Candidate[index, :])
+    print("This is the Minima:", Minima_Candidate)
 
