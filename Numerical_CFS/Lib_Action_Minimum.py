@@ -1,7 +1,8 @@
 from scipy import integrate
 from Numerical_CFS.configfunktion import configfunktion
+import pandas as pd
+#import matplotlib.pyplot as plt
 import multiprocessing as mup
-#import matplotlib as plt
 import configparser
 import numpy as np
 import datetime as dt
@@ -12,9 +13,11 @@ import ctypes
 import psutil
 import time as it
 from SymEngineFast import *
-#from .LibForSimulAnnealing import *
+from mpi4py import MPI
+from Numerical_CFS.SymEngineFast import *
 start_time = it.time()
 process = psutil.Process(os.getpid())
+
 '''
 This Programm contains the code for minimizing the Action.
 With the help of some Minimum finder, i want to find ideally
@@ -346,7 +349,7 @@ class Variation_of_Parameters():
         Output = np.zeros(np.shape(Input_List))
         Output = Output + Input_List
         prop_Keeper1 = np.array([1,3,6,10,15])
-        prop_Keeper = 1/prop_Keeper1[0:N] 
+        prop_Keeper = 1/prop_Keeper1[0:N]
         if self.var_K:
             #print('delta_K', self.delta_K)
             randomi2 = (2*np.random.random_sample(N) - 1)*self.delta_K
@@ -357,6 +360,7 @@ class Variation_of_Parameters():
             print('InpoutLiust', Output)
         if self.var_Rho:
             randomi2 = (2*np.random.random_sample(N) - 1)*prop_Keeper*self.delta_Rho
+            print('delta.Rho', self.delta_Rho)
             rho_randomi6 = np.absolute(Output[1] + randomi2)
             Output[1] = np.array([self.Rho_Values(rho_randomi6)])
 
@@ -441,10 +445,10 @@ class Simulated_Annealing():
         for heat_value in self.BaseArrayForTemp:
             temperatur_list.append(self.temperatur_Function(heat_value))
         return temperatur_list
-    
+
 
     def Minimierer(self, Candidate_Minimum):
-        kol = open('iterk.txt', 'a')
+        kol = open('CandidatesCPU_%d.txt'%(self.Fitness.Comp_String), 'a')
         #Candidate_Minimum = Initial_State
         #print('id(Candidate)',id(Candidate_Minimum[0]))
         kol.write('CPU' + str(self.Fitness.Comp_String)+ ' ' + str(Candidate_Minimum) + '\n')
@@ -459,54 +463,43 @@ class Simulated_Annealing():
 #       plt.show()
         list_boltz=np.zeros(np.shape(temp)[0]*4)
         list_temp = np.zeros(np.shape(temp)[0]*4)
-        print('temp, bolti',temp, list_boltz)
+        #print('temp, bolti',temp, list_boltz)
         for m,tt in enumerate(temp):
-            for _ in range(4):
-                mid_time = it.time()
-                hours = (mid_time - start_time)/3600
-                if hours > 11:
-                    os.system()
-                    ff = open('MinimumFile.txt', 'w')
-                    ff.write('Minimum fuer N = %d'%(len(Minima_Candidate[0,0])) + str(Minima_Candidate[index,:])+'\n')
-                    ff.close()
-                
-                    break
-                else:    
-                    iterat +=1
+            for _ in range(1):
+                iterat +=1
+                self.vary.delta_K = tt/temp_max
+                self.vary.delta_Rho = tt/temp_max
+                print('x_fitn_i', str(iterat), x_fitn_i)
+                new_param_values = self.vary(x_fitn_i)
 
-                    self.vary.delta_K = tt/temp_max
-                    self.vary.delta_Rho = tt/temp_max
-                    print('x_fitn_i', str(iterat), x_fitn_i)
-                    new_param_values = self.vary(x_fitn_i)
+                print('new_params', str(new_param_values[1]))
 
-                    print('new_params', str(new_param_values[1]))
+                self.Fitness.K_Liste = new_param_values[0]
+                self.Fitness.Rho_Liste = new_param_values[1]
+                self.Fitness.w_Liste = new_param_values[2]
+                energy_new_param = self.Fitness.get_Action()
+                print('Rho_Lsite', self.Fitness.Rho_Liste)
+                print('fitnwert for x_fitn', energy_new_param)
+                #kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
+                #        +str(energy_new_param)+'\n')
+                boltzi = self.boltzmann(fitn_wert_x, energy_new_param, tt)
+                print('boltzi = ', boltzi)
+                list_boltz[iterat-1] = boltzi
+                list_temp[iterat -1] = tt
+                #print('curry_x1', fitn_wert_x)
+                if fitn_wert_x > energy_new_param:
+                    fitn_wert_x = energy_new_param
+                    x_fitn_i =  new_param_values
+                    if Candidate_Minimum[4,0] > energy_new_param:
+                        Candidate_Minimum[0:3,:]= new_param_values
+                        Candidate_Minimum[4,0]= energy_new_param
+                #        print('Cand1', Candidate_Minimum)
+                        kol.write('iterat, Ges ' +str(iterat)+','+str(len(temp)*1) + 'boltzi' + str(boltzi)+',CPU' + str(self.Fitness.Comp_String)+ ' ' + str(Candidate_Minimum) + '\n')
 
-                    self.Fitness.K_Liste = new_param_values[0]
-                    self.Fitness.Rho_Liste = new_param_values[1]
-                    self.Fitness.w_Liste = new_param_values[2]
-                    energy_new_param = self.Fitness.get_Action()
-                    print('Rho_Lsite', self.Fitness.Rho_Liste)
-                    print('fitnwert for x_fitn', energy_new_param)
-                    #kol.write(str(iterat)+ ' ' + str(new_param_values[0][0]) +' '
-                    #        +str(energy_new_param)+'\n')
-                    boltzi = self.boltzmann(fitn_wert_x, energy_new_param, tt)
-                    print('boltzi = ', boltzi)
-                    list_boltz[iterat-1] = boltzi
-                    list_temp[iterat -1] = tt
-                    #print('curry_x1', fitn_wert_x)
-                    if fitn_wert_x > energy_new_param:
-                        fitn_wert_x = energy_new_param
-                        x_fitn_i =  new_param_values
-                        if Candidate_Minimum[4,0] > energy_new_param:
-                            Candidate_Minimum[0:3,:]= new_param_values
-                            Candidate_Minimum[4,0]= energy_new_param
-                    #        print('Cand1', Candidate_Minimum)
-                            kol.write('iterat, Ges ' +str(iterat)+','+str(len(temp)*1) + 'boltzi' + str(boltzi)+',CPU' + str(self.Fitness.Comp_String)+ ' ' + str(Candidate_Minimum) + '\n')
-
-                    elif (fitn_wert_x < energy_new_param) and (random.random() <= boltzi) :
-                        fitn_wert_x = energy_new_param
-                        x_fitn_i =  new_param_values
-                    #    print('curry_x2', fitn_wert_x)
+                elif (fitn_wert_x < energy_new_param) and (random.random() <= boltzi) :
+                    fitn_wert_x = energy_new_param
+                    x_fitn_i =  new_param_values
+                #    print('curry_x2', fitn_wert_x)
         kol.close()
         print('Candidate_Minimum_adsfadfa', Candidate_Minimum)
         print('Memory', process.memory_percent())
@@ -566,9 +559,9 @@ def MainProg(CPU_number):
                                    #I set the list in settings.cfs, and it's like
                                    #[i for i in range(SN)]. So i need SN.
 
-    
+
     for SN in range(first, Anzahl_N+1):
-        Iter = SN#(SN + 3) **SN + 4                      #Number of temperatur iterations
+        Iter = 2# (SN + 3) **SN + 4                      #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.1,5,Iter)
         Amplitude = 0.2     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
@@ -577,9 +570,9 @@ def MainProg(CPU_number):
         decay_constant = 2                        #exponential decay constant
 
         Rho_Values = Rho_Class(SN, Constant)
-        delta_K = np.array([1 for i in range(1, SN + 1) ])
+        delta_K = 0.1#np.array([1 for i in range(1, SN + 1) ])
         delta_w = 1/10
-        delta_Rho = 1/10
+        delta_Rho = 5/10
 
         vary = Variation_of_Parameters(var_K, var_Rho, var_w, delta_K, delta_Rho, delta_w, Rho_Values)
 
@@ -619,27 +612,17 @@ def MainProg(CPU_number):
     return Minimum
 
 if __name__ == "__main__":
-    NN = mup.cpu_count()
-    List_Minimas = []
-#   pool = Pool(4)
-#   tasks = [i for i in range(10)]
-#
-#   results = [pool.apply_async(MainProg(t)) for t in tasks]
-#   print(results)
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
 
-#   for result in results:
-#       List_Minimas.append(result.get())
-#   print(List_Minimas)
-#
-    NN = 1
-    with mup.Pool(NN) as p:
-        Liste_M = p.map(MainProg, [i for i in range(1,NN +1)])
-    Minima_Candidate = np.array(Liste_M)
+    Minima_Candidate = MainProg(rank)
+
     print('Minima_Minima', Minima_Candidate)
-    print('mima', Minima_Candidate[:,4,0])
-    index = np.argmin(Minima_Candidate[:,4,0])
-    print('index', Minima_Candidate[index,:])
-    gg = open('Minimum8.txt', 'w')
-    gg.write('Minimum fuer N = %d'%(len(Minima_Candidate[0,0])) + str(Minima_Candidate[index,:])+'\n')
+
+    pd.DataFrame(np_array).to_csv("path/to/file.csv")
+
+    gg = open('Minimum8%d.txt'%(rank), 'w')
+    gg.write('Minimum fuer N = %d'%(len(Minima_Candidate[0])) + str(Minima_Candidate)+'\n')
     gg.close()
-    print("This is the Minima:", Minima_Candidate[index, :])
+    print("This is the Minima:", Minima_Candidate)
+
