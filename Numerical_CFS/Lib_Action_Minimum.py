@@ -446,10 +446,15 @@ class Simulated_Annealing():
 
 
     def Minimierer(self, Candidate_Minimum):
-        kol = open('CandidatesCPU_%d.txt'%(self.Fitness.Comp_String), 'a')
         #Candidate_Minimum = Initial_State
         #print('id(Candidate)',id(Candidate_Minimum[0]))
-        kol.write('CPU' + str(self.Fitness.Comp_String)+ ' ' + str(Candidate_Minimum) + '\n')
+        InitialDict = {'CPU':self.Fitness.Comp_String,
+                'ActionVals':Candidate_Minimum}
+        df = pd.DataFrame.from_dict(data=InitialDict, orient ='index')
+        df.to_csv(r'~/CFSVals_%d.csv'%(self.Fitness.Comp_String), header=False, sep=',', mode ='a')
+
+
+
         fitn_wert_x = Candidate_Minimum[4,0]#Initial_State[1]
         x_fitn_i = Candidate_Minimum[0:3,:]# Initial_State[0]
         iterat = 0
@@ -463,7 +468,7 @@ class Simulated_Annealing():
         list_temp = np.zeros(np.shape(temp)[0]*4)
         #print('temp, bolti',temp, list_boltz)
         for m,tt in enumerate(temp):
-            for _ in range(1):
+            for _ in range(4):
                 iterat +=1
                 self.vary.delta_K = tt/temp_max
                 self.vary.delta_Rho = tt/temp_max
@@ -492,13 +497,15 @@ class Simulated_Annealing():
                         Candidate_Minimum[0:3,:]= new_param_values
                         Candidate_Minimum[4,0]= energy_new_param
                 #        print('Cand1', Candidate_Minimum)
-                        kol.write('iterat, Ges ' +str(iterat)+','+str(len(temp)*1) + 'boltzi' + str(boltzi)+',CPU' + str(self.Fitness.Comp_String)+ ' ' + str(Candidate_Minimum) + '\n')
+                        CandDict ={'CPUu':self.Fitness.Comp_String ,
+                                'Candidate': Candidate_Minimum}
+                        df = pd.DataFrame.from_dict(data=CandDict, orient ='index')
+                        df.to_csv(r'~/CFSVals_%d.csv'%(self.Fitness.Comp_String), header=False, sep=',', mode ='a')
 
                 elif (fitn_wert_x < energy_new_param) and (random.random() <= boltzi) :
                     fitn_wert_x = energy_new_param
                     x_fitn_i =  new_param_values
                 #    print('curry_x2', fitn_wert_x)
-        kol.close()
         print('Candidate_Minimum_adsfadfa', Candidate_Minimum)
         print('Memory', process.memory_percent())
         #plt.plot(list_temp, list_boltz)
@@ -559,7 +566,7 @@ def MainProg(CPU_number):
 
 
     for SN in range(first, Anzahl_N+1):
-        Iter = 2# (SN + 3) **SN + 4                      #Number of temperatur iterations
+        Iter = (SN + 3) **SN + 4                      #Number of temperatur iterations
         BaseArrayForTemp = np.linspace(0.1,5,Iter)
         Amplitude = 0.2     #Amplitude of tempearatur oszillation
                                             #on the exponentially decreasing
