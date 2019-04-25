@@ -2,7 +2,6 @@ from scipy import integrate
 from Numerical_CFS.configfunktion import configfunktion
 import pandas as pd
 #import matplotlib.pyplot as plt
-import multiprocessing as mup
 import configparser
 import numpy as np
 import datetime as dt
@@ -12,7 +11,6 @@ import scipy.misc
 import ctypes
 import psutil
 import time as it
-from SymEngineFast import *
 from mpi4py import MPI
 from Numerical_CFS.SymEngineFast import *
 start_time = it.time()
@@ -619,7 +617,7 @@ if __name__ == "__main__":
 
     print('Minima_Minima', Minima_Candidate)
 
-    pd.DataFrame(np_array).to_csv("path/to/file.csv")
+    #pd.DataFrame(np_array).to_csv("path/to/file.csv")
 
     gg = open('Minimum8%d.txt'%(rank), 'w')
     gg.write('Minimum fuer N = %d'%(len(Minima_Candidate[0])) + str(Minima_Candidate)+'\n')
