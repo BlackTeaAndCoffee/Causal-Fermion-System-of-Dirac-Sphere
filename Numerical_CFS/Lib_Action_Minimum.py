@@ -448,10 +448,17 @@ class Simulated_Annealing():
     def Minimierer(self, Candidate_Minimum):
         #Candidate_Minimum = Initial_State
         #print('id(Candidate)',id(Candidate_Minimum[0]))
-        InitialDict = {'CPU':self.Fitness.Comp_String,
-                'ActionVals':Candidate_Minimum}
-        df = pd.DataFrame.from_dict(data=InitialDict, orient ='index')
-        df.to_csv(r'~/CFSVals_%d.csv'%(self.Fitness.Comp_String), header=False, sep=',', mode ='a')
+        print('CandMim',Candidate_Minimum[0])
+        Cand = np.zeros((6,10))
+        Cand[:Candidate_Minimum.shape[0], :Candidate_Minimum.shape[1]] = Candidate_Minimum
+        InitialDict = pd.DataFrame(Cand, index = ['K', 'Rho', 'w', 'kappa', 'S', 'R_Const'])
+#               'Impuls':list(Candidate_Minimum[0]),
+#               'Weights': list(Candidate_Minimum[1]),
+#               'Frequences':list(Candidate_Minimum[2]),
+#               'System':list(Candidate_Minimum[3]),
+#               'Action':list(Candidate_Minimum[4])}
+        #df = pd.DataFrame.from_dict(data=InitialDict, orient ='index')
+        InitialDict.to_csv(r'~/CFSVals_%d.csv'%(self.Fitness.Comp_String), header=False, sep=',', mode ='a')
 
 
 
@@ -497,10 +504,19 @@ class Simulated_Annealing():
                         Candidate_Minimum[0:3,:]= new_param_values
                         Candidate_Minimum[4,0]= energy_new_param
                 #        print('Cand1', Candidate_Minimum)
-                        CandDict ={'CPUu':self.Fitness.Comp_String ,
-                                'Candidate': Candidate_Minimum}
-                        df = pd.DataFrame.from_dict(data=CandDict, orient ='index')
-                        df.to_csv(r'~/CFSVals_%d.csv'%(self.Fitness.Comp_String), header=False, sep=',', mode ='a')
+                        Cand = np.zeros((6,10))
+
+                        Cand[:Candidate_Minimum.shape[0], :Candidate_Minimum.shape[1]] = Candidate_Minimum
+                        CandDict = pd.DataFrame(Cand, index = ['K', 'Rho', 'w', 'kappa', 
+                        'S', 'R_Const'])
+#                       'Impuls':list(Candidate_Minimum[0]),
+#                       'Weights': list(Candidate_Minimum[1]),
+#                       'Frequences':list(Candidate_Minimum[2]),
+#                       'kappa':list(Candidate_Minimum[3]),
+#                       'Action':list(Candidate_Minimum[4])}
+
+                        #df = pd.DataFrame.from_dict(data=CandDict, orient ='index')
+                        CandDict.to_csv(r'~/CFSVals_%d.csv'%(self.Fitness.Comp_String),   header=False, sep=',', mode ='a')
 
                 elif (fitn_wert_x < energy_new_param) and (random.random() <= boltzi) :
                     fitn_wert_x = energy_new_param
@@ -619,6 +635,11 @@ def MainProg(CPU_number):
 if __name__ == "__main__":
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
+    Header = pd.DataFrame.from_dict({'Indices':[i for i in range(10)]}, orient = 'index') 
+
+    Header.to_csv(r'~/CFSVals_%d.csv'%(rank),   index= True, header=False, sep=',', mode ='a')
+
+
 
     Minima_Candidate = MainProg(rank)
 
